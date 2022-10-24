@@ -130,7 +130,23 @@ int main(int argc, char **argv) {
 		glViewport(0, 0, drawable_size.x, drawable_size.y);
 	};
 	on_resize();
+	
 
+	// === NEW CODE === //
+	SDL_Surface *imageSurface = NULL;
+    SDL_Surface *windowSurface = NULL;
+	imageSurface = SDL_LoadBMP( "Player_Core.bmp" );
+	SDL_Surface *imageSurface1 = SDL_LoadBMP( "Enemy_Basic.bmp" );
+	windowSurface = SDL_GetWindowSurface( window );
+	if( imageSurface == NULL )
+    {
+        std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
+    }
+	if( imageSurface1 == NULL )
+    {
+        std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
+    }
+	// == END NEW CODE === //
 	//This will loop until the current mode is set to null:
 	while (Mode::current) {
 		//every pass through the game loop creates one frame of output
@@ -187,12 +203,43 @@ int main(int argc, char **argv) {
 			Mode::current->draw(drawable_size);
 		}
 
+		// === NEW CODE === //
+		SDL_Rect dst1;
+		dst1.x = 400;
+		dst1.y = 200;
+		dst1.w = 0;
+		dst1.h = 0;
+
+		SDL_Rect dst2;
+		dst2.x = 0;
+		dst2.y = 0;
+		dst2.w = 32;
+		dst2.h = 32;
+
+		SDL_BlitSurface( imageSurface, NULL, windowSurface, &dst1);
+		SDL_BlitSurface( imageSurface1, NULL, windowSurface, &dst2);
+
+		SDL_UpdateWindowSurface(window);
+		// === END NEW CODE === //
+		
 		//Wait until the recently-drawn frame is shown before doing it all again:
-		SDL_GL_SwapWindow(window);
+		// === NEW CODE === //
+		//SDL_GL_SwapWindow(window);
+		
+		// === END NEW CODE === //
 	}
 
 
 	//------------  teardown ------------
+
+	// === NEW CODE === //
+	SDL_FreeSurface( imageSurface );
+    SDL_FreeSurface( windowSurface );
+    
+    imageSurface = NULL;
+    windowSurface = NULL;
+    // === END NEW CODE === //
+
 	Sound::shutdown();
 
 	SDL_GL_DeleteContext(context);

@@ -8,6 +8,8 @@
 #include <vector>
 #include <deque>
 
+#include <SDL.h>
+
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
@@ -18,7 +20,14 @@ struct PlayMode : Mode {
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
 	//----- game state -----
+	//void init_shader();
 
+	//GLuint program = 0;
+	//unsigned int quadVAO;
+	//unsigned int VBO;
+	//glm::uvec2 *png_size;
+	//std::vector< glm::u8vec4 > *png_data;
+	
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;
@@ -27,13 +36,7 @@ struct PlayMode : Mode {
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
+	//Scene::Camera *camera = nullptr;
 
-	//player info:
-	struct Player {
-		WalkPoint at;
-		//transform is at player's feet and will be yawed by mouse left/right motion:
-		Scene::Transform *transform = nullptr;
-		//camera is at player's head and will be pitched by mouse up/down motion:
-		Scene::Camera *camera = nullptr;
-	} player;
+
 };
