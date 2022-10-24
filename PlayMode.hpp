@@ -7,8 +7,13 @@
 
 #include <vector>
 #include <deque>
+#include <array>
 
 #include <SDL.h>
+
+#include "TriangleCluster.hpp"
+
+#include <random>
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -19,24 +24,20 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
-	//----- game state -----
-	//void init_shader();
+	std::mt19937 mt; //rng stuff
+	float rand01() {
+		static float mx = (float)mt.max();
+		return mt() / mx;
+	}
 
-	//GLuint program = 0;
-	//unsigned int quadVAO;
-	//unsigned int VBO;
-	//glm::uvec2 *png_size;
-	//std::vector< glm::u8vec4 > *png_data;
-	
+	//----- game state -----
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
-	//local copy of the game scene (so code can change it during gameplay):
-	Scene scene;
-	//Scene::Camera *camera = nullptr;
+	TriangleCluster player;
 
-
+	std::vector<glm::vec2> food; // temporary
 };

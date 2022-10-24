@@ -13,69 +13,29 @@
 
 #include <random>
 
-#define WIDTH 1280
-#define HEIGHT 720
+#include "GeoHelpers.hpp"
 
+#define WIDTH 960
+#define HEIGHT 540
 
 //compiles+links an OpenGL shader program from source.
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
-//PlayMode::init_shader(){
-//	program = gl_compile_program(
-//		//vertex shader:
-//		"#version 330 core\n"
-//		"layout (location = 0) in vec4 vertex; // <vec2 position, vec2 texCoords>\n"
-//		"out vec2 TexCoords;\n"
-//		"uniform mat4 model;\n"
-//		"uniform mat4 projection;\n"
-//		"void main()\n"
-//		"{\n"
-//		"    TexCoords = vertex.zw;\n"
-//		"    gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);\n"
-//		"}\n"
-//	,
-//		//fragment shader:
-//		"#version 330 core\n"
-//		"in vec2 TexCoords;\n"
-//		"out vec4 color;\n"
-//		"uniform sampler2D image;\n"
-//		"uniform vec3 spriteColor;\n"
-//		"void main()\n"
-//		"{    \n"
-//		"    color = vec4(spriteColor, 1.0) * texture(image, TexCoords);\n"
-//		"} \n"
-//	);
-//
-//	vertices[] = { 
-//        // pos      // tex
-//        0.0f, 1.0f, 0.0f, 1.0f,
-//        1.0f, 0.0f, 1.0f, 0.0f,
-//        0.0f, 0.0f, 0.0f, 0.0f, 
-//    
-//        0.0f, 1.0f, 0.0f, 1.0f,
-//        1.0f, 1.0f, 1.0f, 1.0f,
-//        1.0f, 0.0f, 1.0f, 0.0f
-//    };
-//
-
-//} 
-
-
 PlayMode::PlayMode() {
-	//init_shader();
-	//std::string filename = "Player_Core.png";
+	player = TriangleCluster();
+	player.insertTriangle(0, 0, Triangle());
 
-	//load_png(filename, png_size, png_data, LowerLeftOrigin);
-	//std::cout << png_size->x << std::endl; std::cout << png_size->y << std::endl;
-
+	for (int i = 0; i < 20; i++) {
+		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
+		food.push_back(pos);
+	}
 }
 
 PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.keysym.sym == SDLK_ESCAPE) {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -111,15 +71,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = false;
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			return true;
-		}
 	}
 
 	return false;
@@ -139,6 +90,50 @@ void PlayMode::update(float elapsed) {
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
+		player.pos += move;
+	}
+
+	// eat food = grow a triangle
+	{
+		std::vector<int> toErase;
+		for (int i = 0; i < (int)food.size(); i++) {
+			glm::vec2 foodpos = food[i];
+			for (auto& k : player.triangles) {
+				std::pair<int,int> coords = k.first;
+				std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
+				
+				// is foodpos inside the triangle?
+				if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
+					toErase.push_back(i);
+
+					// add a new triangle to the nearest side
+					float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
+					float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
+					float d3 = GeoHelpers::pointToSegmentDistance(foodpos, corners[2], corners[0]);
+
+					float minDist = fmin(d1, fmin(d2, d3));
+
+					auto tryAddTriangle = [&](int i, int j) {
+						if (!player.triangles.count({i,j})) {
+							player.insertTriangle(i, j, Triangle());
+						}
+					};
+					if (minDist == d1) {
+						if (coords.first%2 == 0) {
+							tryAddTriangle(coords.first+1, coords.second-1);
+						} else {
+							tryAddTriangle(coords.first-1, coords.second+1);
+						}
+					} else if (minDist == d2) {
+						tryAddTriangle(coords.first+1, coords.second);
+					} else {
+						tryAddTriangle(coords.first-1, coords.second);
+					}
+					break;
+				}
+			}
+		}
+		for (int i : toErase) food.erase(food.begin() + i);
 	}
 
 	//reset button press counters:
@@ -149,49 +144,70 @@ void PlayMode::update(float elapsed) {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
-	
 
-	//update camera aspect ratio for drawable:
-	//camera->aspect = float(drawable_size.x) / float(drawable_size.y);
+	static std::array< glm::vec2, 16 > const circle = [](){
+		std::array< glm::vec2, 16 > ret;
+		for (uint32_t a = 0; a < ret.size(); ++a) {
+			float ang = a / float(ret.size()) * 2.0f * float(M_PI);
+			ret[a] = glm::vec2(std::cos(ang), std::sin(ang));
+		}
+		return ret;
+	}();
 
-	//set up light type and position for lit_color_texture_program:
-	//glUseProgram(lit_color_texture_program->program);
-	//glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
-	//glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
-	//glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
-	//glUseProgram(0);
-//
-	//glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-	//glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
-//
-	//scene.draw(*camera);
+	// Not sure what these do but we can change when necessary
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
 
+	// TODO: pick values such that the camera follows the player and zooms out as the player gets larger
+	float aspect = float(drawable_size.x) / float(drawable_size.y);
+	float scale = std::min(2.0f * aspect / 20, 2.0f / 20);
+	glm::vec2 offset = glm::vec2(0.f, 0.f);
+	glm::mat4 world_to_clip = glm::mat4(
+		scale / aspect, 0.0f, 0.0f, offset.x,
+		0.0f, scale, 0.0f, offset.y,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
 
+	DrawLines lines(world_to_clip);
 
-	//{ //use DrawLines to overlay some text:
-	//	glDisable(GL_DEPTH_TEST);
-	//	float aspect = float(drawable_size.x) / float(drawable_size.y);
-	//	DrawLines lines(glm::mat4(
-	//		1.0f / aspect, 0.0f, 0.0f, 0.0f,
-	//		0.0f, 1.0f, 0.0f, 0.0f,
-	//		0.0f, 0.0f, 1.0f, 0.0f,
-	//		0.0f, 0.0f, 0.0f, 1.0f
-	//	));
-//
-	//	constexpr float H = 0.09f;
-	//	lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
-	//		glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-	//		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	//		glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-	//	float ofs = 2.0f / drawable_size.y;
-	//	lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
-	//		glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
-	//		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	//		glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-	//}
+	{ // draw the player
+		for (auto& k : player.triangles) {
+			std::pair<int,int> coords = k.first;
+			Triangle t = k.second;
+
+			std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
+			lines.draw(
+				glm::vec3(corners[0], 0.f),
+				glm::vec3(corners[1], 0.f),
+				t.color
+			);
+			lines.draw(
+				glm::vec3(corners[1], 0.f),
+				glm::vec3(corners[2], 0.f),
+				t.color
+			);
+			lines.draw(
+				glm::vec3(corners[2], 0.f),
+				glm::vec3(corners[0], 0.f),
+				t.color
+			);
+		}
+	}
+
+	{ // draw food
+		for (auto& k : food) {
+			float rad = 0.1f;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				lines.draw(
+					glm::vec3(k + rad * circle[a], 0.0f),
+					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(0xff, 0xff, 0x00, 0xff)
+				);
+			}
+		}
+	}
+
 	GL_ERRORS();
 }

@@ -66,9 +66,9 @@ int main(int argc, char **argv) {
 
 	//create window:
 	SDL_Window *window = SDL_CreateWindow(
-		"gp22 game5: walking simulator", //TODO: remember to set a title for your game!
+		"Contradiction", //TODO: remember to set a title for your game!
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		1280, 720, //TODO: modify window size if you'd like
+		960, 540, //TODO: modify window size if you'd like
 		SDL_WINDOW_OPENGL
 		| SDL_WINDOW_RESIZABLE //uncomment to allow resizing
 		| SDL_WINDOW_ALLOW_HIGHDPI //uncomment for full resolution on high-DPI screens
@@ -132,20 +132,20 @@ int main(int argc, char **argv) {
 	on_resize();
 	
 
-	// === NEW CODE === //
-	SDL_Surface *imageSurface = NULL;
-    SDL_Surface *windowSurface = NULL;
-	imageSurface = SDL_LoadBMP( "Player_Core.bmp" );
-	SDL_Surface *imageSurface1 = SDL_LoadBMP( "Enemy_Basic.bmp" );
-	windowSurface = SDL_GetWindowSurface( window );
-	if( imageSurface == NULL )
-    {
-        std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
-    }
-	if( imageSurface1 == NULL )
-    {
-        std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
-    }
+	// === TODO: DELETE THIS WHEN WE FIGURE OUT HOW TO DRAW === //
+	// SDL_Surface *imageSurface = NULL;
+    // SDL_Surface *windowSurface = NULL;
+	// imageSurface = SDL_LoadBMP( "Player_Core.bmp" );
+	// SDL_Surface *imageSurface1 = SDL_LoadBMP( "Enemy_Basic.bmp" );
+	// windowSurface = SDL_GetWindowSurface( window );
+	// if( imageSurface == NULL )
+    // {
+    //     std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
+    // }
+	// if( imageSurface1 == NULL )
+    // {
+    //     std::cout << "SDL could not load image! SDL Error: " << SDL_GetError( ) << std::endl;
+    // }
 	// == END NEW CODE === //
 	//This will loop until the current mode is set to null:
 	while (Mode::current) {
@@ -203,26 +203,28 @@ int main(int argc, char **argv) {
 			Mode::current->draw(drawable_size);
 		}
 
-		// === NEW CODE === //
-		SDL_Rect dst1;
-		dst1.x = 400;
-		dst1.y = 200;
-		dst1.w = 0;
-		dst1.h = 0;
+		// === TODO: DELETE THIS WHEN WE FIGURE OUT HOW TO DRAW === //
+		// SDL_Rect dst1;
+		// dst1.x = 400;
+		// dst1.y = 200;
+		// dst1.w = 0;
+		// dst1.h = 0;
 
-		SDL_Rect dst2;
-		dst2.x = 0;
-		dst2.y = 0;
-		dst2.w = 32;
-		dst2.h = 32;
+		// SDL_Rect dst2;
+		// dst2.x = 0;
+		// dst2.y = 0;
+		// dst2.w = 32;
+		// dst2.h = 32;
 
-		SDL_BlitSurface( imageSurface, NULL, windowSurface, &dst1);
-		SDL_BlitSurface( imageSurface1, NULL, windowSurface, &dst2);
+		// SDL_BlitSurface( imageSurface, NULL, windowSurface, &dst1);
+		// SDL_BlitScaled( imageSurface1, NULL, windowSurface, &dst2);
 
 		SDL_UpdateWindowSurface(window);
 		// === END NEW CODE === //
 		
 		//Wait until the recently-drawn frame is shown before doing it all again:
+		SDL_GL_SwapWindow(window);
+
 		// === NEW CODE === //
 		//SDL_GL_SwapWindow(window);
 		
@@ -232,12 +234,12 @@ int main(int argc, char **argv) {
 
 	//------------  teardown ------------
 
-	// === NEW CODE === //
-	SDL_FreeSurface( imageSurface );
-    SDL_FreeSurface( windowSurface );
+	// === TODO: DELETE THIS WHEN FIGURE OUT HOW TO DRAW === //
+	// SDL_FreeSurface( imageSurface );
+    // SDL_FreeSurface( windowSurface );
     
-    imageSurface = NULL;
-    windowSurface = NULL;
+    // imageSurface = NULL;
+    // windowSurface = NULL;
     // === END NEW CODE === //
 
 	Sound::shutdown();
