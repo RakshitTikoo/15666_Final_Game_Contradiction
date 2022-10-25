@@ -26,7 +26,7 @@ PlayMode::PlayMode() {
 	player = TriangleCluster();
 	player.insertTriangle(0, 0, Triangle());
 
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 500; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
 		food.push_back(pos);
 	}
@@ -96,6 +96,7 @@ void PlayMode::update(float elapsed) {
 	// eat food = grow a triangle
 	{
 		std::vector<int> toErase;
+		std::vector<std::pair<std::pair<int, int>, Triangle>> toInsert;
 		for (int i = 0; i < (int)food.size(); i++) {
 			glm::vec2 foodpos = food[i];
 			for (auto& k : player.triangles) {
@@ -113,27 +114,31 @@ void PlayMode::update(float elapsed) {
 
 					float minDist = fmin(d1, fmin(d2, d3));
 
-					auto tryAddTriangle = [&](int i, int j) {
-						if (!player.triangles.count({i,j})) {
-							player.insertTriangle(i, j, Triangle());
-						}
-					};
 					if (minDist == d1) {
 						if (coords.first%2 == 0) {
-							tryAddTriangle(coords.first+1, coords.second-1);
+							toInsert.push_back({{coords.first+1, coords.second-1}, Triangle()});
 						} else {
-							tryAddTriangle(coords.first-1, coords.second+1);
+							toInsert.push_back({{coords.first-1, coords.second+1}, Triangle()});
 						}
 					} else if (minDist == d2) {
-						tryAddTriangle(coords.first+1, coords.second);
+						toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
 					} else {
-						tryAddTriangle(coords.first-1, coords.second);
+						toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
 					}
 					break;
 				}
 			}
 		}
-		for (int i : toErase) food.erase(food.begin() + i);
+		for (int i = (int)toErase.size()-1; i >= 0; i--) {
+			food.erase(food.begin() + toErase[i]);
+		}
+		for (auto k : toInsert) {
+			std::pair<int,int> coords = k.first;
+			Triangle t = k.second;
+			if (!player.triangles.count({coords.first, coords.second})) {
+				player.insertTriangle(coords.first, coords.second, t);
+			}
+		}
 	}
 
 	//reset button press counters:
@@ -161,8 +166,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	// TODO: pick values such that the camera follows the player and zooms out as the player gets larger
 	float aspect = float(drawable_size.x) / float(drawable_size.y);
-	float scale = std::min(2.0f * aspect / 20, 2.0f / 20);
-	glm::vec2 offset = glm::vec2(0.f, 0.f);
+	float scale = 1.f / 10.f;
+	glm::vec2 offset = {0.f, 0.f};
 	glm::mat4 world_to_clip = glm::mat4(
 		scale / aspect, 0.0f, 0.0f, offset.x,
 		0.0f, scale, 0.0f, offset.y,
