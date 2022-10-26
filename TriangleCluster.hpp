@@ -14,10 +14,12 @@ struct Triangle {
 
 
     glm::uvec4 color; // temporary, for testing purposes;
+    bool visited;   // for DFS
     // in reality, we should store properties like whether or not there's a turret, hp, etc.
 
     Triangle() {
         color = {255.f, 0.f, 255.f, 1.f}; // default purple
+        visited = false;
     }
 };
 
@@ -33,11 +35,15 @@ struct TriangleCluster {
     TriangleCluster();
 
     void insertTriangle(int i, int j, Triangle t);
-
-    void eraseTriangle(int i, int j);
+    void eraseTriangle(std::vector<std::pair<int, int>>& coords);
+    void eraseTriangleSingle(int i, int j);
 
     // center of (i,j) triangle
     glm::vec2 getTrianglePosition(int i, int j);
 
     std::vector<glm::vec2> getTriangleCorners(int i, int j);
+
+private:
+    void DFS();
+    void DFS_visit(int i, int j);
 };

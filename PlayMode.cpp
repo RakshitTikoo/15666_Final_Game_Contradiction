@@ -13,6 +13,7 @@
 
 #include <random>
 #include <cmath>
+#include <iostream>
 
 #include "GeoHelpers.hpp"
 
@@ -31,6 +32,13 @@ PlayMode::PlayMode() {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
 		food.push_back(pos);
 	}
+
+	for (int i = 0; i < 20; i++) {
+		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
+		bullet.push_back(pos);
+	}
+
+	std::cout << "Initialize successful\n"; 
 }
 
 PlayMode::~PlayMode() {
@@ -114,7 +122,7 @@ void PlayMode::update(float elapsed) {
 			player.angle = std::fmodf(player.angle + 360.0f, 360.0f);
 		}
 	}
-
+ 
 	// eat food = grow a triangle
 	{
 		std::vector<int> toErase;
@@ -169,6 +177,30 @@ void PlayMode::update(float elapsed) {
 				player.insertTriangle(coords.first, coords.second, t);
 			}
 		}
+	}
+
+	// collision with bullets
+	{
+		std::vector<int> toErase_bullet;
+		std::vector<std::pair<int, int>> toErase_player;
+		for (int i = 0; i < (int)bullet.size(); i++) {
+			glm::vec2 bulletpos = bullet[i];
+			for (auto& k : player.triangles) {
+				std::pair<int,int> coords = k.first;
+				std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
+				
+				// is foodpos inside the triangle?
+				if (GeoHelpers::pointInTriangle(bulletpos, corners[0], corners[1], corners[2])) {
+					toErase_bullet.push_back(i);
+					toErase_player.push_back(coords);
+					break;
+				}
+			}
+		}
+		for (int i = (int)toErase_bullet.size()-1; i >= 0; i--) {
+			bullet.erase(bullet.begin() + toErase_bullet[i]);
+		}
+		player.eraseTriangle(toErase_player);
 	}
 
 	//reset button press counters:
@@ -239,6 +271,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
 					glm::u8vec4(0xff, 0xff, 0x00, 0xff)
+				);
+			}
+		}
+	}
+
+	{ // draw bullets
+		for (auto& k : bullet) {
+			float rad = 0.1f;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				lines.draw(
+					glm::vec3(k + rad * circle[a], 0.0f),
+					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(0x00, 0xff, 0xff, 0xff)
 				);
 			}
 		}
