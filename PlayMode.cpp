@@ -12,6 +12,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <random>
+#include <cmath>
 
 #include "GeoHelpers.hpp"
 
@@ -26,7 +27,7 @@ PlayMode::PlayMode() {
 	player = TriangleCluster();
 	player.insertTriangle(0, 0, Triangle());
 
-	for (int i = 0; i < 500; i++) {
+	for (int i = 0; i < 50; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
 		food.push_back(pos);
 	}
@@ -56,6 +57,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_LEFT) {
+			rot_left.downs += 1;
+			rot_left.pressed = true;
+		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+			rot_right.downs += 1;
+			rot_right.pressed = true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -69,6 +76,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_LEFT) {
+			rot_left.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+			rot_right.pressed = false;
 			return true;
 		}
 	}
@@ -91,6 +104,15 @@ void PlayMode::update(float elapsed) {
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
 		player.pos += move;
+
+		if (rot_left.pressed) {
+			player.angle -= 120.0f * elapsed;
+			player.angle = std::fmodf(player.angle + 360.0f, 360.0f);
+		}
+		if (rot_right.pressed) {
+			player.angle += 120.0f * elapsed;
+			player.angle = std::fmodf(player.angle + 360.0f, 360.0f);
+		}
 	}
 
 	// eat food = grow a triangle
@@ -121,9 +143,17 @@ void PlayMode::update(float elapsed) {
 							toInsert.push_back({{coords.first-1, coords.second+1}, Triangle()});
 						}
 					} else if (minDist == d2) {
-						toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
+						if (coords.first%2 == 0) {
+							toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
+						} else {
+							toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
+						}
 					} else {
-						toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
+						if (coords.first%2 == 0) {
+							toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
+						} else {
+							toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
+						}
 					}
 					break;
 				}

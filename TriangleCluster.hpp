@@ -5,6 +5,14 @@
 #include <vector>
 
 struct Triangle {
+    /**
+     * Triangle winding
+     *      2           1   --   0
+     *    /    \          \     /
+     *   0  --  1            2
+     */
+
+
     glm::uvec4 color; // temporary, for testing purposes;
     // in reality, we should store properties like whether or not there's a turret, hp, etc.
 
@@ -18,6 +26,7 @@ struct TriangleCluster {
     // even x means right-side-up, odd means upside-down
 
     glm::vec2 pos; // position of middle of (0,0) triangle
+    float angle; // angle of rotation of the whole cluster
     float size; // side length of one triangle
     std::map<std::pair<int, int>, Triangle> triangles; // coordinates -> Triangle
 
