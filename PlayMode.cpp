@@ -25,8 +25,8 @@
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
 PlayMode::PlayMode() {
-	player = TriangleCluster();
-	player.insertTriangle(0, 0, Triangle());
+	player = Player();
+	player.addTriangle(0, 0, PlayerTriangle());
 
 	for (int i = 0; i < 50; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
@@ -111,27 +111,26 @@ void PlayMode::update(float elapsed) {
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
-		player.pos += move;
+		player.cluster.pos += move;
 
 		if (rot_left.pressed) {
-			player.angle -= 120.0f * elapsed;
-			player.angle = std::fmodf(player.angle + 360.0f, 360.0f);
+			player.cluster.angle -= 120.0f * elapsed;
+			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
 		}
 		if (rot_right.pressed) {
-			player.angle += 120.0f * elapsed;
-			player.angle = std::fmodf(player.angle + 360.0f, 360.0f);
+			player.cluster.angle += 120.0f * elapsed;
+			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
 		}
 	}
  
 	// eat food = grow a triangle
 	{
 		std::vector<int> toErase;
-		std::vector<std::pair<std::pair<int, int>, Triangle>> toInsert;
+		std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
 		for (int i = 0; i < (int)food.size(); i++) {
 			glm::vec2 foodpos = food[i];
-			for (auto& k : player.triangles) {
-				std::pair<int,int> coords = k.first;
-				std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
+			for (std::pair<int,int> coords : player.cluster.triangles) {
+				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 				
 				// is foodpos inside the triangle?
 				if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
@@ -146,21 +145,21 @@ void PlayMode::update(float elapsed) {
 
 					if (minDist == d1) {
 						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first+1, coords.second-1}, Triangle()});
+							toInsert.push_back({{coords.first+1, coords.second-1}, PlayerTriangle()});
 						} else {
-							toInsert.push_back({{coords.first-1, coords.second+1}, Triangle()});
+							toInsert.push_back({{coords.first-1, coords.second+1}, PlayerTriangle()});
 						}
 					} else if (minDist == d2) {
 						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
+							toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
 						} else {
-							toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
+							toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
 						}
 					} else {
 						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first-1, coords.second}, Triangle()});
+							toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
 						} else {
-							toInsert.push_back({{coords.first+1, coords.second}, Triangle()});
+							toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
 						}
 					}
 					break;
@@ -172,9 +171,9 @@ void PlayMode::update(float elapsed) {
 		}
 		for (auto k : toInsert) {
 			std::pair<int,int> coords = k.first;
-			Triangle t = k.second;
-			if (!player.triangles.count({coords.first, coords.second})) {
-				player.insertTriangle(coords.first, coords.second, t);
+			PlayerTriangle t = k.second;
+			if (!player.cluster.triangles.count({coords.first, coords.second})) {
+				player.addTriangle(coords.first, coords.second, t);
 			}
 		}
 	}
@@ -185,9 +184,8 @@ void PlayMode::update(float elapsed) {
 		std::vector<std::pair<int, int>> toErase_player;
 		for (int i = 0; i < (int)bullet.size(); i++) {
 			glm::vec2 bulletpos = bullet[i];
-			for (auto& k : player.triangles) {
-				std::pair<int,int> coords = k.first;
-				std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
+			for (std::pair<int,int> coords : player.cluster.triangles) {
+				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 				
 				// is foodpos inside the triangle?
 				if (GeoHelpers::pointInTriangle(bulletpos, corners[0], corners[1], corners[2])) {
@@ -200,7 +198,7 @@ void PlayMode::update(float elapsed) {
 		for (int i = (int)toErase_bullet.size()-1; i >= 0; i--) {
 			bullet.erase(bullet.begin() + toErase_bullet[i]);
 		}
-		player.eraseTriangle(toErase_player);
+		player.destroyTriangles(toErase_player);
 	}
 
 	//reset button press counters:
@@ -240,11 +238,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	DrawLines lines(world_to_clip);
 
 	{ // draw the player
-		for (auto& k : player.triangles) {
-			std::pair<int,int> coords = k.first;
-			Triangle t = k.second;
+		for (std::pair<int,int> coords : player.cluster.triangles) {
+			std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+			PlayerTriangle t = player.triangle_info[coords];
 
-			std::vector<glm::vec2> corners = player.getTriangleCorners(coords.first, coords.second);
 			lines.draw(
 				glm::vec3(corners[0], 0.f),
 				glm::vec3(corners[1], 0.f),

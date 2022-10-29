@@ -11,20 +11,12 @@ TriangleCluster::TriangleCluster() {
     size = 1;
 }
 
-void TriangleCluster::insertTriangle(int i, int j, Triangle t) {
-    assert(!triangles.count({i,j}));
-    triangles[{i,j}] = t;
+void TriangleCluster::insertTriangle(int i, int j) {
+    assert(!triangles.count({i, j}));
+    triangles.insert({i, j});
 }
 
-void TriangleCluster::eraseTriangle(std::vector<std::pair<int, int>>& coords)
-{
-    for (auto &coord : coords) {
-        this->eraseTriangleSingle(coord.first, coord.second);
-    }
-    this->DFS();
-}
-
-void TriangleCluster::eraseTriangleSingle(int i, int j) {
+void TriangleCluster::eraseTriangle(int i, int j) {
     assert(triangles.count({i,j}));
     if (i != 0 || j != 0) {
         triangles.erase({i,j});
@@ -61,38 +53,4 @@ std::vector<glm::vec2> TriangleCluster::getTriangleCorners(int i, int j) {
         res.push_back(center + glm::rotate(glm::vec2(0.f, -len2), glm::radians(this->angle)));
     }
     return res;
-}
-
-void TriangleCluster::DFS() {
-    this->DFS_visit(0, 0);
-    for (auto it = this->triangles.begin(); it != this->triangles.end(); ) {
-        Triangle tri = it->second;
-        if (!tri.visited) {
-            it = this->triangles.erase(it);
-        } else {
-            ++it;
-        }
-    }
-    for (auto &p : this->triangles) {
-        p.second.visited = false;
-    }
-}
-
-void TriangleCluster::DFS_visit(int i, int j) {
-    if (this->triangles.find(std::make_pair(i, j)) == this->triangles.end()) {
-        return;
-    } else if (this->triangles[std::make_pair(i, j)].visited) {
-        return;
-    }
-
-    this->triangles[std::make_pair(i, j)].visited = true;
-    if (i % 2 == 0) {
-        this->DFS_visit(i + 1, j);
-        this->DFS_visit(i + 1, j - 1);
-        this->DFS_visit(i - 1, j);
-    } else {
-        this->DFS_visit(i + 1, j);
-        this->DFS_visit(i - 1, j + 1);
-        this->DFS_visit(i - 1, j);
-    }
 }

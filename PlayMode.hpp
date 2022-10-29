@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Mode.hpp"
 
 #include "Scene.hpp"
@@ -12,6 +14,7 @@
 #include <SDL.h>
 
 #include "TriangleCluster.hpp"
+#include "Player.hpp"
 
 #include <random>
 
@@ -37,7 +40,7 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up, rot_left, rot_right;
 
-	TriangleCluster player;
+	Player player;
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> bullet;

@@ -160,7 +160,8 @@ const common_names = [
 	maek.CPP('GL.cpp'),
 	maek.CPP('Load.cpp'),
 	maek.CPP('TriangleCluster.cpp'),
-	maek.CPP('GeoHelpers.cpp')
+	maek.CPP('GeoHelpers.cpp'),
+	maek.CPP('Player.cpp')
 ];
 
 const show_meshes_names = [
