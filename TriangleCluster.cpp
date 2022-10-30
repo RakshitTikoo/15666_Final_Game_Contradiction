@@ -17,7 +17,7 @@ void TriangleCluster::insertTriangle(int i, int j) {
 }
 
 void TriangleCluster::eraseTriangle(int i, int j) {
-    assert(triangles.count({i,j}));
+    //assert(triangles.count({i,j}));
     if (i != 0 || j != 0) {
         triangles.erase({i,j});
     }

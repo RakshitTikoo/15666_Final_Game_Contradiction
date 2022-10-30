@@ -354,7 +354,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	{ // draw enemys
 		for (auto& k : enemy) {
-			float rad = 0.1f;
+			float rad = 0.25f;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
