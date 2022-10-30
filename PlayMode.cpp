@@ -24,21 +24,49 @@
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
+
+
+
+
+
+
+Load< Sound::Sample > Main_Music(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("Main_Music.opus"));
+});
+
+
+void PlayMode::player_move(glm::vec2 move_amt){
+	// Move everything by that negative amount to simulate player movement
+	for (int i = 0; i < (int)food.size(); i++) {
+			food[i] -= move_amt;
+	}
+	for (int i = 0; i < (int)enemy.size(); i++) {
+			enemy[i] -= move_amt;
+	}
+
+}
+
+
 PlayMode::PlayMode() {
 	player = Player();
 	player.addTriangle(0, 0, PlayerTriangle());
 
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < food_cnt; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
 		food.push_back(pos);
 	}
 
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < enemy_cnt; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
-		bullet.push_back(pos);
+		enemy.push_back(pos);
 	}
 
 	std::cout << "Initialize successful\n"; 
+	
+	// Music Assets
+	MainLoop = Sound::loop(*Main_Music, main_volume, 0.0f);
+
+	// Define level bounds
 }
 
 PlayMode::~PlayMode() {
@@ -46,10 +74,7 @@ PlayMode::~PlayMode() {
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_a) {
+		if (evt.key.keysym.sym == SDLK_a) {
 			left.downs += 1;
 			left.pressed = true;
 			return true;
@@ -98,10 +123,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-	//player movement:
+	// ===================
+	// player movement
+	// ===================
 	{
 		//combine inputs into a move:
-		constexpr float PlayerSpeed = 3.0f;
+		//constexpr float PlayerSpeed = 3.0f;
 		glm::vec2 move = glm::vec2(0.0f);
 		if (left.pressed && !right.pressed) move.x =-1.0f;
 		if (!left.pressed && right.pressed) move.x = 1.0f;
@@ -109,21 +136,35 @@ void PlayMode::update(float elapsed) {
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 
 		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
+		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * elapsed;
 
-		player.cluster.pos += move;
+		player_move(player_speed*move);
+		//player.cluster.pos += player_speed * move;
 
 		if (rot_left.pressed) {
-			player.cluster.angle -= 120.0f * elapsed;
+			player.cluster.angle -= player_rot * elapsed;
 			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
 		}
 		if (rot_right.pressed) {
-			player.cluster.angle += 120.0f * elapsed;
+			player.cluster.angle += player_rot * elapsed;
 			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
 		}
 	}
+
+
+	// ===============
+	// enemy movement
+	// ===============
+	for (int i = 0; i < (int)enemy.size(); i++) {
+			glm::vec2 dir = player.cluster.pos - enemy[i];
+			dir = dir/glm::length(dir);
+			enemy[i] += dir*elapsed*enemy_speed;
+	}
+	
  
+	// ==============================
 	// eat food = grow a triangle
+	// ==============================
 	{
 		std::vector<int> toErase;
 		std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
@@ -178,25 +219,27 @@ void PlayMode::update(float elapsed) {
 		}
 	}
 
-	// collision with bullets
+	// ======================
+	// collision with enemys
+	// ======================
 	{
-		std::vector<int> toErase_bullet;
+		std::vector<int> toErase_enemy;
 		std::vector<std::pair<int, int>> toErase_player;
-		for (int i = 0; i < (int)bullet.size(); i++) {
-			glm::vec2 bulletpos = bullet[i];
+		for (int i = 0; i < (int)enemy.size(); i++) {
+			glm::vec2 enemypos = enemy[i];
 			for (std::pair<int,int> coords : player.cluster.triangles) {
 				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 				
 				// is foodpos inside the triangle?
-				if (GeoHelpers::pointInTriangle(bulletpos, corners[0], corners[1], corners[2])) {
-					toErase_bullet.push_back(i);
+				if (GeoHelpers::pointInTriangle(enemypos, corners[0], corners[1], corners[2])) {
+					toErase_enemy.push_back(i);
 					toErase_player.push_back(coords);
 					break;
 				}
 			}
 		}
-		for (int i = (int)toErase_bullet.size()-1; i >= 0; i--) {
-			bullet.erase(bullet.begin() + toErase_bullet[i]);
+		for (int i = (int)toErase_enemy.size()-1; i >= 0; i--) {
+			enemy.erase(enemy.begin() + toErase_enemy[i]);
 		}
 		player.destroyTriangles(toErase_player);
 	}
@@ -267,20 +310,20 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0xff, 0xff, 0x00, 0xff)
+					glm::u8vec4(0x00, 0xff, 0x00, 0xff)
 				);
 			}
 		}
 	}
 
-	{ // draw bullets
-		for (auto& k : bullet) {
+	{ // draw enemys
+		for (auto& k : enemy) {
 			float rad = 0.1f;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0x00, 0xff, 0xff, 0xff)
+					glm::u8vec4(0xff, 0x00, 0x00, 0xff)
 				);
 			}
 		}

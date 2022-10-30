@@ -4,7 +4,7 @@
 
 #include "Scene.hpp"
 #include "WalkMesh.hpp"
-
+#include "Sound.hpp"
 #include <glm/glm.hpp>
 
 #include <vector>
@@ -33,6 +33,8 @@ struct PlayMode : Mode {
 		return mt() / mx;
 	}
 
+	void player_move(glm::vec2 move_amt);
+
 	//----- game state -----
 	//input tracking:
 	struct Button {
@@ -42,6 +44,19 @@ struct PlayMode : Mode {
 
 	Player player;
 
+	float player_speed = 5.0f;
+	float player_rot = 300.0f;
+
+	float enemy_speed = 2.0f;
+
+
+	int enemy_cnt = 10;
+	int food_cnt = 20;
+
+	// Music Samples
+	std::shared_ptr< Sound::PlayingSample > MainLoop;
+	float main_volume = 1.0f;
+
 	std::vector<glm::vec2> food; // temporary
-	std::vector<glm::vec2> bullet;
+	std::vector<glm::vec2> enemy;
 };
