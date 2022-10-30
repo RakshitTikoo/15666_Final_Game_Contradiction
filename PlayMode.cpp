@@ -29,8 +29,17 @@ GLuint gl_compile_program(std::string const &vertex_shader_source,std::string co
 
 
 
-
+// Music Assets
 Load< Sound::Sample > Main_Music(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("Main_Music.opus"));
+});
+Load< Sound::Sample > Player_Hit(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("player_hit.opus"));
+});
+Load< Sound::Sample > Player_Grow(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("player_grow.opus"));
+});
+Load< Sound::Sample > Player_Destroyed(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("Main_Music.opus"));
 });
 
@@ -63,10 +72,9 @@ PlayMode::PlayMode() {
 
 	std::cout << "Initialize successful\n"; 
 	
-	// Music Assets
+	
 	MainLoop = Sound::loop(*Main_Music, main_volume, 0.0f);
 
-	// Define level bounds
 }
 
 PlayMode::~PlayMode() {
@@ -176,7 +184,8 @@ void PlayMode::update(float elapsed) {
 				// is foodpos inside the triangle?
 				if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
 					toErase.push_back(i);
-
+					// play sound
+					Sound::play(*Player_Grow, sound_effect_volume, 0.0f);
 					// add a new triangle to the nearest side
 					float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
 					float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
@@ -230,8 +239,11 @@ void PlayMode::update(float elapsed) {
 			for (std::pair<int,int> coords : player.cluster.triangles) {
 				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 				
-				// is foodpos inside the triangle?
+				// is enemy inside the triangle?
 				if (GeoHelpers::pointInTriangle(enemypos, corners[0], corners[1], corners[2])) {
+					// play sound
+					Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
+
 					toErase_enemy.push_back(i);
 					toErase_player.push_back(coords);
 					break;
@@ -243,6 +255,30 @@ void PlayMode::update(float elapsed) {
 		}
 		player.destroyTriangles(toErase_player);
 	}
+
+
+	//TODO:
+	// =================
+	// game over logic
+	// =================
+
+	// =================
+	// level bounds 
+	// =================
+	
+	// =============================
+	// bullet type triangle spawing
+	// =============================
+
+	// =================
+	// player shooting 
+	// =================
+
+	// =======================
+	// bullet enemy collision 
+	// =======================
+
+	
 
 	//reset button press counters:
 	left.downs = 0;

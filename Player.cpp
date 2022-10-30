@@ -27,7 +27,7 @@ void Player::destroyTriangles(std::vector<std::pair<int,int>> coords) {
 }
 
 void Player::eraseSingleTriangle(int i, int j) {
-    //assert(cluster.triangles.count({i, j}));
+    assert(cluster.triangles.count({i, j}));
     cluster.eraseTriangle(i, j);
     triangle_info.erase({i, j});
 }

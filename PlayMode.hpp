@@ -55,7 +55,8 @@ struct PlayMode : Mode {
 
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;
-	float main_volume = 1.0f;
+	float main_volume = 0.5f;
+	float sound_effect_volume = 1.0f;
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> enemy;
