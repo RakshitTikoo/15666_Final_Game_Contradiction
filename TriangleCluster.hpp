@@ -12,7 +12,7 @@ struct TriangleCluster {
     float angle; // angle of rotation of the whole cluster
     float size; // side length of one triangle
     std::set<std::pair<int, int>> triangles; // coordinates -> Triangle
-
+    //std::set<uint8_t> type; // 0 - basic , 1 - shooter_1, 2 - defence, 3 - shooter_2 , 4 - bomb/etc
     TriangleCluster();
 
     void insertTriangle(int i, int j);

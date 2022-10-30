@@ -59,6 +59,7 @@ void PlayMode::player_move(glm::vec2 move_amt){
 PlayMode::PlayMode() {
 	player = Player();
 	player.addTriangle(0, 0, PlayerTriangle());
+	//player.cluster
 
 	for (int i = 0; i < food_cnt; i++) {
 		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
@@ -258,6 +259,10 @@ void PlayMode::update(float elapsed) {
 
 
 	//TODO:
+	// ==================================================
+	// Spawn small amount of food randomly in play area
+	// ==================================================
+
 	// =================
 	// game over logic
 	// =================
