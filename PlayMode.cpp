@@ -99,10 +99,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_LEFT) {
+		} else if (evt.key.keysym.sym == SDLK_e) {
 			rot_left.downs += 1;
 			rot_left.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+		} else if (evt.key.keysym.sym == SDLK_q) {
 			rot_right.downs += 1;
 			rot_right.pressed = true;
 		}
@@ -119,10 +119,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_LEFT) {
+		} else if (evt.key.keysym.sym == SDLK_e) {
 			rot_left.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+		} else if (evt.key.keysym.sym == SDLK_q) {
 			rot_right.pressed = false;
 			return true;
 		}
