@@ -59,7 +59,7 @@ struct PlayMode : Mode {
 	int enemy_cnt = 10;
 	int food_cnt = 20;
 
-
+	int triangle_type[10] = {1,1,1,1,1,1,2,2,2,2}; // temp, // 0 - basic , 1 - shooter
 
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;

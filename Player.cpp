@@ -8,9 +8,10 @@ Player::Player() {
     cluster = TriangleCluster();
 }
 
-void Player::addTriangle(int i, int j, PlayerTriangle t) {
+void Player::addTriangle(int i, int j, PlayerTriangle t, int type) {
     assert(!cluster.triangles.count({i, j}));
     cluster.insertTriangle(i, j);
+    cluster.insertTriangleType(i, j, type);
     triangle_info[{i,j}] = t;
 }
 

@@ -58,7 +58,7 @@ void PlayMode::player_move(glm::vec2 move_amt){
 
 PlayMode::PlayMode() {
 	player = Player();
-	player.addTriangle(0, 0, PlayerTriangle());
+	player.addTriangle(0, 0, PlayerTriangle(), 0);
 	//player.cluster
 
 	for (int i = 0; i < food_cnt; i++) {
@@ -224,7 +224,8 @@ void PlayMode::update(float elapsed) {
 			std::pair<int,int> coords = k.first;
 			PlayerTriangle t = k.second;
 			if (!player.cluster.triangles.count({coords.first, coords.second})) {
-				player.addTriangle(coords.first, coords.second, t);
+				int rand_type = std::rand() % 10;
+				player.addTriangle(coords.first, coords.second, t, triangle_type[rand_type]);
 			}
 		}
 	}
@@ -329,17 +330,17 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			lines.draw(
 				glm::vec3(corners[0], 0.f),
 				glm::vec3(corners[1], 0.f),
-				t.color
+				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
 			);
 			lines.draw(
 				glm::vec3(corners[1], 0.f),
 				glm::vec3(corners[2], 0.f),
-				t.color
+				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
 			);
 			lines.draw(
 				glm::vec3(corners[2], 0.f),
 				glm::vec3(corners[0], 0.f),
-				t.color
+				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
 			);
 		}
 	}

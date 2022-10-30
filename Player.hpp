@@ -5,7 +5,13 @@
 #include <glm/glm.hpp>
 
 struct PlayerTriangle {
-    glm::uvec4 color = glm::uvec4(255.f, 255.f, 0.f, 1.f);
+    glm::uvec4 color[4] = {
+        glm::uvec4(255.f, 255.f, 0.f, 255.f),  // core color
+        glm::uvec4(255.f, 0.f, 255.f, 255.f),  // basic color
+        glm::uvec4(255.f, 0.f, 0.f, 255.f),  // shooter1 color
+        glm::uvec4(0.f, 255.f, 255.f, 255.f)  // defence color
+    }; // 0 - core , 1 - basic, 2 - shooter1, 3 - defence
+
 };
 
 struct Player {
@@ -14,7 +20,7 @@ struct Player {
 
     Player();
 
-    void addTriangle(int i, int j, PlayerTriangle t);
+    void addTriangle(int i, int j, PlayerTriangle t, int type);
     void destroyTriangle(int i, int j);
     void destroyTriangles(std::vector<std::pair<int,int>> coords);
 

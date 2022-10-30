@@ -16,11 +16,17 @@ void TriangleCluster::insertTriangle(int i, int j) {
     triangles.insert({i, j});
 }
 
+void TriangleCluster::insertTriangleType(int i, int j, int type) {
+    //assert(!triangles.count({i, j}));
+    triangle_type.insert(std::pair<std::pair<int, int> ,int>({i, j}, type));
+}
+
 void TriangleCluster::eraseTriangle(int i, int j) {
     //assert(triangles.count({i,j}));
-    if (i != 0 || j != 0) {
+    //if (i != 0 || j != 0) {
         triangles.erase({i,j});
-    }
+        triangle_type.erase({i, j});
+    //}
 }
 
 glm::vec2 TriangleCluster::getTrianglePosition(int i, int j) {
