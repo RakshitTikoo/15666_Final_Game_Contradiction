@@ -27,6 +27,8 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
+	void init(int state);
+
 	std::mt19937 mt; //rng stuff
 	float rand01() {
 		static float mx = (float)mt.max();
@@ -40,38 +42,48 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up, rot_left, rot_right, mouse;
+	} left, right, down, up, rot_left, rot_right, mouse, space;
 
 	Player player;
 
 
-	
+
 	// Game Control Values
-	glm::vec2 level_bound_max = glm::vec2(50.0f, 50.0f);
-	glm::vec2 level_bound_min = glm::vec2(-50.0f, -50.0f);
+	int begin_game;
+	
+	glm::vec2 level_bound_max;
+	glm::vec2 level_bound_min;
 
-	float player_speed = 5.0f;
-	float player_rot = 300.0f;
-	float bullet_speed = 15.0f;
+	float player_speed;
+	float player_rot;
+	float bullet_speed;
 
-	float bullet_cooldown_cnt = 10.0f;
-	float bullet_cooldown = 10.0f;
+	float bullet_cooldown_cnt;
+	float bullet_cooldown;
 
-	float enemy_speed = 3.0f;
+	float enemy_speed;
 
-	int enemy_cnt = 50;
-	int food_cnt = 500;
+	int enemy_cnt;
+	int food_cnt;
 
-	float rad_basic_enemy = 0.25f;
+	float rad_basic_enemy;
+
+	uint32_t score;
 
 	glm::vec2 mouse_loc;
 
+	std::string msg;
 	int triangle_type[10] = {1,1,1,1,1,1,2,2,2,2}; // temp, // 0 - basic , 1 - shooter
+
+	
+
 
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;
-	float main_volume = 0.0f;
-	float sound_effect_volume = 0.0f;
+	float main_volume;
+	float sound_effect_volume;
+
+
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> enemy;

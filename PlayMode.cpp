@@ -64,10 +64,43 @@ void PlayMode::player_move(glm::vec2 move_amt){
 }
 
 
-PlayMode::PlayMode() {
-	player = Player();
+void PlayMode::init(int state){
+
+	main_volume = 0.0f;
+	sound_effect_volume = 0.0f;
+	level_bound_max = glm::vec2(50.0f, 50.0f);
+	level_bound_min = glm::vec2(-50.0f, -50.0f);
+
+	player_speed = 5.0f;
+	player_rot = 300.0f;
+	bullet_speed = 15.0f;
+
+	bullet_cooldown_cnt = 10.0f;
+	bullet_cooldown = 10.0f;
+
+	enemy_speed = 4.0f;
+
+	enemy_cnt = 50;
+	food_cnt = 500;
+
+	rad_basic_enemy = 0.25f;
+
+	score = 0;
+
+	begin_game = 0;
+
+	player.cluster.angle *= 0.0f;
+
+	if(state == 0) {
+		player = Player();
+		msg = "Press Space to Begin";
+	}
 	player.addTriangle(0, 0, PlayerTriangle(), 0);
-	//player.cluster
+
+	food.clear();
+	enemy.clear();
+	player_bullet_pos.clear();
+	player_bullet_speed.clear();
 
 	for (int i = 0; i < food_cnt; i++) {
 		float signx;
@@ -92,8 +125,14 @@ PlayMode::PlayMode() {
 		enemy.push_back(pos);
 	}
 
-	std::cout << "Initialize successful\n"; 
+
+
+}
+
+PlayMode::PlayMode() {
 	
+	init(0);
+	std::cout << "Initialize successful\n"; 
 	
 	MainLoop = Sound::loop(*Main_Music, main_volume, 0.0f);
 
@@ -126,6 +165,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_q) {
 			rot_right.downs += 1;
 			rot_right.pressed = true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.downs += 1;
+			space.pressed = true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -145,6 +187,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_q) {
 			rot_right.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.pressed = false;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -167,241 +212,246 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-	// ===================
-	// player movement
-	// ===================
-	{
-		//combine inputs into a move:
-		//constexpr float PlayerSpeed = 3.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
-
-
-		// =================
-		// level bounds 
-		// =================
-	
-		// Remove Bullet
-		for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-				if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
-					player_bullet_pos.erase(player_bullet_pos.begin() + i);
-					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-				}
-				else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
-					player_bullet_pos.erase(player_bullet_pos.begin() + i);
-					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-				}
-		}
-
-		// If Player at level_bound
-
-
-
-		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * elapsed;
-
-		glm::vec2 min_check = level_bound_min - player_speed*move;
-		glm::vec2 max_check = level_bound_max - player_speed*move;
-		if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
+	if(begin_game == 0) {
+		if(space.pressed) {begin_game = 1; msg = "";}
+	}
+	else {
+		// ===================
+		// player movement
+		// ===================
 		{
-			if(min_check.x >= 0.0f || max_check.x <= 0.0f) move.x = 0.0f;
-			if(min_check.y >= 0.0f || max_check.y <= 0.0f) move.y = 0.0f;
-		}
-
-		//printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
-
-		player_move(player_speed*move);
-		//player.cluster.pos += player_speed * move;
-
-		if (rot_left.pressed) {
-			player.cluster.angle -= player_rot * elapsed;
-			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
-		}
-		if (rot_right.pressed) {
-			player.cluster.angle += player_rot * elapsed;
-			player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
-		}
-	}
+			//combine inputs into a move:
+			//constexpr float PlayerSpeed = 3.0f;
+			glm::vec2 move = glm::vec2(0.0f);
+			if (left.pressed && !right.pressed) move.x =-1.0f;
+			if (!left.pressed && right.pressed) move.x = 1.0f;
+			if (down.pressed && !up.pressed) move.y =-1.0f;
+			if (!down.pressed && up.pressed) move.y = 1.0f;
 
 
-	// ===============
-	// enemy movement
-	// ===============
-	for (int i = 0; i < (int)enemy.size(); i++) {
-			glm::vec2 dir = player.cluster.pos - enemy[i];
-			dir = dir/glm::length(dir);
-			enemy[i] += dir*elapsed*enemy_speed;
-	}
-	
- 
-	// ==============================
-	// eat food = grow a triangle
-	// ==============================
-	{
-		std::vector<int> toErase;
-		std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
-		for (int i = 0; i < (int)food.size(); i++) {
-			glm::vec2 foodpos = food[i];
-			for (std::pair<int,int> coords : player.cluster.triangles) {
-				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-				
-				// is foodpos inside the triangle?
-				if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
-					toErase.push_back(i);
-					// play sound
-					Sound::play(*Player_Grow, sound_effect_volume, 0.0f);
-					// add a new triangle to the nearest side
-					float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
-					float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
-					float d3 = GeoHelpers::pointToSegmentDistance(foodpos, corners[2], corners[0]);
+			// =================
+			// level bounds 
+			// =================
 
-					float minDist = fmin(d1, fmin(d2, d3));
-
-					if (minDist == d1) {
-						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first+1, coords.second-1}, PlayerTriangle()});
-						} else {
-							toInsert.push_back({{coords.first-1, coords.second+1}, PlayerTriangle()});
-						}
-					} else if (minDist == d2) {
-						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
-						} else {
-							toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
-						}
-					} else {
-						if (coords.first%2 == 0) {
-							toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
-						} else {
-							toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
-						}
+			// Remove Bullet
+			for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
+					if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
+						player_bullet_pos.erase(player_bullet_pos.begin() + i);
+						player_bullet_speed.erase(player_bullet_speed.begin() + i);
 					}
-					break;
-				}
+					else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
+						player_bullet_pos.erase(player_bullet_pos.begin() + i);
+						player_bullet_speed.erase(player_bullet_speed.begin() + i);
+					}
 			}
-		}
-		for (int i = (int)toErase.size()-1; i >= 0; i--) {
-			food.erase(food.begin() + toErase[i]);
-		}
-		for (auto k : toInsert) {
-			std::pair<int,int> coords = k.first;
-			PlayerTriangle t = k.second;
-			if (!player.cluster.triangles.count({coords.first, coords.second})) {
-				int rand_type = std::rand() % 10;
-				player.addTriangle(coords.first, coords.second, t, triangle_type[rand_type]);
-			}
-		}
-	}
 
-	// ======================
-	// collision with enemys
-	// ======================
-	{
-		std::vector<int> toErase_enemy;
-		std::vector<std::pair<int, int>> toErase_player;
+			// If Player at level_bound
+
+
+
+			//make it so that moving diagonally doesn't go faster:
+			if (move != glm::vec2(0.0f)) move = glm::normalize(move) * elapsed;
+
+			glm::vec2 min_check = level_bound_min - player_speed*move;
+			glm::vec2 max_check = level_bound_max - player_speed*move;
+			if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
+			{
+				if(min_check.x >= 0.0f || max_check.x <= 0.0f) move.x = 0.0f;
+				if(min_check.y >= 0.0f || max_check.y <= 0.0f) move.y = 0.0f;
+			}
+
+			//printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
+
+			player_move(player_speed*move);
+			//player.cluster.pos += player_speed * move;
+
+			if (rot_left.pressed) {
+				player.cluster.angle -= player_rot * elapsed;
+				player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
+			}
+			if (rot_right.pressed) {
+				player.cluster.angle += player_rot * elapsed;
+				player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
+			}
+		}
+
+
+		// ===============
+		// enemy movement
+		// ===============
 		for (int i = 0; i < (int)enemy.size(); i++) {
-			glm::vec2 enemypos = enemy[i];
-			for (std::pair<int,int> coords : player.cluster.triangles) {
-				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-				
-				// is enemy inside the triangle?
-				if (GeoHelpers::pointInTriangle(enemypos, corners[0], corners[1], corners[2])) {
-					// play sound
-					Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
+				glm::vec2 dir = player.cluster.pos - enemy[i];
+				dir = dir/glm::length(dir);
+				enemy[i] += dir*elapsed*enemy_speed;
+		}
 
-					toErase_enemy.push_back(i);
-					toErase_player.push_back(coords);
+	
+		// ==============================
+		// eat food = grow a triangle
+		// ==============================
+		{
+			std::vector<int> toErase;
+			std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
+			for (int i = 0; i < (int)food.size(); i++) {
+				glm::vec2 foodpos = food[i];
+				for (std::pair<int,int> coords : player.cluster.triangles) {
+					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+
+					// is foodpos inside the triangle?
+					if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
+						toErase.push_back(i);
+						// play sound
+						Sound::play(*Player_Grow, sound_effect_volume, 0.0f);
+						score += 1;
+						// add a new triangle to the nearest side
+						float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
+						float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
+						float d3 = GeoHelpers::pointToSegmentDistance(foodpos, corners[2], corners[0]);
+
+						float minDist = fmin(d1, fmin(d2, d3));
+
+						if (minDist == d1) {
+							if (coords.first%2 == 0) {
+								toInsert.push_back({{coords.first+1, coords.second-1}, PlayerTriangle()});
+							} else {
+								toInsert.push_back({{coords.first-1, coords.second+1}, PlayerTriangle()});
+							}
+						} else if (minDist == d2) {
+							if (coords.first%2 == 0) {
+								toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
+							} else {
+								toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
+							}
+						} else {
+							if (coords.first%2 == 0) {
+								toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
+							} else {
+								toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
+							}
+						}
+						break;
+					}
+				}
+			}
+			for (int i = (int)toErase.size()-1; i >= 0; i--) {
+				food.erase(food.begin() + toErase[i]);
+			}
+			for (auto k : toInsert) {
+				std::pair<int,int> coords = k.first;
+				PlayerTriangle t = k.second;
+				if (!player.cluster.triangles.count({coords.first, coords.second})) {
+					int rand_type = std::rand() % 10;
+					player.addTriangle(coords.first, coords.second, t, triangle_type[rand_type]);
+				}
+			}
+		}
+
+		// ======================
+		// collision with enemys
+		// ======================
+		{
+			std::vector<int> toErase_enemy;
+			std::vector<std::pair<int, int>> toErase_player;
+			for (int i = 0; i < (int)enemy.size(); i++) {
+				glm::vec2 enemypos = enemy[i];
+				for (std::pair<int,int> coords : player.cluster.triangles) {
+					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+
+					// is enemy inside the triangle?
+					if (GeoHelpers::pointInTriangle(enemypos, corners[0], corners[1], corners[2])) {
+						// play sound
+						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
+
+						toErase_enemy.push_back(i);
+						toErase_player.push_back(coords);
+						break;
+					}
+				}
+			}
+			for (int i = (int)toErase_enemy.size()-1; i >= 0; i--) {
+				enemy.erase(enemy.begin() + toErase_enemy[i]);
+			}
+			player.destroyTriangles(toErase_player);
+		}
+
+
+		//TODO:
+		// ==================================================
+		// Spawn small amount of food randomly in play area
+		// ==================================================
+		if((int)food.size() <= food_cnt/2) {// 50 % food left
+			for (int i = 0; i < food_cnt - (int)food.size(); i++) {
+				float signx;
+				float signy;
+				if(rand()%2 == 0) signx = 1.0f;
+				else signx = -1.0f;
+				if(rand()%2 == 0) signy = 1.0f;
+				else signy = -1.0f;
+				glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};		
+				food.push_back(pos);
+			}
+		}
+		// =============================================
+		// Spawn new enemies (if 50 % enemies defeated)
+		// =============================================
+		if((int)enemy.size() <= enemy_cnt/2) { // 50% enemies left
+			for (int i = 0; i < enemy_cnt - (int)enemy.size(); i++) {
+				float signx;
+				float signy;
+				if(rand()%2 == 0) signx = 1.0f;
+				else signx = -1.0f;
+				if(rand()%2 == 0) signy = 1.0f;
+				else signy = -1.0f;
+
+				glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
+				enemy.push_back(pos);
+			}
+		}
+
+
+		// =================
+		// game over logic
+		// =================
+		if(player.cluster.triangles.size() == 0) {
+			msg = "Game Over | Score : " + std::to_string(score); 
+			init(1);
+		}
+
+		// =================
+		// player shooting 
+		// =================
+		bullet_cooldown_cnt += 1.0f;
+		if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
+			//printf("Shoot\n");
+			bullet_cooldown_cnt = 0.0f;
+			glm::vec2 dir = mouse_loc - player.cluster.pos;
+			dir = dir/glm::length(dir);
+			player_bullet_pos.push_back(player.cluster.pos);
+			player_bullet_speed.push_back(dir);
+		}
+
+		// Bullet movement
+		for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
+			player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
+		}
+
+
+		// =======================
+		// bullet enemy collision 
+		// =======================
+		for(int i = 0; i < (int)player_bullet_pos.size(); i++){
+			for(int j = 0; j < (int)enemy.size(); j++) {
+				if(GeoHelpers::pointInCircle(player_bullet_pos[i], enemy[j], rad_basic_enemy)) {
+					score += 1;
+					player_bullet_pos.erase(player_bullet_pos.begin() + i);
+					player_bullet_speed.erase(player_bullet_speed.begin() + i);
+					enemy.erase(enemy.begin() + j);
 					break;
 				}
 			}
 		}
-		for (int i = (int)toErase_enemy.size()-1; i >= 0; i--) {
-			enemy.erase(enemy.begin() + toErase_enemy[i]);
-		}
-		player.destroyTriangles(toErase_player);
-	}
-
-
-	//TODO:
-	// ==================================================
-	// Spawn small amount of food randomly in play area
-	// ==================================================
-	if((int)food.size() <= food_cnt/2) {// 50 % food left
-		for (int i = 0; i < food_cnt - (int)food.size(); i++) {
-			float signx;
-			float signy;
-			if(rand()%2 == 0) signx = 1.0f;
-			else signx = -1.0f;
-			if(rand()%2 == 0) signy = 1.0f;
-			else signy = -1.0f;
-			glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};		
-			food.push_back(pos);
-		}
-	}
-	// =============================================
-	// Spawn new enemies (if 50 % enemies defeated)
-	// =============================================
-	if((int)enemy.size() <= enemy_cnt/2) { // 50% enemies left
-		for (int i = 0; i < enemy_cnt - (int)enemy.size(); i++) {
-			float signx;
-			float signy;
-			if(rand()%2 == 0) signx = 1.0f;
-			else signx = -1.0f;
-			if(rand()%2 == 0) signy = 1.0f;
-			else signy = -1.0f;
-
-			glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
-			enemy.push_back(pos);
-		}
-	}
-
-
-	// =================
-	// game over logic
-	// =================
-
-	// =================
-	// game win logic
-	// =================
-
-
-	// =================
-	// player shooting 
-	// =================
-	bullet_cooldown_cnt += 1.0f;
-	if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
-		//printf("Shoot\n");
-		bullet_cooldown_cnt = 0.0f;
-		glm::vec2 dir = mouse_loc - player.cluster.pos;
-		dir = dir/glm::length(dir);
-		player_bullet_pos.push_back(player.cluster.pos);
-		player_bullet_speed.push_back(dir);
-	}
-
-	// Bullet movement
-	for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
-		player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
-	}
-
-
-	// =======================
-	// bullet enemy collision 
-	// =======================
-	for(int i = 0; i < (int)player_bullet_pos.size(); i++){
-		for(int j = 0; j < (int)enemy.size(); j++) {
-			if(GeoHelpers::pointInCircle(player_bullet_pos[i], enemy[j], rad_basic_enemy)) {
-				player_bullet_pos.erase(player_bullet_pos.begin() + i);
-				player_bullet_speed.erase(player_bullet_speed.begin() + i);
-				enemy.erase(enemy.begin() + j);
-				break;
-			}
-		}
-	}
 	
-	
+	}
 
 	//reset button press counters:
 	left.downs = 0;
@@ -409,6 +459,7 @@ void PlayMode::update(float elapsed) {
 	up.downs = 0;
 	down.downs = 0;
 	mouse.downs = 0;
+	space.pressed = 0;
 
 }
 
@@ -528,6 +579,25 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
 			);
 		
+	}
+
+
+	{ // Draw msg
+		float H = 1.5f;
+
+		lines.draw_text(msg, // Main Msg
+		glm::vec3(-4.5f,0.0f,0.0f),
+		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+
+		H = 1.0f;
+
+		lines.draw_text("Score:" + std::to_string(score), // Main Msg
+		glm::vec3(8500.0f/drawable_size.x,4500.0f/drawable_size.y,0.0f),
+		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+
+
 	}
 
 	GL_ERRORS();
