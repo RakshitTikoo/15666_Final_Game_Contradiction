@@ -61,6 +61,10 @@ void PlayMode::player_move(glm::vec2 move_amt){
 			player_bullet_pos[i] -= move_amt;
 	}
 
+	for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
+			player_triangle_bullet_pos[i] -= move_amt;
+	}
+
 	level_bound_max -= move_amt;
 	level_bound_min -= move_amt;
 
@@ -82,10 +86,15 @@ void PlayMode::init(int state){
 	bullet_cooldown_cnt = 10.0f;
 	bullet_cooldown = 10.0f;
 
+	triangle_bullet_speed = 15.0f;
+	triangle_bullet_cooldown_cnt = 40.0f;
+	triangle_bullet_cooldown = 40.0f;
+
+
 	basic_enemy_speed = 4.0f;
 
-	basic_enemy_cnt = 50;
-	food_cnt = 500;
+	basic_enemy_cnt = 75;
+	food_cnt = 300;
 
 	rad_basic_basic_enemy = 0.25f;
 
@@ -105,6 +114,8 @@ void PlayMode::init(int state){
 	basic_enemy.clear();
 	player_bullet_pos.clear();
 	player_bullet_speed.clear();
+	player_triangle_bullet_pos.clear();
+	player_triangle_bullet_speed.clear();
 
 	for (int i = 0; i < food_cnt; i++) {
 		float signx;
@@ -248,6 +259,18 @@ void PlayMode::update(float elapsed) {
 						player_bullet_speed.erase(player_bullet_speed.begin() + i);
 					}
 			}
+
+			for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
+					if (player_triangle_bullet_pos[i].x > level_bound_max.x || player_triangle_bullet_pos[i].x < level_bound_min.x) {
+						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+					}
+					else if (player_triangle_bullet_pos[i].y > level_bound_max.y || player_triangle_bullet_pos[i].y < level_bound_min.y) {
+						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+					}
+			}
+
 
 			// If Player at level_bound
 
@@ -421,23 +444,50 @@ void PlayMode::update(float elapsed) {
 			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
 			init(1);
 		}
+		
+		
+
+
 
 		// =================
 		// player shooting 
 		// =================
+
+		glm::vec2 dir = mouse_loc - player.cluster.pos;
+		dir = dir/glm::length(dir);
+
+		// Basic Bullet
 		bullet_cooldown_cnt += 1.0f;
 		if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
 			Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
 			bullet_cooldown_cnt = 0.0f;
-			glm::vec2 dir = mouse_loc - player.cluster.pos;
-			dir = dir/glm::length(dir);
 			player_bullet_pos.push_back(player.cluster.pos);
 			player_bullet_speed.push_back(dir);
 		}
 
-		// Bullet movement
+		// Basic Bullet movement
 		for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
 			player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
+		}
+
+		// Triangle Bullet
+		triangle_bullet_cooldown_cnt += 1.0f;
+		if(mouse.pressed && triangle_bullet_cooldown_cnt >= triangle_bullet_cooldown) {
+			//Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
+			//printf("Ok1");
+			triangle_bullet_cooldown_cnt = 0.0f;
+			for (std::pair<int,int> coords : player.cluster.triangles) {
+				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+				if (player.cluster.triangle_type[{coords.first, coords.second}] == 2) {// Shooting Triangle 
+					player_triangle_bullet_pos.push_back(player.cluster.getTrianglePosition(coords.first, coords.second));
+					player_triangle_bullet_speed.push_back(dir);
+				}
+			}
+		}
+
+		// Triangle Bullet movement
+		for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
+			player_triangle_bullet_pos[i] += player_triangle_bullet_speed[i]*elapsed*bullet_speed;
 		}
 
 
@@ -455,6 +505,19 @@ void PlayMode::update(float elapsed) {
 				}
 			}
 		}
+
+		for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++){
+			for(int j = 0; j < (int)basic_enemy.size(); j++) {
+				if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
+					score += 1;
+					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+					basic_enemy.erase(basic_enemy.begin() + j);
+					break;
+				}
+			}
+		}
+
 	
 	}
 
@@ -555,10 +618,22 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0xff, 0x00, 0xff, 0xff)
+					glm::u8vec4(255.f, 255.f, 0.f, 255.f)
 				);
 			}
 		}
+
+		for (auto& k : player_triangle_bullet_pos) {
+			float rad = 0.1f;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				lines.draw(
+					glm::vec3(k + rad * circle[a], 0.0f),
+					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(255.f, 0.f, 255.f, 255.f)
+				);
+			}
+		}
+
 	}
 
 	// draw bounds
