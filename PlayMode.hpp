@@ -47,8 +47,8 @@ struct PlayMode : Mode {
 
 	
 	// Game Control Values
-	float level_bound_x = 1000.0f;
-	float level_bound_y = 1000.0f;
+	glm::vec2 level_bound_max = glm::vec2(100.0f, 100.0f);
+	glm::vec2 level_bound_min = glm::vec2(-100.0f, -100.0f);
 
 	float player_speed = 5.0f;
 	float player_rot = 300.0f;
@@ -70,8 +70,8 @@ struct PlayMode : Mode {
 
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;
-	float main_volume = 0.5f;
-	float sound_effect_volume = 1.0f;
+	float main_volume = 0.0f;
+	float sound_effect_volume = 0.0f;
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> enemy;

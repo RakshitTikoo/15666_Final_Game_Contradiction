@@ -57,6 +57,9 @@ void PlayMode::player_move(glm::vec2 move_amt){
 			player_bullet_pos[i] -= move_amt;
 	}
 
+	level_bound_max -= move_amt;
+	level_bound_min -= move_amt;
+
 
 }
 
@@ -163,8 +166,38 @@ void PlayMode::update(float elapsed) {
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 
+
+		// =================
+		// level bounds 
+		// =================
+	
+		// Remove Bullet
+		for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
+				if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
+					player_bullet_pos.erase(player_bullet_pos.begin() + i);
+					player_bullet_speed.erase(player_bullet_speed.begin() + i);
+				}
+				else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
+					player_bullet_pos.erase(player_bullet_pos.begin() + i);
+					player_bullet_speed.erase(player_bullet_speed.begin() + i);
+				}
+		}
+
+		// If Player at level_bound
+
+
+
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * elapsed;
+
+		glm::vec2 min_check = level_bound_min - player_speed*move;
+		glm::vec2 max_check = level_bound_max - player_speed*move;
+		if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
+		{
+			move = move*0.0f;
+		}
+
+		printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
 
 		player_move(player_speed*move);
 		//player.cluster.pos += player_speed * move;
@@ -287,21 +320,7 @@ void PlayMode::update(float elapsed) {
 	// game over logic
 	// =================
 
-	// =================
-	// level bounds 
-	// =================
-	
-	// Remove Bullet
-	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-			if (player_bullet_pos[i].x > level_bound_x || player_bullet_pos[i].x < -1.0f*level_bound_x) {
-				player_bullet_pos.erase(player_bullet_pos.begin() + i);
-				player_bullet_speed.erase(player_bullet_speed.begin() + i);
-			}
-			else if (player_bullet_pos[i].y > level_bound_y || player_bullet_pos[i].y < -1.0f*level_bound_y) {
-				player_bullet_pos.erase(player_bullet_pos.begin() + i);
-				player_bullet_speed.erase(player_bullet_speed.begin() + i);
-			}
-	}
+
 
 	// =============================
 	// bullet type triangle spawing
