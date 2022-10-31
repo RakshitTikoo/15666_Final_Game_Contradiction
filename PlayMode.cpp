@@ -236,7 +236,7 @@ void PlayMode::update(float elapsed) {
 			}
 
 
-			// If Player at level_bound
+			// If player at level_bound
 			glm::vec2 min_check = level_bound_min - move;
 			glm::vec2 max_check = level_bound_max - move;
 			if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
@@ -354,9 +354,11 @@ void PlayMode::update(float elapsed) {
 			for (int i = (int)toErase_basic_enemy.size()-1; i >= 0; i--) {
 				basic_enemy.erase(basic_enemy.begin() + toErase_basic_enemy[i]);
 			}
+			// remove duplicates and destroy
+			std::sort(toErase_player.begin(), toErase_player.end());
+			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
 			player.destroyTriangles(toErase_player);
 		}
-
 
 		// ==================================================
 		// Spawn small amount of food randomly in play area
