@@ -12,11 +12,9 @@ struct TriangleCluster {
     float angle; // angle of rotation of the whole cluster
     float size; // side length of one triangle
     std::set<std::pair<int, int>> triangles; // coordinates -> Triangle
-    std::map<std::pair<int, int> , int> triangle_type; // coords 2 type // 0 - core , 1 - basic, 2 - shooter1, 3 - defence , so on ...
     
     TriangleCluster();
 
-    void insertTriangleType(int i, int j, int type);
     void insertTriangle(int i, int j);
     void eraseTriangle(int i, int j);
 

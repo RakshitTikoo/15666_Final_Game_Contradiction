@@ -4,14 +4,21 @@
 #include <functional>
 #include <vector>
 
+PlayerTriangle::PlayerTriangle() {
+    this->type = 0;
+}
+
+PlayerTriangle::PlayerTriangle(int type) {
+    this->type = type;
+}
+
 Player::Player() {
     cluster = TriangleCluster();
 }
 
-void Player::addTriangle(int i, int j, PlayerTriangle t, int type) {
+void Player::addTriangle(int i, int j, PlayerTriangle t) {
     assert(!cluster.triangles.count({i, j}));
     cluster.insertTriangle(i, j);
-    cluster.insertTriangleType(i, j, type);
     triangle_info[{i,j}] = t;
 }
 

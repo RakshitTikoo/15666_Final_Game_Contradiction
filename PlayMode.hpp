@@ -66,10 +66,10 @@ struct PlayMode : Mode {
 	float triangle_bullet_cooldown;
 
 	float basic_enemy_speed;
-	int basic_enemy_cnt;
+	int basic_enemy_cap;
 	float rad_basic_basic_enemy;
 
-	int food_cnt;
+	int food_cap;
 
 	uint32_t score;
 
@@ -78,15 +78,10 @@ struct PlayMode : Mode {
 	std::string msg;
 	int triangle_type[10] = {1,1,1,1,1,1,1,1,2,2}; // temp, // 0 - basic , 1 - shooter
 
-	
-
-
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;
 	float main_volume;
 	float sound_effect_volume;
-
-
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> basic_enemy;

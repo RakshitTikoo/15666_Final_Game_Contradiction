@@ -60,8 +60,8 @@ void PlayMode::init(int state){
 
 	basic_enemy_speed = 4.0f;
 
-	basic_enemy_cnt = 75;
-	food_cnt = 300;
+	basic_enemy_cap = 75;
+	food_cap = 300;
 
 	rad_basic_basic_enemy = 0.25f;
 
@@ -75,7 +75,7 @@ void PlayMode::init(int state){
 		player = Player();
 		msg = "Press Space to Begin";
 	}
-	player.addTriangle(0, 0, PlayerTriangle(), 0);
+	player.addTriangle(0, 0, PlayerTriangle(0));
 
 	food.clear();
 	basic_enemy.clear();
@@ -84,7 +84,7 @@ void PlayMode::init(int state){
 	player_triangle_bullet_pos.clear();
 	player_triangle_bullet_speed.clear();
 
-	for (int i = 0; i < food_cnt; i++) {
+	for (int i = 0; i < food_cap; i++) {
 		float signx;
 		float signy;
 		if(rand()%2 == 0) signx = 1.0f;
@@ -95,7 +95,7 @@ void PlayMode::init(int state){
 		food.push_back(pos);
 	}
 
-	for (int i = 0; i < basic_enemy_cnt; i++) {
+	for (int i = 0; i < basic_enemy_cap; i++) {
 		float signx;
 		float signy;
 		if(rand()%2 == 0) signx = 1.0f;
@@ -189,8 +189,16 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 void PlayMode::update(float elapsed) {
 	if(begin_game == 0) {
 		if(space.pressed) {begin_game = 1; msg = "";}
-	}
-	else {
+	} else {
+		// =================
+		// game over logic
+		// =================
+		if (player.cluster.triangles.size() == 0) {
+			msg = "Game Over | Score : " + std::to_string(score); 
+			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
+			init(1);
+		}
+
 		// ===================
 		// player movement
 		// ===================
@@ -282,23 +290,27 @@ void PlayMode::update(float elapsed) {
 
 						float minDist = fmin(d1, fmin(d2, d3));
 
+						auto addTriangle = [&](int x, int y) {
+							toInsert.push_back({{x, y}, PlayerTriangle(triangle_type[std::rand()%10])});
+						};
+
 						if (minDist == d1) {
 							if (coords.first%2 == 0) {
-								toInsert.push_back({{coords.first+1, coords.second-1}, PlayerTriangle()});
+								addTriangle(coords.first+1, coords.second-1);
 							} else {
-								toInsert.push_back({{coords.first-1, coords.second+1}, PlayerTriangle()});
+								addTriangle(coords.first-1, coords.second+1);
 							}
 						} else if (minDist == d2) {
 							if (coords.first%2 == 0) {
-								toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
+								addTriangle(coords.first+1, coords.second);
 							} else {
-								toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
+								addTriangle(coords.first-1, coords.second);
 							}
 						} else {
 							if (coords.first%2 == 0) {
-								toInsert.push_back({{coords.first-1, coords.second}, PlayerTriangle()});
+								addTriangle(coords.first-1, coords.second);
 							} else {
-								toInsert.push_back({{coords.first+1, coords.second}, PlayerTriangle()});
+								addTriangle(coords.first+1, coords.second);
 							}
 						}
 						break;
@@ -312,8 +324,7 @@ void PlayMode::update(float elapsed) {
 				std::pair<int,int> coords = k.first;
 				PlayerTriangle t = k.second;
 				if (!player.cluster.triangles.count({coords.first, coords.second})) {
-					int rand_type = std::rand() % 10;
-					player.addTriangle(coords.first, coords.second, t, triangle_type[rand_type]);
+					player.addTriangle(coords.first, coords.second, t);
 				}
 			}
 		}
@@ -347,12 +358,11 @@ void PlayMode::update(float elapsed) {
 		}
 
 
-		//TODO:
 		// ==================================================
 		// Spawn small amount of food randomly in play area
 		// ==================================================
-		if((int)food.size() <= food_cnt/2) {// 50 % food left
-			for (int i = 0; i < food_cnt - (int)food.size(); i++) {
+		if((int)food.size() <= .5 * food_cap) {// 50 % food left
+			for (int i = 0; i < food_cap - (int)food.size(); i++) {
 				float signx;
 				float signy;
 				if(rand()%2 == 0) signx = 1.0f;
@@ -363,11 +373,12 @@ void PlayMode::update(float elapsed) {
 				food.push_back(pos);
 			}
 		}
+
 		// =============================================
-		// Spawn new enemies (if 25 % enemies defeated)
+		// Spawn new enemies (if 25% enemies defeated)
 		// =============================================
-		if((int)basic_enemy.size() <= 3*basic_enemy_cnt/4) { // 75% enemies left
-			for (int i = 0; i < basic_enemy_cnt - (int)basic_enemy.size(); i++) {
+		if((int)basic_enemy.size() <= .75 * basic_enemy_cap) { // 75% enemies left
+			for (int i = 0; i < basic_enemy_cap - (int)basic_enemy.size(); i++) {
 				float signx;
 				float signy;
 				if(rand()%2 == 0) signx = 1.0f;
@@ -381,114 +392,83 @@ void PlayMode::update(float elapsed) {
 		}
 
 		// =================
-		// game over logic
+		// player bullet movement
 		// =================
-		if(player.cluster.triangles.size() == 0) {
-			msg = "Game Over | Score : " + std::to_string(score); 
-			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
-			init(1);
-		}
+		{
+			glm::vec2 dir = glm::normalize(mouse_loc - player.cluster.pos);
 
-		// =================
-		// player shooting 
-		// =================
+			// Basic Bullet
+			bullet_cooldown_cnt += 1.0f;
+			if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
+				Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
+				bullet_cooldown_cnt = 0.0f;
+				player_bullet_pos.push_back(player.cluster.pos);
+				player_bullet_speed.push_back(dir);
+			}
 
-		glm::vec2 dir = mouse_loc - player.cluster.pos;
-		dir = dir/glm::length(dir);
+			// Basic Bullet movement
+			for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
+				player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
+			}
 
-		// Basic Bullet
-		bullet_cooldown_cnt += 1.0f;
-		if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
-			Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
-			bullet_cooldown_cnt = 0.0f;
-			player_bullet_pos.push_back(player.cluster.pos);
-			player_bullet_speed.push_back(dir);
-		}
-
-		// Basic Bullet movement
-		for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
-			player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
-		}
-
-		// Triangle Bullet
-		triangle_bullet_cooldown_cnt += 1.0f;
-		if(mouse.pressed && triangle_bullet_cooldown_cnt >= triangle_bullet_cooldown) {
-			//Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
-			//printf("Ok1");
-			triangle_bullet_cooldown_cnt = 0.0f;
-			for (std::pair<int,int> coords : player.cluster.triangles) {
-				std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-				if (player.cluster.triangle_type[{coords.first, coords.second}] == 2) {// Shooting Triangle 
-					player_triangle_bullet_pos.push_back(player.cluster.getTrianglePosition(coords.first, coords.second));
-					player_triangle_bullet_speed.push_back(dir);
+			// Triangle Bullet
+			triangle_bullet_cooldown_cnt += 1.0f;
+			if(mouse.pressed && triangle_bullet_cooldown_cnt >= triangle_bullet_cooldown) {
+				triangle_bullet_cooldown_cnt = 0.0f;
+				for (std::pair<int,int> coords : player.cluster.triangles) {
+					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+					if (player.triangle_info[{coords.first, coords.second}].type == 2) {// Shooting Triangle 
+						player_triangle_bullet_pos.push_back(player.cluster.getTrianglePosition(coords.first, coords.second));
+						player_triangle_bullet_speed.push_back(dir);
+					}
 				}
 			}
-		}
 
-		// Triangle Bullet movement
-		for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-			player_triangle_bullet_pos[i] += player_triangle_bullet_speed[i]*elapsed*bullet_speed;
+			// Triangle Bullet movement
+			for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
+				player_triangle_bullet_pos[i] += player_triangle_bullet_speed[i]*elapsed*bullet_speed;
+			}
 		}
 
 		// =======================
-		// bullet basic_enemy collision 
+		// bullet collisions with enemies
 		// =======================
-		for(int i = 0; i < (int)player_bullet_pos.size(); i++){
-			for(int j = 0; j < (int)basic_enemy.size(); j++) {
-				if(GeoHelpers::pointInCircle(player_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
-					score += 1;
-					player_bullet_pos.erase(player_bullet_pos.begin() + i);
-					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-					basic_enemy.erase(basic_enemy.begin() + j);
-					break;
+		{
+			for(int i = 0; i < (int)player_bullet_pos.size(); i++){
+				for(int j = 0; j < (int)basic_enemy.size(); j++) {
+					if(GeoHelpers::pointInCircle(player_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
+						score += 1;
+						player_bullet_pos.erase(player_bullet_pos.begin() + i);
+						player_bullet_speed.erase(player_bullet_speed.begin() + i);
+						basic_enemy.erase(basic_enemy.begin() + j);
+						break;
+					}
+				}
+			}
+
+			for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++){
+				for(int j = 0; j < (int)basic_enemy.size(); j++) {
+					if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
+						score += 1;
+						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+						basic_enemy.erase(basic_enemy.begin() + j);
+						break;
+					}
 				}
 			}
 		}
-
-		for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++){
-			for(int j = 0; j < (int)basic_enemy.size(); j++) {
-				if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
-					score += 1;
-					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-					basic_enemy.erase(basic_enemy.begin() + j);
-					break;
-				}
-			}
-		}
-
-	
 	}
 
 	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
-	mouse.downs = 0;
-	space.pressed = 0;
-
-}
-
-void PlayMode::player_move(glm::vec2 move_amt){
-	// Move everything by that negative amount to simulate player movement
-	for (int i = 0; i < (int)food.size(); i++) {
-			food[i] -= move_amt;
+	{
+		left.downs = 0;
+		right.downs = 0;
+		up.downs = 0;
+		down.downs = 0;
+		mouse.downs = 0;
+		space.pressed = 0;
 	}
-	for (int i = 0; i < (int)basic_enemy.size(); i++) {
-			basic_enemy[i] -= move_amt;
-	}
-
-	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-			player_bullet_pos[i] -= move_amt;
-	}
-
-	for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-			player_triangle_bullet_pos[i] -= move_amt;
-	}
-
-	level_bound_max -= move_amt;
-	level_bound_min -= move_amt;
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
@@ -531,17 +511,17 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			drawline_helper(
 				glm::vec3(corners[0], 0.f),
 				glm::vec3(corners[1], 0.f),
-				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
+				t.color[t.type]
 			);
 			drawline_helper(
 				glm::vec3(corners[1], 0.f),
 				glm::vec3(corners[2], 0.f),
-				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
+				t.color[t.type]
 			);
 			drawline_helper(
 				glm::vec3(corners[2], 0.f),
 				glm::vec3(corners[0], 0.f),
-				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
+				t.color[t.type]
 			);
 		}
 	}
@@ -635,8 +615,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		glm::vec3(8500.0f/drawable_size.x,4500.0f/drawable_size.y,0.0f),
 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		glm::u8vec4(0xff, 0xff, 0xff, 0xff));
-
-
 	}
 
 	GL_ERRORS();
