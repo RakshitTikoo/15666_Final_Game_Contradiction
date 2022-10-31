@@ -70,12 +70,25 @@ PlayMode::PlayMode() {
 	//player.cluster
 
 	for (int i = 0; i < food_cnt; i++) {
-		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
+		float signx;
+		float signy;
+		if(rand()%2 == 0) signx = 1.0f;
+		else signx = -1.0f;
+		if(rand()%2 == 0) signy = 1.0f;
+		else signy = -1.0f;
+		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
 		food.push_back(pos);
 	}
 
 	for (int i = 0; i < enemy_cnt; i++) {
-		glm::vec2 pos = {rand01() * 16 - 8, rand01() * 16 - 8};
+		float signx;
+		float signy;
+		if(rand()%2 == 0) signx = 1.0f;
+		else signx = -1.0f;
+		if(rand()%2 == 0) signy = 1.0f;
+		else signy = -1.0f;
+
+		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
 		enemy.push_back(pos);
 	}
 
@@ -194,10 +207,11 @@ void PlayMode::update(float elapsed) {
 		glm::vec2 max_check = level_bound_max - player_speed*move;
 		if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
 		{
-			move = move*0.0f;
+			if(min_check.x >= 0.0f || max_check.x <= 0.0f) move.x = 0.0f;
+			if(min_check.y >= 0.0f || max_check.y <= 0.0f) move.y = 0.0f;
 		}
 
-		printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
+		//printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
 
 		player_move(player_speed*move);
 		//player.cluster.pos += player_speed * move;
@@ -315,16 +329,44 @@ void PlayMode::update(float elapsed) {
 	// ==================================================
 	// Spawn small amount of food randomly in play area
 	// ==================================================
+	if((int)food.size() <= food_cnt/2) {// 50 % food left
+		for (int i = 0; i < food_cnt - (int)food.size(); i++) {
+			float signx;
+			float signy;
+			if(rand()%2 == 0) signx = 1.0f;
+			else signx = -1.0f;
+			if(rand()%2 == 0) signy = 1.0f;
+			else signy = -1.0f;
+			glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};		
+			food.push_back(pos);
+		}
+	}
+	// =============================================
+	// Spawn new enemies (if 50 % enemies defeated)
+	// =============================================
+	if((int)enemy.size() <= enemy_cnt/2) { // 50% enemies left
+		for (int i = 0; i < enemy_cnt - (int)enemy.size(); i++) {
+			float signx;
+			float signy;
+			if(rand()%2 == 0) signx = 1.0f;
+			else signx = -1.0f;
+			if(rand()%2 == 0) signy = 1.0f;
+			else signy = -1.0f;
+
+			glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
+			enemy.push_back(pos);
+		}
+	}
+
 
 	// =================
 	// game over logic
 	// =================
 
+	// =================
+	// game win logic
+	// =================
 
-
-	// =============================
-	// bullet type triangle spawing
-	// =============================
 
 	// =================
 	// player shooting 
@@ -354,6 +396,7 @@ void PlayMode::update(float elapsed) {
 				player_bullet_pos.erase(player_bullet_pos.begin() + i);
 				player_bullet_speed.erase(player_bullet_speed.begin() + i);
 				enemy.erase(enemy.begin() + j);
+				break;
 			}
 		}
 	}
@@ -462,7 +505,30 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 	}
 
-
+	// draw bounds
+	{
+		lines.draw(
+				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
+				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
+			);
+		lines.draw(
+				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
+				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
+			);
+		lines.draw(
+				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
+				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
+			);
+		lines.draw(
+				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
+				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
+			);
+		
+	}
 
 	GL_ERRORS();
 }

@@ -47,8 +47,8 @@ struct PlayMode : Mode {
 
 	
 	// Game Control Values
-	glm::vec2 level_bound_max = glm::vec2(100.0f, 100.0f);
-	glm::vec2 level_bound_min = glm::vec2(-100.0f, -100.0f);
+	glm::vec2 level_bound_max = glm::vec2(50.0f, 50.0f);
+	glm::vec2 level_bound_min = glm::vec2(-50.0f, -50.0f);
 
 	float player_speed = 5.0f;
 	float player_rot = 300.0f;
@@ -57,10 +57,10 @@ struct PlayMode : Mode {
 	float bullet_cooldown_cnt = 10.0f;
 	float bullet_cooldown = 10.0f;
 
-	float enemy_speed = 2.0f;
+	float enemy_speed = 3.0f;
 
-	int enemy_cnt = 10;
-	int food_cnt = 20;
+	int enemy_cnt = 50;
+	int food_cnt = 500;
 
 	float rad_basic_enemy = 0.25f;
 
