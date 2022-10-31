@@ -61,12 +61,12 @@ struct PlayMode : Mode {
 	float bullet_cooldown_cnt;
 	float bullet_cooldown;
 
-	float enemy_speed;
+	float basic_enemy_speed;
 
-	int enemy_cnt;
+	int basic_enemy_cnt;
 	int food_cnt;
 
-	float rad_basic_enemy;
+	float rad_basic_basic_enemy;
 
 	uint32_t score;
 
@@ -86,7 +86,7 @@ struct PlayMode : Mode {
 
 
 	std::vector<glm::vec2> food; // temporary
-	std::vector<glm::vec2> enemy;
+	std::vector<glm::vec2> basic_enemy;
 	std::vector<glm::vec2> player_bullet_pos;
 	std::vector<glm::vec2> player_bullet_speed;
 };

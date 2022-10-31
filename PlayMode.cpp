@@ -40,8 +40,12 @@ Load< Sound::Sample > Player_Grow(LoadTagDefault, []() -> Sound::Sample const * 
 	return new Sound::Sample(data_path("player_grow.opus"));
 });
 Load< Sound::Sample > Player_Destroyed(LoadTagDefault, []() -> Sound::Sample const * {
-	return new Sound::Sample(data_path("Main_Music.opus"));
+	return new Sound::Sample(data_path("player_destroyed.opus"));
 });
+Load< Sound::Sample > Player_Bullet(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("player_bullet.opus"));
+});
+
 
 
 void PlayMode::player_move(glm::vec2 move_amt){
@@ -49,8 +53,8 @@ void PlayMode::player_move(glm::vec2 move_amt){
 	for (int i = 0; i < (int)food.size(); i++) {
 			food[i] -= move_amt;
 	}
-	for (int i = 0; i < (int)enemy.size(); i++) {
-			enemy[i] -= move_amt;
+	for (int i = 0; i < (int)basic_enemy.size(); i++) {
+			basic_enemy[i] -= move_amt;
 	}
 
 	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
@@ -66,8 +70,8 @@ void PlayMode::player_move(glm::vec2 move_amt){
 
 void PlayMode::init(int state){
 
-	main_volume = 0.0f;
-	sound_effect_volume = 0.0f;
+	main_volume = 0.5f;
+	sound_effect_volume = 1.0f;
 	level_bound_max = glm::vec2(50.0f, 50.0f);
 	level_bound_min = glm::vec2(-50.0f, -50.0f);
 
@@ -78,12 +82,12 @@ void PlayMode::init(int state){
 	bullet_cooldown_cnt = 10.0f;
 	bullet_cooldown = 10.0f;
 
-	enemy_speed = 4.0f;
+	basic_enemy_speed = 4.0f;
 
-	enemy_cnt = 50;
+	basic_enemy_cnt = 50;
 	food_cnt = 500;
 
-	rad_basic_enemy = 0.25f;
+	rad_basic_basic_enemy = 0.25f;
 
 	score = 0;
 
@@ -98,7 +102,7 @@ void PlayMode::init(int state){
 	player.addTriangle(0, 0, PlayerTriangle(), 0);
 
 	food.clear();
-	enemy.clear();
+	basic_enemy.clear();
 	player_bullet_pos.clear();
 	player_bullet_speed.clear();
 
@@ -113,7 +117,7 @@ void PlayMode::init(int state){
 		food.push_back(pos);
 	}
 
-	for (int i = 0; i < enemy_cnt; i++) {
+	for (int i = 0; i < basic_enemy_cnt; i++) {
 		float signx;
 		float signy;
 		if(rand()%2 == 0) signx = 1.0f;
@@ -122,7 +126,7 @@ void PlayMode::init(int state){
 		else signy = -1.0f;
 
 		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
-		enemy.push_back(pos);
+		basic_enemy.push_back(pos);
 	}
 
 
@@ -277,12 +281,12 @@ void PlayMode::update(float elapsed) {
 
 
 		// ===============
-		// enemy movement
+		// basic_enemy movement
 		// ===============
-		for (int i = 0; i < (int)enemy.size(); i++) {
-				glm::vec2 dir = player.cluster.pos - enemy[i];
+		for (int i = 0; i < (int)basic_enemy.size(); i++) {
+				glm::vec2 dir = player.cluster.pos - basic_enemy[i];
 				dir = dir/glm::length(dir);
-				enemy[i] += dir*elapsed*enemy_speed;
+				basic_enemy[i] += dir*elapsed*basic_enemy_speed;
 		}
 
 	
@@ -301,7 +305,7 @@ void PlayMode::update(float elapsed) {
 					if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
 						toErase.push_back(i);
 						// play sound
-						Sound::play(*Player_Grow, sound_effect_volume, 0.0f);
+						Sound::play(*Player_Grow, sound_effect_volume*0.5f, 0.0f);
 						score += 1;
 						// add a new triangle to the nearest side
 						float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
@@ -347,29 +351,29 @@ void PlayMode::update(float elapsed) {
 		}
 
 		// ======================
-		// collision with enemys
+		// collision with basic_enemys
 		// ======================
 		{
-			std::vector<int> toErase_enemy;
+			std::vector<int> toErase_basic_enemy;
 			std::vector<std::pair<int, int>> toErase_player;
-			for (int i = 0; i < (int)enemy.size(); i++) {
-				glm::vec2 enemypos = enemy[i];
+			for (int i = 0; i < (int)basic_enemy.size(); i++) {
+				glm::vec2 basic_enemypos = basic_enemy[i];
 				for (std::pair<int,int> coords : player.cluster.triangles) {
 					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 
-					// is enemy inside the triangle?
-					if (GeoHelpers::pointInTriangle(enemypos, corners[0], corners[1], corners[2])) {
+					// is basic_enemy inside the triangle?
+					if (GeoHelpers::pointInTriangle(basic_enemypos, corners[0], corners[1], corners[2])) {
 						// play sound
 						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
 
-						toErase_enemy.push_back(i);
+						toErase_basic_enemy.push_back(i);
 						toErase_player.push_back(coords);
 						break;
 					}
 				}
 			}
-			for (int i = (int)toErase_enemy.size()-1; i >= 0; i--) {
-				enemy.erase(enemy.begin() + toErase_enemy[i]);
+			for (int i = (int)toErase_basic_enemy.size()-1; i >= 0; i--) {
+				basic_enemy.erase(basic_enemy.begin() + toErase_basic_enemy[i]);
 			}
 			player.destroyTriangles(toErase_player);
 		}
@@ -392,10 +396,10 @@ void PlayMode::update(float elapsed) {
 			}
 		}
 		// =============================================
-		// Spawn new enemies (if 50 % enemies defeated)
+		// Spawn new enemies (if 25 % enemies defeated)
 		// =============================================
-		if((int)enemy.size() <= enemy_cnt/2) { // 50% enemies left
-			for (int i = 0; i < enemy_cnt - (int)enemy.size(); i++) {
+		if((int)basic_enemy.size() <= 3*basic_enemy_cnt/4) { // 75% enemies left
+			for (int i = 0; i < basic_enemy_cnt - (int)basic_enemy.size(); i++) {
 				float signx;
 				float signy;
 				if(rand()%2 == 0) signx = 1.0f;
@@ -403,8 +407,8 @@ void PlayMode::update(float elapsed) {
 				if(rand()%2 == 0) signy = 1.0f;
 				else signy = -1.0f;
 
-				glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
-				enemy.push_back(pos);
+				glm::vec2 pos = {rand01() * signx * level_bound_max.x * 2.0f, rand01() * signy * level_bound_max.y * 2.0f};
+				basic_enemy.push_back(pos);
 			}
 		}
 
@@ -414,6 +418,7 @@ void PlayMode::update(float elapsed) {
 		// =================
 		if(player.cluster.triangles.size() == 0) {
 			msg = "Game Over | Score : " + std::to_string(score); 
+			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
 			init(1);
 		}
 
@@ -422,7 +427,7 @@ void PlayMode::update(float elapsed) {
 		// =================
 		bullet_cooldown_cnt += 1.0f;
 		if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
-			//printf("Shoot\n");
+			Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
 			bullet_cooldown_cnt = 0.0f;
 			glm::vec2 dir = mouse_loc - player.cluster.pos;
 			dir = dir/glm::length(dir);
@@ -437,15 +442,15 @@ void PlayMode::update(float elapsed) {
 
 
 		// =======================
-		// bullet enemy collision 
+		// bullet basic_enemy collision 
 		// =======================
 		for(int i = 0; i < (int)player_bullet_pos.size(); i++){
-			for(int j = 0; j < (int)enemy.size(); j++) {
-				if(GeoHelpers::pointInCircle(player_bullet_pos[i], enemy[j], rad_basic_enemy)) {
+			for(int j = 0; j < (int)basic_enemy.size(); j++) {
+				if(GeoHelpers::pointInCircle(player_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
 					score += 1;
 					player_bullet_pos.erase(player_bullet_pos.begin() + i);
 					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-					enemy.erase(enemy.begin() + j);
+					basic_enemy.erase(basic_enemy.begin() + j);
 					break;
 				}
 			}
@@ -530,9 +535,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 	}
 
-	{ // draw enemys
-		for (auto& k : enemy) {
-			float rad = rad_basic_enemy;
+	{ // draw basic_enemys
+		for (auto& k : basic_enemy) {
+			float rad = rad_basic_basic_enemy;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
