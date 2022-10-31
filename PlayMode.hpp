@@ -40,7 +40,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up, rot_left, rot_right;
+	} left, right, down, up, rot_left, rot_right, mouse;
 
 	Player player;
 
@@ -52,12 +52,19 @@ struct PlayMode : Mode {
 
 	float player_speed = 5.0f;
 	float player_rot = 300.0f;
+	float bullet_speed = 15.0f;
+
+	float bullet_cooldown_cnt = 10.0f;
+	float bullet_cooldown = 10.0f;
 
 	float enemy_speed = 2.0f;
 
-
 	int enemy_cnt = 10;
 	int food_cnt = 20;
+
+	float rad_basic_enemy = 0.25f;
+
+	glm::vec2 mouse_loc;
 
 	int triangle_type[10] = {1,1,1,1,1,1,2,2,2,2}; // temp, // 0 - basic , 1 - shooter
 
@@ -68,5 +75,6 @@ struct PlayMode : Mode {
 
 	std::vector<glm::vec2> food; // temporary
 	std::vector<glm::vec2> enemy;
-	std::vector<glm::vec2> player_bullets;
+	std::vector<glm::vec2> player_bullet_pos;
+	std::vector<glm::vec2> player_bullet_speed;
 };

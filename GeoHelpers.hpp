@@ -10,4 +10,6 @@ namespace GeoHelpers{
     bool pointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
 
     float pointToSegmentDistance(glm::vec2 p, glm::vec2 a, glm::vec2 b);
+
+    bool pointInCircle(glm::vec2 point, glm::vec2 circle, float radius);
 }

@@ -53,6 +53,11 @@ void PlayMode::player_move(glm::vec2 move_amt){
 			enemy[i] -= move_amt;
 	}
 
+	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
+			player_bullet_pos[i] -= move_amt;
+	}
+
+
 }
 
 
@@ -126,7 +131,21 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			rot_right.pressed = false;
 			return true;
 		}
+	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
+		mouse.downs += 1;
+		mouse.pressed = true;
+		return true;
+	} else if (evt.type == SDL_MOUSEBUTTONUP) {
+		mouse.pressed = false;
+		return true;
 	}
+	int x, y;
+	SDL_GetMouseState(&x, &y);
+	mouse_loc = glm::vec2((float) x, (float) y);
+	mouse_loc.x = mouse_loc.x - float(window_size.x)/2.0f;
+	mouse_loc.y = float(window_size.y)/2.0f - mouse_loc.y;
+
+	//printf("%f %f \n", mouse_loc.x , mouse_loc.y);
 
 	return false;
 }
@@ -272,6 +291,18 @@ void PlayMode::update(float elapsed) {
 	// level bounds 
 	// =================
 	
+	// Remove Bullet
+	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
+			if (player_bullet_pos[i].x > level_bound_x || player_bullet_pos[i].x < -1.0f*level_bound_x) {
+				player_bullet_pos.erase(player_bullet_pos.begin() + i);
+				player_bullet_speed.erase(player_bullet_speed.begin() + i);
+			}
+			else if (player_bullet_pos[i].y > level_bound_y || player_bullet_pos[i].y < -1.0f*level_bound_y) {
+				player_bullet_pos.erase(player_bullet_pos.begin() + i);
+				player_bullet_speed.erase(player_bullet_speed.begin() + i);
+			}
+	}
+
 	// =============================
 	// bullet type triangle spawing
 	// =============================
@@ -279,11 +310,35 @@ void PlayMode::update(float elapsed) {
 	// =================
 	// player shooting 
 	// =================
+	bullet_cooldown_cnt += 1.0f;
+	if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
+		//printf("Shoot\n");
+		bullet_cooldown_cnt = 0.0f;
+		glm::vec2 dir = mouse_loc - player.cluster.pos;
+		dir = dir/glm::length(dir);
+		player_bullet_pos.push_back(player.cluster.pos);
+		player_bullet_speed.push_back(dir);
+	}
+
+	// Bullet movement
+	for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
+		player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
+	}
+
 
 	// =======================
 	// bullet enemy collision 
 	// =======================
-
+	for(int i = 0; i < (int)player_bullet_pos.size(); i++){
+		for(int j = 0; j < (int)enemy.size(); j++) {
+			if(GeoHelpers::pointInCircle(player_bullet_pos[i], enemy[j], rad_basic_enemy)) {
+				player_bullet_pos.erase(player_bullet_pos.begin() + i);
+				player_bullet_speed.erase(player_bullet_speed.begin() + i);
+				enemy.erase(enemy.begin() + j);
+			}
+		}
+	}
+	
 	
 
 	//reset button press counters:
@@ -291,9 +346,13 @@ void PlayMode::update(float elapsed) {
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
+	mouse.downs = 0;
+
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
+	
+	//printf("%f %f\n", float(drawable_size.x), float(drawable_size.y));
 
 	static std::array< glm::vec2, 16 > const circle = [](){
 		std::array< glm::vec2, 16 > ret;
@@ -360,7 +419,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	{ // draw enemys
 		for (auto& k : enemy) {
-			float rad = 0.25f;
+			float rad = rad_basic_enemy;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
 				lines.draw(
 					glm::vec3(k + rad * circle[a], 0.0f),
@@ -370,6 +429,21 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 	}
+
+	{ // draw player bullets
+		for (auto& k : player_bullet_pos) {
+			float rad = 0.1f;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				lines.draw(
+					glm::vec3(k + rad * circle[a], 0.0f),
+					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(0xff, 0x00, 0xff, 0xff)
+				);
+			}
+		}
+	}
+
+
 
 	GL_ERRORS();
 }

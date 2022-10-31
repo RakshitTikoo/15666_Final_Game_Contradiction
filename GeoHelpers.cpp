@@ -28,4 +28,11 @@ namespace GeoHelpers{
         glm::vec2 proj = a + t * (b-a);
         return glm::distance(p, proj);
     }
+
+
+    bool pointInCircle(glm::vec2 point, glm::vec2 circle, float radius) {
+        if(glm::length(point - circle) < radius) return true;
+
+        return false;
+    };
 }
