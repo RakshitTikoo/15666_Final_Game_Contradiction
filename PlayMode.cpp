@@ -24,11 +24,6 @@
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
-
-
-
-
-
 // Music Assets
 Load< Sound::Sample > Main_Music(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("Main_Music.opus"));
@@ -46,40 +41,13 @@ Load< Sound::Sample > Player_Bullet(LoadTagDefault, []() -> Sound::Sample const 
 	return new Sound::Sample(data_path("player_bullet.opus"));
 });
 
-
-
-void PlayMode::player_move(glm::vec2 move_amt){
-	// Move everything by that negative amount to simulate player movement
-	for (int i = 0; i < (int)food.size(); i++) {
-			food[i] -= move_amt;
-	}
-	for (int i = 0; i < (int)basic_enemy.size(); i++) {
-			basic_enemy[i] -= move_amt;
-	}
-
-	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-			player_bullet_pos[i] -= move_amt;
-	}
-
-	for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-			player_triangle_bullet_pos[i] -= move_amt;
-	}
-
-	level_bound_max -= move_amt;
-	level_bound_min -= move_amt;
-
-
-}
-
-
 void PlayMode::init(int state){
-
 	main_volume = 0.5f;
 	sound_effect_volume = 1.0f;
 	level_bound_max = glm::vec2(50.0f, 50.0f);
 	level_bound_min = glm::vec2(-50.0f, -50.0f);
 
-	player_speed = 5.0f;
+	player_speed = 3.0f;
 	player_rot = 300.0f;
 	bullet_speed = 15.0f;
 
@@ -89,7 +57,6 @@ void PlayMode::init(int state){
 	triangle_bullet_speed = 15.0f;
 	triangle_bullet_cooldown_cnt = 40.0f;
 	triangle_bullet_cooldown = 40.0f;
-
 
 	basic_enemy_speed = 4.0f;
 
@@ -139,18 +106,13 @@ void PlayMode::init(int state){
 		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
 		basic_enemy.push_back(pos);
 	}
-
-
-
 }
 
 PlayMode::PlayMode() {
-	
 	init(0);
-	std::cout << "Initialize successful\n"; 
+	std::cout << "Initialization successful\n"; 
 	
 	MainLoop = Sound::loop(*Main_Music, main_volume, 0.0f);
-
 }
 
 PlayMode::~PlayMode() {
@@ -215,13 +177,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		mouse.pressed = false;
 		return true;
 	}
-	int x, y;
-	SDL_GetMouseState(&x, &y);
-	mouse_loc = glm::vec2((float) x, (float) y);
-	mouse_loc.x = mouse_loc.x - float(window_size.x)/2.0f;
-	mouse_loc.y = float(window_size.y)/2.0f - mouse_loc.y;
 
-	//printf("%f %f \n", mouse_loc.x , mouse_loc.y);
+	int x, y; SDL_GetMouseState(&x, &y);
+	mouse_loc = glm::vec2();
+	mouse_loc.x = x - float(window_size.x) / 2.f;
+	mouse_loc.y = float(window_size.y) / 2.f - y;
 
 	return false;
 }
@@ -236,61 +196,48 @@ void PlayMode::update(float elapsed) {
 		// ===================
 		{
 			//combine inputs into a move:
-			//constexpr float PlayerSpeed = 3.0f;
 			glm::vec2 move = glm::vec2(0.0f);
 			if (left.pressed && !right.pressed) move.x =-1.0f;
 			if (!left.pressed && right.pressed) move.x = 1.0f;
 			if (down.pressed && !up.pressed) move.y =-1.0f;
 			if (!down.pressed && up.pressed) move.y = 1.0f;
+			//make it so that moving diagonally doesn't go faster:
+			if (move != glm::vec2(0.0f)) move = player_speed * glm::normalize(move) * elapsed;
 
-
-			// =================
-			// level bounds 
-			// =================
-
-			// Remove Bullet
+			// Remove out of bounds bullets
 			for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-					if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
-						player_bullet_pos.erase(player_bullet_pos.begin() + i);
-						player_bullet_speed.erase(player_bullet_speed.begin() + i);
-					}
-					else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
-						player_bullet_pos.erase(player_bullet_pos.begin() + i);
-						player_bullet_speed.erase(player_bullet_speed.begin() + i);
-					}
+				if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
+					player_bullet_pos.erase(player_bullet_pos.begin() + i);
+					player_bullet_speed.erase(player_bullet_speed.begin() + i);
+				}
+				else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
+					player_bullet_pos.erase(player_bullet_pos.begin() + i);
+					player_bullet_speed.erase(player_bullet_speed.begin() + i);
+				}
 			}
 
 			for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-					if (player_triangle_bullet_pos[i].x > level_bound_max.x || player_triangle_bullet_pos[i].x < level_bound_min.x) {
-						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-					}
-					else if (player_triangle_bullet_pos[i].y > level_bound_max.y || player_triangle_bullet_pos[i].y < level_bound_min.y) {
-						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-					}
+				if (player_triangle_bullet_pos[i].x > level_bound_max.x || player_triangle_bullet_pos[i].x < level_bound_min.x) {
+					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+				}
+				else if (player_triangle_bullet_pos[i].y > level_bound_max.y || player_triangle_bullet_pos[i].y < level_bound_min.y) {
+					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+				}
 			}
 
 
 			// If Player at level_bound
-
-
-
-			//make it so that moving diagonally doesn't go faster:
-			if (move != glm::vec2(0.0f)) move = glm::normalize(move) * elapsed;
-
-			glm::vec2 min_check = level_bound_min - player_speed*move;
-			glm::vec2 max_check = level_bound_max - player_speed*move;
+			glm::vec2 min_check = level_bound_min - move;
+			glm::vec2 max_check = level_bound_max - move;
 			if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
 			{
 				if(min_check.x >= 0.0f || max_check.x <= 0.0f) move.x = 0.0f;
 				if(min_check.y >= 0.0f || max_check.y <= 0.0f) move.y = 0.0f;
 			}
 
-			//printf("min %f %f max %f %f\n", level_bound_min.x, level_bound_min.y, level_bound_max.x, level_bound_max.y );
-
-			player_move(player_speed*move);
-			//player.cluster.pos += player_speed * move;
+			player.cluster.pos += player_speed * move;
 
 			if (rot_left.pressed) {
 				player.cluster.angle -= player_rot * elapsed;
@@ -302,7 +249,6 @@ void PlayMode::update(float elapsed) {
 			}
 		}
 
-
 		// ===============
 		// basic_enemy movement
 		// ===============
@@ -311,7 +257,6 @@ void PlayMode::update(float elapsed) {
 				dir = dir/glm::length(dir);
 				basic_enemy[i] += dir*elapsed*basic_enemy_speed;
 		}
-
 	
 		// ==============================
 		// eat food = grow a triangle
@@ -435,7 +380,6 @@ void PlayMode::update(float elapsed) {
 			}
 		}
 
-
 		// =================
 		// game over logic
 		// =================
@@ -444,10 +388,6 @@ void PlayMode::update(float elapsed) {
 			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
 			init(1);
 		}
-		
-		
-
-
 
 		// =================
 		// player shooting 
@@ -490,7 +430,6 @@ void PlayMode::update(float elapsed) {
 			player_triangle_bullet_pos[i] += player_triangle_bullet_speed[i]*elapsed*bullet_speed;
 		}
 
-
 		// =======================
 		// bullet basic_enemy collision 
 		// =======================
@@ -531,10 +470,28 @@ void PlayMode::update(float elapsed) {
 
 }
 
-void PlayMode::draw(glm::uvec2 const &drawable_size) {
-	
-	//printf("%f %f\n", float(drawable_size.x), float(drawable_size.y));
+void PlayMode::player_move(glm::vec2 move_amt){
+	// Move everything by that negative amount to simulate player movement
+	for (int i = 0; i < (int)food.size(); i++) {
+			food[i] -= move_amt;
+	}
+	for (int i = 0; i < (int)basic_enemy.size(); i++) {
+			basic_enemy[i] -= move_amt;
+	}
 
+	for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
+			player_bullet_pos[i] -= move_amt;
+	}
+
+	for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
+			player_triangle_bullet_pos[i] -= move_amt;
+	}
+
+	level_bound_max -= move_amt;
+	level_bound_min -= move_amt;
+}
+
+void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	static std::array< glm::vec2, 16 > const circle = [](){
 		std::array< glm::vec2, 16 > ret;
 		for (uint32_t a = 0; a < ret.size(); ++a) {
@@ -561,23 +518,27 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	);
 
 	DrawLines lines(world_to_clip);
+	auto drawline_helper = [&](glm::vec3 p1, glm::vec3 p2, glm::u8vec4 color) {
+		glm::vec3 player_pos = glm::vec3(player.cluster.pos.x, player.cluster.pos.y, 0.f);
+		lines.draw(p1 - player_pos, p2 - player_pos, color);
+	};
 
 	{ // draw the player
 		for (std::pair<int,int> coords : player.cluster.triangles) {
 			std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
 			PlayerTriangle t = player.triangle_info[coords];
 
-			lines.draw(
+			drawline_helper(
 				glm::vec3(corners[0], 0.f),
 				glm::vec3(corners[1], 0.f),
 				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
 			);
-			lines.draw(
+			drawline_helper(
 				glm::vec3(corners[1], 0.f),
 				glm::vec3(corners[2], 0.f),
 				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
 			);
-			lines.draw(
+			drawline_helper(
 				glm::vec3(corners[2], 0.f),
 				glm::vec3(corners[0], 0.f),
 				t.color[player.cluster.triangle_type[{coords.first, coords.second}]]
@@ -589,7 +550,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		for (auto& k : food) {
 			float rad = 0.1f;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
-				lines.draw(
+				drawline_helper(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
 					glm::u8vec4(0x00, 0xff, 0x00, 0xff)
@@ -602,7 +563,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		for (auto& k : basic_enemy) {
 			float rad = rad_basic_basic_enemy;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
-				lines.draw(
+				drawline_helper(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
 					glm::u8vec4(0xff, 0x00, 0x00, 0xff)
@@ -615,7 +576,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		for (auto& k : player_bullet_pos) {
 			float rad = 0.1f;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
-				lines.draw(
+				drawline_helper(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
 					glm::u8vec4(255.f, 255.f, 0.f, 255.f)
@@ -626,7 +587,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		for (auto& k : player_triangle_bullet_pos) {
 			float rad = 0.1f;
 			for (uint32_t a = 0; a < circle.size(); ++a) {
-				lines.draw(
+				drawline_helper(
 					glm::vec3(k + rad * circle[a], 0.0f),
 					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
 					glm::u8vec4(255.f, 0.f, 255.f, 255.f)
@@ -638,29 +599,27 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	// draw bounds
 	{
-		lines.draw(
+		drawline_helper(
 				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
 				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
 				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
 			);
-		lines.draw(
+		drawline_helper(
 				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
 				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
 				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
 			);
-		lines.draw(
+		drawline_helper(
 				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
 				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
 				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
 			);
-		lines.draw(
+		drawline_helper(
 				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
 				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
 				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
 			);
-		
 	}
-
 
 	{ // Draw msg
 		float H = 1.5f;

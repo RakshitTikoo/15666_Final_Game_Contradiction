@@ -46,8 +46,6 @@ struct PlayMode : Mode {
 
 	Player player;
 
-
-
 	// Game Control Values
 	int begin_game;
 	
