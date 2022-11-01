@@ -48,7 +48,7 @@ void PlayMode::init(int state){
 	level_bound_max = glm::vec2(50.0f, 50.0f);
 	level_bound_min = glm::vec2(-50.0f, -50.0f);
 
-	player_speed = 3.0f;
+	player_speed = 9.0f;
 	player_rot = 300.0f;
 	bullet_speed = 15.0f;
 
@@ -80,6 +80,7 @@ void PlayMode::init(int state){
 		msg = "Press Space to Begin";
 	}
 	player.addTriangle(0, 0, PlayerTriangle(0));
+	player.cluster.pos = glm::vec2(0.f, 0.f);
 
 	food.clear();
 	basic_enemy.clear();
@@ -216,7 +217,11 @@ void PlayMode::update(float elapsed) {
 			//make it so that moving diagonally doesn't go faster:
 			if (move != glm::vec2(0.0f)) move = player_speed * glm::normalize(move) * elapsed;
 
-			// Remove out of bounds bullets
+			// ================================
+			// Remove out of bounds 
+			// ================================
+
+			// player bullets
 			for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
 				if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
 					player_bullet_pos.erase(player_bullet_pos.begin() + i);
@@ -239,17 +244,26 @@ void PlayMode::update(float elapsed) {
 				}
 			}
 
-
-			// If player at level_bound
-			glm::vec2 min_check = level_bound_min - move;
-			glm::vec2 max_check = level_bound_max - move;
-			if(min_check.x >= 0.0f || min_check.y >= 0.0f || max_check.x <= 0.0f || max_check.y <= 0.0f)
-			{
-				if(min_check.x >= 0.0f || max_check.x <= 0.0f) move.x = 0.0f;
-				if(min_check.y >= 0.0f || max_check.y <= 0.0f) move.y = 0.0f;
+			// enemy bullet 
+			for (int i = 0; i < (int)enemy_bullet.size(); i++) {
+				if (enemy_bullet[i].pos.x > level_bound_max.x || enemy_bullet[i].pos.x < level_bound_min.x) {
+					enemy_bullet.erase(enemy_bullet.begin() + i);
+				}
+				else if (enemy_bullet[i].pos.y > level_bound_max.y || enemy_bullet[i].pos.y < level_bound_min.y) {
+					enemy_bullet.erase(enemy_bullet.begin() + i);
+				}
 			}
 
-			player.cluster.pos += player_speed * move;
+
+			// If player at level_bound
+			glm::vec2 move_check = player.cluster.pos + move;
+			if(move_check.x >= level_bound_max.x || move_check.y >= level_bound_max.y || move_check.x <= level_bound_min.x || move_check.y <= level_bound_min.y)
+			{
+				if(move_check.x >= level_bound_max.x || move_check.x <= level_bound_min.x) move.x = 0.0f;
+				if(move_check.y >= level_bound_max.y || move_check.y <= level_bound_min.y) move.y = 0.0f;
+			}
+
+			player.cluster.pos += move;
 
 			if (rot_left.pressed) {
 				player.cluster.angle -= player_rot * elapsed;
