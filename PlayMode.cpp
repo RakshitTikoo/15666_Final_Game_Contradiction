@@ -300,11 +300,9 @@ void PlayMode::update(float elapsed) {
 				b.pos = enemy;
 				b.speed = bullet_speed * glm::normalize(player.cluster.pos - enemy);
 				enemy_bullet.push_back(b);
-				std::cout << "shoot! ";
 			}
 		}
 		if (enemy_bullet_cooldown <= 0.0f) {
-			std::cout << "cooldown! ";
 			enemy_bullet_cooldown += 1.0f;
 		}
 	
