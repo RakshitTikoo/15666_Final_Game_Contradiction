@@ -10,6 +10,7 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <list>
 
 #include <SDL.h>
 
@@ -91,4 +92,12 @@ struct PlayMode : Mode {
 	std::vector<glm::vec2> player_triangle_bullet_pos;
 	std::vector<glm::vec2> player_triangle_bullet_speed;
 
+	struct EnemyBullet {
+		glm::vec2 pos;
+		glm::vec2 speed;
+	};
+	float enemy_bullet_cooldown;
+	float shooting_enemy_speed;
+	std::vector<glm::vec2> shooting_enemy;
+	std::vector<EnemyBullet> enemy_bullet;
 };

@@ -10,6 +10,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include <random>
 #include <cmath>
@@ -58,7 +59,10 @@ void PlayMode::init(int state){
 	triangle_bullet_cooldown_cnt = 40.0f;
 	triangle_bullet_cooldown = 40.0f;
 
+	enemy_bullet_cooldown = 1.0f;
+
 	basic_enemy_speed = 4.0f;
+	shooting_enemy_speed = 2.0f;
 
 	basic_enemy_cap = 75;
 	food_cap = 300;
@@ -265,6 +269,30 @@ void PlayMode::update(float elapsed) {
 				dir = dir/glm::length(dir);
 				basic_enemy[i] += dir*elapsed*basic_enemy_speed;
 		}
+
+		// ===============
+		// shooting_enemy movement & shooting
+		// ===============
+		enemy_bullet_cooldown = enemy_bullet_cooldown - elapsed;
+		for (auto &enemy : shooting_enemy) {
+			float dist = glm::length(player.cluster.pos - enemy);
+			if (dist >= 5.0f) {
+				glm::vec2 dir = glm::normalize(player.cluster.pos - enemy);
+				enemy = enemy + dir * elapsed * shooting_enemy_speed;
+			}
+
+			if (enemy_bullet_cooldown <= 0.0f) {
+				EnemyBullet b;
+				b.pos = enemy;
+				b.speed = bullet_speed * glm::normalize(player.cluster.pos - enemy);
+				enemy_bullet.push_back(b);
+				std::cout << "shoot! ";
+			}
+		}
+		if (enemy_bullet_cooldown <= 0.0f) {
+			std::cout << "cooldown! ";
+			enemy_bullet_cooldown += 1.0f;
+		}
 	
 		// ==============================
 		// eat food = grow a triangle
@@ -360,6 +388,37 @@ void PlayMode::update(float elapsed) {
 			player.destroyTriangles(toErase_player);
 		}
 
+		// ======================
+		// collision with shooting_enemys
+		// ======================
+		{
+			std::vector<int> toErase_shooting_enemy;
+			std::vector<std::pair<int, int>> toErase_player;
+			for (int i = 0; i < (int)shooting_enemy.size(); i++) {
+				glm::vec2 shooting_enemypos = shooting_enemy[i];
+				for (std::pair<int,int> coords : player.cluster.triangles) {
+					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+
+					// is shooting_enemy inside the triangle?
+					if (GeoHelpers::pointInTriangle(shooting_enemypos, corners[0], corners[1], corners[2])) {
+						// play sound
+						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
+
+						toErase_shooting_enemy.push_back(i);
+						toErase_player.push_back(coords);
+						break;
+					}
+				}
+			}
+			for (int i = (int)toErase_shooting_enemy.size()-1; i >= 0; i--) {
+				shooting_enemy.erase(shooting_enemy.begin() + toErase_shooting_enemy[i]);
+			}
+			// remove duplicates and destroy
+			std::sort(toErase_player.begin(), toErase_player.end());
+			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
+			player.destroyTriangles(toErase_player);
+		}
+
 		// ==================================================
 		// Spawn small amount of food randomly in play area
 		// ==================================================
@@ -389,7 +448,13 @@ void PlayMode::update(float elapsed) {
 				else signy = -1.0f;
 
 				glm::vec2 pos = {rand01() * signx * level_bound_max.x * 2.0f, rand01() * signy * level_bound_max.y * 2.0f};
-				basic_enemy.push_back(pos);
+
+				// 15% chance to spawn as a shooting enemy
+				if (rand() % 100 < 15) {
+					shooting_enemy.push_back(pos);
+				} else {
+					basic_enemy.push_back(pos);
+				}
 			}
 		}
 
@@ -432,6 +497,15 @@ void PlayMode::update(float elapsed) {
 			}
 		}
 
+		// =================
+		// enemy bullet movement
+		// =================
+		{
+			for (auto &b : enemy_bullet) {
+				b.pos += b.speed * elapsed;
+			}
+		}
+
 		// =======================
 		// bullet collisions with enemies
 		// =======================
@@ -443,6 +517,15 @@ void PlayMode::update(float elapsed) {
 						player_bullet_pos.erase(player_bullet_pos.begin() + i);
 						player_bullet_speed.erase(player_bullet_speed.begin() + i);
 						basic_enemy.erase(basic_enemy.begin() + j);
+						break;
+					}
+				}
+				for(int j = 0; j < (int)shooting_enemy.size(); j++) {
+					if(GeoHelpers::pointInCircle(player_bullet_pos[i], shooting_enemy[j], rad_basic_basic_enemy)) {
+						score += 1;
+						player_bullet_pos.erase(player_bullet_pos.begin() + i);
+						player_bullet_speed.erase(player_bullet_speed.begin() + i);
+						shooting_enemy.erase(shooting_enemy.begin() + j);
 						break;
 					}
 				}
@@ -458,7 +541,46 @@ void PlayMode::update(float elapsed) {
 						break;
 					}
 				}
+				for(int j = 0; j < (int)shooting_enemy.size(); j++) {
+					if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], shooting_enemy[j], rad_basic_basic_enemy)) {
+						score += 1;
+						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
+						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
+						shooting_enemy.erase(shooting_enemy.begin() + j);
+						break;
+					}
+				}
 			}
+		}
+
+		// =======================
+		// enemy bullet collisions with player
+		// =======================
+		{
+			std::vector<int> toErase_enemy_bullet;
+			std::vector<std::pair<int, int>> toErase_player;
+			for (int i = 0; i < (int)enemy_bullet.size(); i++) {
+				glm::vec2 enemy_bullet_pos = enemy_bullet[i].pos;
+				for (std::pair<int,int> coords : player.cluster.triangles) {
+					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+
+					if (GeoHelpers::pointInTriangle(enemy_bullet_pos, corners[0], corners[1], corners[2])) {
+						// play sound
+						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
+
+						toErase_enemy_bullet.push_back(i);
+						toErase_player.push_back(coords);
+						break;
+					}
+				}
+			}
+			for (int i = (int)toErase_enemy_bullet.size()-1; i >= 0; i--) {
+				enemy_bullet.erase(enemy_bullet.begin() + toErase_enemy_bullet[i]);
+			}
+			// remove duplicates and destroy
+			std::sort(toErase_player.begin(), toErase_player.end());
+			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
+			player.destroyTriangles(toErase_player);
 		}
 	}
 
@@ -552,6 +674,17 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				);
 			}
 		}
+
+		for (auto& k : shooting_enemy) {
+			float rad = rad_basic_basic_enemy;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				drawline_helper(
+					glm::vec3(k + rad * circle[a], 0.0f),
+					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(0xff, 0x80, 0x00, 0xff)
+				);
+			}
+		}
 	}
 
 	{ // draw player bullets
@@ -577,6 +710,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 
+	}
+
+	{ // draw enemy bullets
+		for (auto& k : enemy_bullet) {
+			float rad = 0.1f;
+			for (uint32_t a = 0; a < circle.size(); ++a) {
+				drawline_helper(
+					glm::vec3(k.pos + rad * circle[a], 0.0f),
+					glm::vec3(k.pos + rad * circle[(a+1)%circle.size()], 0.0f),
+					glm::u8vec4(255.f, 127.f, 0.f, 255.f)
+				);
+			}
+		}
 	}
 
 	// draw bounds
