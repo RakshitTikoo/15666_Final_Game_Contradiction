@@ -20,6 +20,7 @@
 #include "GameState.hpp"
 
 #include <random>
+#include "Controls.hpp"
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -40,21 +41,10 @@ struct PlayMode : Mode {
 
 	//----- game state -----
 	//input tracking:
-	struct Button {
-		uint8_t downs = 0;
-		uint8_t pressed = 0;
-	} left, right, down, up, rot_left, rot_right, mouse, space;
-	glm::vec2 mouse_loc;
+	Controls controls;
 
 	// Game Control Values
 	int begin_game;
-	float player_speed = 9.f;
-	float player_rot = 300.f;
-
-	// Music Samples
-	std::shared_ptr< Sound::PlayingSample > MainLoop;
-	float main_volume = 0.5f;
-	float sound_effect_volume = 1.f;
 
 	GameState gs;
 };

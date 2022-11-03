@@ -6,6 +6,7 @@
 struct Drawer {
     glm::vec2 center = {0.f, 0.f};
     float scale = 1.f;
+    float aspect = 1.f;
     DrawLines lines;
 
     Drawer(glm::vec2 drawable_size);

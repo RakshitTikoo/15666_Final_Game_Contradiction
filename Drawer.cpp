@@ -12,10 +12,10 @@ Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 
-	float aspect = float(drawable_size.x) / float(drawable_size.y);
+	this->aspect = float(drawable_size.x) / float(drawable_size.y);
 	glm::vec2 offset = {0.f, 0.f};
 	glm::mat4 world_to_clip = glm::mat4(
-		1.f / aspect, 0.0f, 0.0f, offset.x,
+		1.f / this->aspect, 0.0f, 0.0f, offset.x,
 		0.0f, 1.f, 0.0f, offset.y,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
@@ -29,7 +29,7 @@ void Drawer::set_center(glm::vec2 c) {
 }
 
 void Drawer::set_width(float width) {
-    this->scale = 1.f / width;
+    this->scale = 1.f / (width/2) * this->aspect;
 }
 
 void Drawer::line(glm::vec2 p1, glm::vec2 p2, glm::uvec4 color) {

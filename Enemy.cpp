@@ -31,9 +31,11 @@ void Shooter::update(float elapsed, GameState& state) {
     }
 
     // Shoot bullet towards player
+    bullet_cooldown -= elapsed;
     if (bullet_cooldown <= 0.0f) {
         ShooterBullet* b = new ShooterBullet(this->pos, 15.f * glm::normalize(player_pos - this->pos));
         state.bullets.push_back(b);
+        bullet_cooldown = 1.f;
     }
 
     // TODO: destroy stuff
