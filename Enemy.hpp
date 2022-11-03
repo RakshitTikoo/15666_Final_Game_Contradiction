@@ -6,8 +6,8 @@
 struct GameState; // forward declaration
 
 struct Enemy {
-    virtual void draw(Drawer& drawer);
-    virtual void update(float elapsed, GameState& state);
+    virtual void draw(Drawer& drawer) = 0;
+    virtual void update(float elapsed, GameState& state) = 0;
 };
 
 struct Chaser : Enemy {

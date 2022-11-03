@@ -32,7 +32,7 @@ void Shooter::update(float elapsed, GameState& state) {
 
     // Shoot bullet towards player
     if (bullet_cooldown <= 0.0f) {
-        ShooterBullet b(this->pos, 15.f * glm::normalize(player_pos - this->pos));
+        ShooterBullet* b = new ShooterBullet(this->pos, 15.f * glm::normalize(player_pos - this->pos));
         state.bullets.push_back(b);
     }
 

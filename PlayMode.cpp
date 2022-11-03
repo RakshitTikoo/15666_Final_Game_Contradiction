@@ -58,12 +58,12 @@ void PlayMode::init(int state){
 
 	for (int i = 0; i < 25; i++) {
 		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
-		gs.enemies.push_back(Chaser(pos));
+		gs.enemies.push_back(new Chaser(pos));
 	}
 
 	for (int i = 0; i < 10; i++) {
 		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
-		gs.enemies.push_back(Shooter(pos));
+		gs.enemies.push_back(new Shooter(pos));
 	}
 }
 
@@ -253,11 +253,11 @@ void PlayMode::update(float elapsed) {
 
 	// update enemies and bullets
 	{
-		for (Enemy& e : gs.enemies) {
-			e.update(elapsed, gs);
+		for (Enemy* e : gs.enemies) {
+			e->update(elapsed, gs);
 		}
-		for (Bullet& b : gs.bullets) {
-			b.update(elapsed, gs);
+		for (Bullet* b : gs.bullets) {
+			b->update(elapsed, gs);
 		}
 	}
 
@@ -295,14 +295,14 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	{ // draw basic_enemys
-		for (Enemy& e : gs.enemies) {
-			e.draw(drawer);
+		for (Enemy* e : gs.enemies) {
+			e->draw(drawer);
 		}
 	}
 
 	{ // draw bullets
-		for (Bullet& b : gs.bullets) {
-			b.draw(drawer);
+		for (Bullet* b : gs.bullets) {
+			b->draw(drawer);
 		}
 	}
 

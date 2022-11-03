@@ -11,8 +11,8 @@ struct GameState {
 	glm::vec2 arena_min = {-50.f, -50.f};
 
     Player player;
-    std::vector<Enemy> enemies;
-    std::vector<Bullet> bullets;
+    std::vector<Enemy*> enemies;
+    std::vector<Bullet*> bullets;
     std::vector<glm::vec2> food;
 
 	uint32_t score = 0;
