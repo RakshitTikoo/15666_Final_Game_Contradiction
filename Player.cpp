@@ -126,12 +126,28 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // player shooting
     {
         time_since_shoot += elapsed;
+        for (auto& k : triangle_info) if (k.second.type == 2) {
+            k.second.time_since_shoot += elapsed;
+        }
+
         if (controls.mouse.pressed) {
-            
+            if (time_since_shoot >= SHOOT_COOLDOWN) {
+                time_since_shoot = 0.f;
+                glm::vec2 dir = glm::normalize(controls.mouse_loc - cluster.pos);
+                gs.bullets.push_back(new CoreBullet(cluster.pos, 20.f * dir));
+            }
+            for (auto& k : triangle_info) if (k.second.type == 2) {
+                std::pair<int, int> coords = k.first;
+                PlayerTriangle& t = k.second;
+                if (t.time_since_shoot >= t.SHOOT_COOLDOWN) {
+                    t.time_since_shoot = 0.f;
+                    glm::vec2 p = cluster.getTrianglePosition(coords.first, coords.second);
+                    glm::vec2 dir = glm::normalize(controls.mouse_loc - p);
+                    gs.bullets.push_back(new TurretBullet(p, 8.f * dir));
+                }
+            }
         }
     }
-
-    return;
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {
