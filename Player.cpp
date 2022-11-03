@@ -135,6 +135,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                 time_since_shoot = 0.f;
                 glm::vec2 dir = glm::normalize(controls.mouse_loc - cluster.pos);
                 gs.bullets.push_back(new CoreBullet(cluster.pos, 20.f * dir));
+                Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.5f, 0.0f);
             }
             for (auto& k : triangle_info) if (k.second.type == 2) {
                 std::pair<int, int> coords = k.first;
@@ -144,6 +145,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     glm::vec2 p = cluster.getTrianglePosition(coords.first, coords.second);
                     glm::vec2 dir = glm::normalize(controls.mouse_loc - p);
                     gs.bullets.push_back(new TurretBullet(p, 8.f * dir));
+                    Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.3f, 0.0f);
                 }
             }
         }

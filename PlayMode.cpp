@@ -143,7 +143,7 @@ void PlayMode::update(float elapsed) {
 	}
 
 	{ // update player
-	gs.player.update(elapsed, gs, controls);
+		gs.player.update(elapsed, gs, controls);
 	}
 
 	{ // update enemies
@@ -184,7 +184,7 @@ void PlayMode::update(float elapsed) {
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	Drawer drawer(drawable_size);
 	drawer.set_center(gs.player.cluster.pos);
-	drawer.set_width(100.f);
+	drawer.set_width(30.f);
 
 	{ // draw the player
 		gs.player.draw(drawer);
