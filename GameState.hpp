@@ -8,8 +8,7 @@
 #include "Sound.hpp"
 #include "data_path.hpp"
 
-struct GameState
-{
+struct GameState {
     GameState();
 
     std::shared_ptr<Sound::PlayingSample> MainLoop;
@@ -32,4 +31,6 @@ struct GameState
     Sound::Sample* player_grow;
     Sound::Sample* player_hit;
     Sound::Sample* player_bullet;
+
+    bool in_arena(glm::vec2 p);
 };

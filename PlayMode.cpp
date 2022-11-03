@@ -142,15 +142,30 @@ void PlayMode::update(float elapsed) {
 		}
 	}
 
-	// update player
+	{ // update player
 	gs.player.update(elapsed, gs, controls);
-
-	// update enemies and bullets
-	for (Enemy* e : gs.enemies) {
-		e->update(elapsed, gs);
 	}
-	for (Bullet* b : gs.bullets) {
-		b->update(elapsed, gs);
+
+	{ // update enemies
+		for (Enemy* e : gs.enemies) {
+			e->update(elapsed, gs);
+		}
+		for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
+			if (gs.enemies[i]->destroyed) {
+				gs.enemies.erase(gs.enemies.begin() + i);
+			}
+		}
+	}
+
+	{ // update bullets
+		for (Bullet* b : gs.bullets) {
+			b->update(elapsed, gs);
+		}
+		for (int i = (int)gs.bullets.size()-1; i >= 0; i--) {
+			if (gs.bullets[i]->destroyed) {
+				gs.bullets.erase(gs.bullets.begin() + i);
+			}
+		}
 	}
 
 	//reset button press counters:
@@ -169,7 +184,7 @@ void PlayMode::update(float elapsed) {
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	Drawer drawer(drawable_size);
 	drawer.set_center(gs.player.cluster.pos);
-	drawer.set_width(50.f);
+	drawer.set_width(100.f);
 
 	{ // draw the player
 		gs.player.draw(drawer);

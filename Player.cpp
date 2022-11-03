@@ -75,7 +75,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                 if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
                     toErase.push_back(i);
                     // play sound
-                    Sound::play(*(gs.player_grow), gs.sound_effect_volume*0.5f, 0.0f);
+                    Sound::play(*gs.player_grow, gs.sound_effect_volume*0.5f, 0.0f);
 
                     // add a new triangle to the nearest side
                     float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);

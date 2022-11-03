@@ -7,3 +7,7 @@ GameState::GameState() {
     player_hit = new Sound::Sample(data_path("player_hit.opus"));
     player_bullet = new Sound::Sample(data_path("player_bullet.opus"));
 }
+
+bool GameState::in_arena(glm::vec2 p) {
+    return arena_min.x <= p.x && p.x <= arena_max.x && arena_min.y <= p.y && p.y <= arena_max.y;
+}

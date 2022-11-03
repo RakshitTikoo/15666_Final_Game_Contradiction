@@ -12,6 +12,10 @@ void CoreBullet::draw(Drawer& drawer) {
 }
 void CoreBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
+	if (!state.in_arena(this->pos)) {
+		destroyed = true;
+		return;
+	}
 
 	// TODO: Collide with enemies
 }
@@ -25,6 +29,10 @@ void TurretBullet::draw(Drawer& drawer) {
 }
 void TurretBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
+	if (!state.in_arena(this->pos)) {
+		destroyed = true;
+		return;
+	}
 
 	// TODO: Collide with enemies
 }
@@ -38,6 +46,10 @@ void ShooterBullet::draw(Drawer& drawer) {
 }
 void ShooterBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
+	if (!state.in_arena(this->pos)) {
+		destroyed = true;
+		return;
+	}
 
 	// TODO: Collide with player
 }
