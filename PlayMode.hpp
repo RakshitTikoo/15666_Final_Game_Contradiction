@@ -17,6 +17,8 @@
 #include "TriangleCluster.hpp"
 #include "Player.hpp"
 
+#include "GameState.hpp"
+
 #include <random>
 
 struct PlayMode : Mode {
@@ -36,68 +38,23 @@ struct PlayMode : Mode {
 		return mt() / mx;
 	}
 
-	void player_move(glm::vec2 move_amt);
-
 	//----- game state -----
 	//input tracking:
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
 	} left, right, down, up, rot_left, rot_right, mouse, space;
-
-	Player player;
+	glm::vec2 mouse_loc;
 
 	// Game Control Values
 	int begin_game;
-	
-	glm::vec2 level_bound_max;
-	glm::vec2 level_bound_min;
-
-	float player_speed;
-	float player_rot;
-
-	// Basic Player Weapon
-	float bullet_speed;
-	float bullet_cooldown_cnt;
-	float bullet_cooldown;
-
-	// Triangle Bullets
-	float triangle_bullet_speed;
-	float triangle_bullet_cooldown_cnt;
-	float triangle_bullet_cooldown;
-
-	float basic_enemy_speed;
-	int basic_enemy_cap;
-	float rad_basic_basic_enemy;
-
-	int food_cap;
-
-	uint32_t score;
-
-	glm::vec2 mouse_loc;
-
-	std::string msg;
-	int triangle_type[10] = {1,1,1,1,1,1,1,1,2,2}; // temp, // 0 - basic , 1 - shooter
+	float player_speed = 9.f;
+	float player_rot = 300.f;
 
 	// Music Samples
 	std::shared_ptr< Sound::PlayingSample > MainLoop;
-	float main_volume;
-	float sound_effect_volume;
+	float main_volume = 0.5f;
+	float sound_effect_volume = 1.f;
 
-	std::vector<glm::vec2> food; // temporary
-	std::vector<glm::vec2> basic_enemy;
-	std::vector<glm::vec2> player_bullet_pos;
-	std::vector<glm::vec2> player_bullet_speed;
-
-	std::vector<glm::vec2> player_triangle_bullet_pos;
-	std::vector<glm::vec2> player_triangle_bullet_speed;
-
-	struct EnemyBullet {
-		glm::vec2 pos;
-		glm::vec2 speed;
-	};
-	float enemy_bullet_cooldown;
-	float shooting_enemy_speed;
-	std::vector<glm::vec2> shooting_enemy;
-	std::vector<EnemyBullet> enemy_bullet;
+	GameState gs;
 };

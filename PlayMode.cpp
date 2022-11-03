@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "GeoHelpers.hpp"
+#include "Drawer.hpp"
 
 #define WIDTH 960
 #define HEIGHT 540
@@ -43,73 +44,26 @@ Load< Sound::Sample > Player_Bullet(LoadTagDefault, []() -> Sound::Sample const 
 });
 
 void PlayMode::init(int state){
-	main_volume = 0.5f;
-	sound_effect_volume = 1.0f;
-	level_bound_max = glm::vec2(50.0f, 50.0f);
-	level_bound_min = glm::vec2(-50.0f, -50.0f);
-
-	player_speed = 9.0f;
-	player_rot = 300.0f;
-	bullet_speed = 15.0f;
-
-	bullet_cooldown_cnt = 10.0f;
-	bullet_cooldown = 10.0f;
-
-	triangle_bullet_speed = 15.0f;
-	triangle_bullet_cooldown_cnt = 40.0f;
-	triangle_bullet_cooldown = 40.0f;
-
-	enemy_bullet_cooldown = 1.0f;
-
-	basic_enemy_speed = 4.0f;
-	shooting_enemy_speed = 2.0f;
-
-	basic_enemy_cap = 75;
-	food_cap = 300;
-
-	rad_basic_basic_enemy = 0.25f;
-
-	score = 0;
-
-	begin_game = 0;
-
-	player.cluster.angle *= 0.0f;
+	this->begin_game = 0;
 
 	if(state == 0) {
-		player = Player();
-		msg = "Press Space to Begin";
+		gs.player = Player();
 	}
-	player.addTriangle(0, 0, PlayerTriangle(0));
-	player.cluster.pos = glm::vec2(0.f, 0.f);
+	gs.player.addTriangle(0, 0, PlayerTriangle(0));
 
-	food.clear();
-	basic_enemy.clear();
-	player_bullet_pos.clear();
-	player_bullet_speed.clear();
-	player_triangle_bullet_pos.clear();
-	player_triangle_bullet_speed.clear();
-
-	for (int i = 0; i < food_cap; i++) {
-		float signx;
-		float signy;
-		if(rand()%2 == 0) signx = 1.0f;
-		else signx = -1.0f;
-		if(rand()%2 == 0) signy = 1.0f;
-		else signy = -1.0f;
-		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
-		food.push_back(pos);
+	for (int i = 0; i < 300; i++) {
+		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+		gs.food.push_back(pos);
 	}
 
-	for (int i = 0; i < basic_enemy_cap; i++) {
-		float signx;
-		float signy;
-		if(rand()%2 == 0) signx = 1.0f;
-		else signx = -1.0f;
-		if(rand()%2 == 0) signy = 1.0f;
-		else signy = -1.0f;
+	for (int i = 0; i < 25; i++) {
+		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+		gs.enemies.push_back(Chaser(pos));
+	}
 
-		glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};
-		basic_enemy.push_back(pos);
+	for (int i = 0; i < 10; i++) {
+		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+		gs.enemies.push_back(Shooter(pos));
 	}
 }
 
@@ -192,14 +146,15 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-	if(begin_game == 0) {
-		if(space.pressed) {begin_game = 1; msg = "";}
+	if (begin_game == 0) {
+		if(space.pressed) {
+			begin_game = 1;
+		}
 	} else {
 		// =================
 		// game over logic
 		// =================
-		if (player.cluster.triangles.size() == 0) {
-			msg = "Game Over | Score : " + std::to_string(score); 
+		if (gs.player.cluster.triangles.size() == 0) {
 			Sound::play(*Player_Destroyed, 3.0f*sound_effect_volume, 0.0f);
 			init(1);
 		}
@@ -208,121 +163,47 @@ void PlayMode::update(float elapsed) {
 		// player movement
 		// ===================
 		{
-			//combine inputs into a move:
+			// combine inputs into a move:
 			glm::vec2 move = glm::vec2(0.0f);
 			if (left.pressed && !right.pressed) move.x =-1.0f;
 			if (!left.pressed && right.pressed) move.x = 1.0f;
 			if (down.pressed && !up.pressed) move.y =-1.0f;
 			if (!down.pressed && up.pressed) move.y = 1.0f;
-			//make it so that moving diagonally doesn't go faster:
+			// make it so that moving diagonally doesn't go faster:
 			if (move != glm::vec2(0.0f)) move = player_speed * glm::normalize(move) * elapsed;
 
-			// ================================
-			// Remove out of bounds 
-			// ================================
-
-			// player bullets
-			for (int i = 0; i < (int)player_bullet_pos.size(); i++) {
-				if (player_bullet_pos[i].x > level_bound_max.x || player_bullet_pos[i].x < level_bound_min.x) {
-					player_bullet_pos.erase(player_bullet_pos.begin() + i);
-					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-				}
-				else if (player_bullet_pos[i].y > level_bound_max.y || player_bullet_pos[i].y < level_bound_min.y) {
-					player_bullet_pos.erase(player_bullet_pos.begin() + i);
-					player_bullet_speed.erase(player_bullet_speed.begin() + i);
-				}
-			}
-
-			for (int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-				if (player_triangle_bullet_pos[i].x > level_bound_max.x || player_triangle_bullet_pos[i].x < level_bound_min.x) {
-					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-				}
-				else if (player_triangle_bullet_pos[i].y > level_bound_max.y || player_triangle_bullet_pos[i].y < level_bound_min.y) {
-					player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-					player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-				}
-			}
-
-			// enemy bullet 
-			for (int i = 0; i < (int)enemy_bullet.size(); i++) {
-				if (enemy_bullet[i].pos.x > level_bound_max.x || enemy_bullet[i].pos.x < level_bound_min.x) {
-					enemy_bullet.erase(enemy_bullet.begin() + i);
-				}
-				else if (enemy_bullet[i].pos.y > level_bound_max.y || enemy_bullet[i].pos.y < level_bound_min.y) {
-					enemy_bullet.erase(enemy_bullet.begin() + i);
-				}
-			}
-
-
-			// If player at level_bound
-			glm::vec2 move_check = player.cluster.pos + move;
-			if(move_check.x >= level_bound_max.x || move_check.y >= level_bound_max.y || move_check.x <= level_bound_min.x || move_check.y <= level_bound_min.y)
-			{
-				if(move_check.x >= level_bound_max.x || move_check.x <= level_bound_min.x) move.x = 0.0f;
-				if(move_check.y >= level_bound_max.y || move_check.y <= level_bound_min.y) move.y = 0.0f;
-			}
-
-			player.cluster.pos += move;
+			// Clip player inside arena
+			gs.player.cluster.pos += move;
+			gs.player.cluster.pos = max(gs.arena_min, gs.player.cluster.pos);
+			gs.player.cluster.pos = min(gs.arena_max, gs.player.cluster.pos);
 
 			if (rot_left.pressed) {
-				player.cluster.angle -= player_rot * elapsed;
-				player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
+				gs.player.cluster.angle -= player_rot * elapsed;
+				gs.player.cluster.angle = std::fmodf(gs.player.cluster.angle + 360.0f, 360.0f);
 			}
 			if (rot_right.pressed) {
-				player.cluster.angle += player_rot * elapsed;
-				player.cluster.angle = std::fmodf(player.cluster.angle + 360.0f, 360.0f);
+				gs.player.cluster.angle += player_rot * elapsed;
+				gs.player.cluster.angle = std::fmodf(gs.player.cluster.angle + 360.0f, 360.0f);
 			}
 		}
 
-		// ===============
-		// basic_enemy movement
-		// ===============
-		for (int i = 0; i < (int)basic_enemy.size(); i++) {
-				glm::vec2 dir = player.cluster.pos - basic_enemy[i];
-				dir = dir/glm::length(dir);
-				basic_enemy[i] += dir*elapsed*basic_enemy_speed;
-		}
-
-		// ===============
-		// shooting_enemy movement & shooting
-		// ===============
-		enemy_bullet_cooldown = enemy_bullet_cooldown - elapsed;
-		for (auto &enemy : shooting_enemy) {
-			float dist = glm::length(player.cluster.pos - enemy);
-			if (dist >= 5.0f) {
-				glm::vec2 dir = glm::normalize(player.cluster.pos - enemy);
-				enemy = enemy + dir * elapsed * shooting_enemy_speed;
-			}
-
-			if (enemy_bullet_cooldown <= 0.0f) {
-				EnemyBullet b;
-				b.pos = enemy;
-				b.speed = bullet_speed * glm::normalize(player.cluster.pos - enemy);
-				enemy_bullet.push_back(b);
-			}
-		}
-		if (enemy_bullet_cooldown <= 0.0f) {
-			enemy_bullet_cooldown += 1.0f;
-		}
-	
 		// ==============================
 		// eat food = grow a triangle
 		// ==============================
 		{
 			std::vector<int> toErase;
 			std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
-			for (int i = 0; i < (int)food.size(); i++) {
-				glm::vec2 foodpos = food[i];
-				for (std::pair<int,int> coords : player.cluster.triangles) {
-					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
+			for (int i = 0; i < (int)gs.food.size(); i++) {
+				glm::vec2 foodpos = gs.food[i];
+				for (std::pair<int,int> coords : gs.player.cluster.triangles) {
+					std::vector<glm::vec2> corners = gs.player.cluster.getTriangleCorners(coords.first, coords.second);
 
 					// is foodpos inside the triangle?
 					if (GeoHelpers::pointInTriangle(foodpos, corners[0], corners[1], corners[2])) {
 						toErase.push_back(i);
 						// play sound
 						Sound::play(*Player_Grow, sound_effect_volume*0.5f, 0.0f);
-						score += 1;
+
 						// add a new triangle to the nearest side
 						float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
 						float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
@@ -331,7 +212,7 @@ void PlayMode::update(float elapsed) {
 						float minDist = fmin(d1, fmin(d2, d3));
 
 						auto addTriangle = [&](int x, int y) {
-							toInsert.push_back({{x, y}, PlayerTriangle(triangle_type[std::rand()%10])});
+							toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%2 + 1)});
 						};
 
 						if (minDist == d1) {
@@ -358,241 +239,25 @@ void PlayMode::update(float elapsed) {
 				}
 			}
 			for (int i = (int)toErase.size()-1; i >= 0; i--) {
-				food.erase(food.begin() + toErase[i]);
+				gs.food.erase(gs.food.begin() + toErase[i]);
 			}
 			for (auto k : toInsert) {
 				std::pair<int,int> coords = k.first;
 				PlayerTriangle t = k.second;
-				if (!player.cluster.triangles.count({coords.first, coords.second})) {
-					player.addTriangle(coords.first, coords.second, t);
+				if (!gs.player.cluster.triangles.count({coords.first, coords.second})) {
+					gs.player.addTriangle(coords.first, coords.second, t);
 				}
 			}
 		}
+	}
 
-		// ======================
-		// collision with basic_enemys
-		// ======================
-		{
-			std::vector<int> toErase_basic_enemy;
-			std::vector<std::pair<int, int>> toErase_player;
-			for (int i = 0; i < (int)basic_enemy.size(); i++) {
-				glm::vec2 basic_enemypos = basic_enemy[i];
-				for (std::pair<int,int> coords : player.cluster.triangles) {
-					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-
-					// is basic_enemy inside the triangle?
-					if (GeoHelpers::pointInTriangle(basic_enemypos, corners[0], corners[1], corners[2])) {
-						// play sound
-						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
-
-						toErase_basic_enemy.push_back(i);
-						toErase_player.push_back(coords);
-						break;
-					}
-				}
-			}
-			for (int i = (int)toErase_basic_enemy.size()-1; i >= 0; i--) {
-				basic_enemy.erase(basic_enemy.begin() + toErase_basic_enemy[i]);
-			}
-			// remove duplicates and destroy
-			std::sort(toErase_player.begin(), toErase_player.end());
-			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
-			player.destroyTriangles(toErase_player);
+	// update enemies and bullets
+	{
+		for (Enemy& e : gs.enemies) {
+			e.update(elapsed, gs);
 		}
-
-		// ======================
-		// collision with shooting_enemys
-		// ======================
-		{
-			std::vector<int> toErase_shooting_enemy;
-			std::vector<std::pair<int, int>> toErase_player;
-			for (int i = 0; i < (int)shooting_enemy.size(); i++) {
-				glm::vec2 shooting_enemypos = shooting_enemy[i];
-				for (std::pair<int,int> coords : player.cluster.triangles) {
-					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-
-					// is shooting_enemy inside the triangle?
-					if (GeoHelpers::pointInTriangle(shooting_enemypos, corners[0], corners[1], corners[2])) {
-						// play sound
-						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
-
-						toErase_shooting_enemy.push_back(i);
-						toErase_player.push_back(coords);
-						break;
-					}
-				}
-			}
-			for (int i = (int)toErase_shooting_enemy.size()-1; i >= 0; i--) {
-				shooting_enemy.erase(shooting_enemy.begin() + toErase_shooting_enemy[i]);
-			}
-			// remove duplicates and destroy
-			std::sort(toErase_player.begin(), toErase_player.end());
-			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
-			player.destroyTriangles(toErase_player);
-		}
-
-		// ==================================================
-		// Spawn small amount of food randomly in play area
-		// ==================================================
-		if((int)food.size() <= .5 * food_cap) {// 50 % food left
-			for (int i = 0; i < food_cap - (int)food.size(); i++) {
-				float signx;
-				float signy;
-				if(rand()%2 == 0) signx = 1.0f;
-				else signx = -1.0f;
-				if(rand()%2 == 0) signy = 1.0f;
-				else signy = -1.0f;
-				glm::vec2 pos = {rand01() * signx * level_bound_max.x, rand01() * signy * level_bound_max.y};		
-				food.push_back(pos);
-			}
-		}
-
-		// =============================================
-		// Spawn new enemies (if 25% enemies defeated)
-		// =============================================
-		if((int)basic_enemy.size() <= .75 * basic_enemy_cap) { // 75% enemies left
-			for (int i = 0; i < basic_enemy_cap - (int)basic_enemy.size(); i++) {
-				float signx;
-				float signy;
-				if(rand()%2 == 0) signx = 1.0f;
-				else signx = -1.0f;
-				if(rand()%2 == 0) signy = 1.0f;
-				else signy = -1.0f;
-
-				glm::vec2 pos = {rand01() * signx * level_bound_max.x * 2.0f, rand01() * signy * level_bound_max.y * 2.0f};
-
-				// 15% chance to spawn as a shooting enemy
-				if (rand() % 100 < 15) {
-					shooting_enemy.push_back(pos);
-				} else {
-					basic_enemy.push_back(pos);
-				}
-			}
-		}
-
-		// =================
-		// player bullet movement
-		// =================
-		{
-			glm::vec2 dir = glm::normalize(mouse_loc - player.cluster.pos);
-
-			// Basic Bullet
-			bullet_cooldown_cnt += 1.0f;
-			if(mouse.pressed && bullet_cooldown_cnt >= bullet_cooldown) {
-				Sound::play(*Player_Bullet, sound_effect_volume*0.5f, 0.0f);
-				bullet_cooldown_cnt = 0.0f;
-				player_bullet_pos.push_back(player.cluster.pos);
-				player_bullet_speed.push_back(dir);
-			}
-
-			// Basic Bullet movement
-			for(int i = 0; i < (int)player_bullet_pos.size(); i++) {
-				player_bullet_pos[i] += player_bullet_speed[i]*elapsed*bullet_speed;
-			}
-
-			// Triangle Bullet
-			triangle_bullet_cooldown_cnt += 1.0f;
-			if(mouse.pressed && triangle_bullet_cooldown_cnt >= triangle_bullet_cooldown) {
-				triangle_bullet_cooldown_cnt = 0.0f;
-				for (std::pair<int,int> coords : player.cluster.triangles) {
-					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-					if (player.triangle_info[{coords.first, coords.second}].type == 2) {// Shooting Triangle 
-						player_triangle_bullet_pos.push_back(player.cluster.getTrianglePosition(coords.first, coords.second));
-						player_triangle_bullet_speed.push_back(dir);
-					}
-				}
-			}
-
-			// Triangle Bullet movement
-			for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++) {
-				player_triangle_bullet_pos[i] += player_triangle_bullet_speed[i]*elapsed*bullet_speed;
-			}
-		}
-
-		// =================
-		// enemy bullet movement
-		// =================
-		{
-			for (auto &b : enemy_bullet) {
-				b.pos += b.speed * elapsed;
-			}
-		}
-
-		// =======================
-		// bullet collisions with enemies
-		// =======================
-		{
-			for(int i = 0; i < (int)player_bullet_pos.size(); i++){
-				for(int j = 0; j < (int)basic_enemy.size(); j++) {
-					if(GeoHelpers::pointInCircle(player_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
-						score += 1;
-						player_bullet_pos.erase(player_bullet_pos.begin() + i);
-						player_bullet_speed.erase(player_bullet_speed.begin() + i);
-						basic_enemy.erase(basic_enemy.begin() + j);
-						break;
-					}
-				}
-				for(int j = 0; j < (int)shooting_enemy.size(); j++) {
-					if(GeoHelpers::pointInCircle(player_bullet_pos[i], shooting_enemy[j], rad_basic_basic_enemy)) {
-						score += 1;
-						player_bullet_pos.erase(player_bullet_pos.begin() + i);
-						player_bullet_speed.erase(player_bullet_speed.begin() + i);
-						shooting_enemy.erase(shooting_enemy.begin() + j);
-						break;
-					}
-				}
-			}
-
-			for(int i = 0; i < (int)player_triangle_bullet_pos.size(); i++){
-				for(int j = 0; j < (int)basic_enemy.size(); j++) {
-					if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], basic_enemy[j], rad_basic_basic_enemy)) {
-						score += 1;
-						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-						basic_enemy.erase(basic_enemy.begin() + j);
-						break;
-					}
-				}
-				for(int j = 0; j < (int)shooting_enemy.size(); j++) {
-					if(GeoHelpers::pointInCircle(player_triangle_bullet_pos[i], shooting_enemy[j], rad_basic_basic_enemy)) {
-						score += 1;
-						player_triangle_bullet_pos.erase(player_triangle_bullet_pos.begin() + i);
-						player_triangle_bullet_speed.erase(player_triangle_bullet_speed.begin() + i);
-						shooting_enemy.erase(shooting_enemy.begin() + j);
-						break;
-					}
-				}
-			}
-		}
-
-		// =======================
-		// enemy bullet collisions with player
-		// =======================
-		{
-			std::vector<int> toErase_enemy_bullet;
-			std::vector<std::pair<int, int>> toErase_player;
-			for (int i = 0; i < (int)enemy_bullet.size(); i++) {
-				glm::vec2 enemy_bullet_pos = enemy_bullet[i].pos;
-				for (std::pair<int,int> coords : player.cluster.triangles) {
-					std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-
-					if (GeoHelpers::pointInTriangle(enemy_bullet_pos, corners[0], corners[1], corners[2])) {
-						// play sound
-						Sound::play(*Player_Hit, sound_effect_volume*2.0f, 0.0f);
-
-						toErase_enemy_bullet.push_back(i);
-						toErase_player.push_back(coords);
-						break;
-					}
-				}
-			}
-			for (int i = (int)toErase_enemy_bullet.size()-1; i >= 0; i--) {
-				enemy_bullet.erase(enemy_bullet.begin() + toErase_enemy_bullet[i]);
-			}
-			// remove duplicates and destroy
-			std::sort(toErase_player.begin(), toErase_player.end());
-			toErase_player.erase(std::unique(toErase_player.begin(), toErase_player.end()), toErase_player.end());
-			player.destroyTriangles(toErase_player);
+		for (Bullet& b : gs.bullets) {
+			b.update(elapsed, gs);
 		}
 	}
 
@@ -608,173 +273,53 @@ void PlayMode::update(float elapsed) {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
-	static std::array< glm::vec2, 16 > const circle = [](){
-		std::array< glm::vec2, 16 > ret;
-		for (uint32_t a = 0; a < ret.size(); ++a) {
-			float ang = a / float(ret.size()) * 2.0f * float(M_PI);
-			ret[a] = glm::vec2(std::cos(ang), std::sin(ang));
-		}
-		return ret;
-	}();
-
-	// Not sure what these do but we can change when necessary
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-
-	// TODO: pick values such that the camera follows the player and zooms out as the player gets larger
-	float aspect = float(drawable_size.x) / float(drawable_size.y);
-	float scale = 1.f / 10.f;
-	glm::vec2 offset = {0.f, 0.f};
-	glm::mat4 world_to_clip = glm::mat4(
-		scale / aspect, 0.0f, 0.0f, offset.x,
-		0.0f, scale, 0.0f, offset.y,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	);
-
-	DrawLines lines(world_to_clip);
-	auto drawline_helper = [&](glm::vec3 p1, glm::vec3 p2, glm::u8vec4 color) {
-		glm::vec3 player_pos = glm::vec3(player.cluster.pos.x, player.cluster.pos.y, 0.f);
-		lines.draw(p1 - player_pos, p2 - player_pos, color);
-	};
+	Drawer drawer(drawable_size);
+	drawer.set_center(gs.player.cluster.pos);
+	drawer.set_width(10.f);
 
 	{ // draw the player
-		for (std::pair<int,int> coords : player.cluster.triangles) {
-			std::vector<glm::vec2> corners = player.cluster.getTriangleCorners(coords.first, coords.second);
-			PlayerTriangle t = player.triangle_info[coords];
+		for (std::pair<int,int> coords : gs.player.cluster.triangles) {
+			std::vector<glm::vec2> corners = gs.player.cluster.getTriangleCorners(coords.first, coords.second);
+			PlayerTriangle t = gs.player.triangle_info[coords];
 
-			drawline_helper(
-				glm::vec3(corners[0], 0.f),
-				glm::vec3(corners[1], 0.f),
-				t.color[t.type]
-			);
-			drawline_helper(
-				glm::vec3(corners[1], 0.f),
-				glm::vec3(corners[2], 0.f),
-				t.color[t.type]
-			);
-			drawline_helper(
-				glm::vec3(corners[2], 0.f),
-				glm::vec3(corners[0], 0.f),
-				t.color[t.type]
-			);
+			drawer.line(corners[0], corners[1], t.color[t.type]);
+			drawer.line(corners[1], corners[2], t.color[t.type]);
+			drawer.line(corners[2], corners[0], t.color[t.type]);
 		}
 	}
 
 	{ // draw food
-		for (auto& k : food) {
-			float rad = 0.1f;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k + rad * circle[a], 0.0f),
-					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0x00, 0xff, 0x00, 0xff)
-				);
-			}
+		for (auto& k : gs.food) {
+			drawer.circle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
 		}
 	}
 
 	{ // draw basic_enemys
-		for (auto& k : basic_enemy) {
-			float rad = rad_basic_basic_enemy;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k + rad * circle[a], 0.0f),
-					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0xff, 0x00, 0x00, 0xff)
-				);
-			}
-		}
-
-		for (auto& k : shooting_enemy) {
-			float rad = rad_basic_basic_enemy;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k + rad * circle[a], 0.0f),
-					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(0xff, 0x80, 0x00, 0xff)
-				);
-			}
+		for (Enemy& e : gs.enemies) {
+			e.draw(drawer);
 		}
 	}
 
-	{ // draw player bullets
-		for (auto& k : player_bullet_pos) {
-			float rad = 0.1f;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k + rad * circle[a], 0.0f),
-					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(255.f, 255.f, 0.f, 255.f)
-				);
-			}
-		}
-
-		for (auto& k : player_triangle_bullet_pos) {
-			float rad = 0.1f;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k + rad * circle[a], 0.0f),
-					glm::vec3(k + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(255.f, 0.f, 255.f, 255.f)
-				);
-			}
-		}
-
-	}
-
-	{ // draw enemy bullets
-		for (auto& k : enemy_bullet) {
-			float rad = 0.1f;
-			for (uint32_t a = 0; a < circle.size(); ++a) {
-				drawline_helper(
-					glm::vec3(k.pos + rad * circle[a], 0.0f),
-					glm::vec3(k.pos + rad * circle[(a+1)%circle.size()], 0.0f),
-					glm::u8vec4(255.f, 127.f, 0.f, 255.f)
-				);
-			}
+	{ // draw bullets
+		for (Bullet& b : gs.bullets) {
+			b.draw(drawer);
 		}
 	}
 
-	// draw bounds
-	{
-		drawline_helper(
-				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
-				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
-				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
-			);
-		drawline_helper(
-				glm::vec3(level_bound_min.x, level_bound_max.y, 0.f),
-				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
-				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
-			);
-		drawline_helper(
-				glm::vec3(level_bound_max.x, level_bound_max.y, 0.f),
-				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
-				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
-			);
-		drawline_helper(
-				glm::vec3(level_bound_max.x, level_bound_min.y, 0.f),
-				glm::vec3(level_bound_min.x, level_bound_min.y, 0.f),
-				glm::u8vec4(0xff, 0xff, 0xff, 0xff)
-			);
-	}
-
-	{ // Draw msg
-		float H = 1.5f;
-
-		lines.draw_text(msg, // Main Msg
-		glm::vec3(-4.5f,0.0f,0.0f),
-		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		glm::u8vec4(0xff, 0xff, 0xff, 0xff));
-
-		H = 1.0f;
-
-		lines.draw_text("Score:" + std::to_string(score), // Main Msg
-		glm::vec3(8500.0f/drawable_size.x,4500.0f/drawable_size.y,0.0f),
-		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+	{ // draw bounds
+		glm::u8vec4 color = {255.f, 255.f, 255.f, 255.f};
+		drawer.line(glm::vec2(gs.arena_min.x, gs.arena_min.y),
+					glm::vec2(gs.arena_min.x, gs.arena_max.y),
+					color);
+		drawer.line(glm::vec2(gs.arena_min.x, gs.arena_max.y),
+					glm::vec2(gs.arena_max.x, gs.arena_max.y),
+					color);
+		drawer.line(glm::vec2(gs.arena_max.x, gs.arena_max.y),
+					glm::vec2(gs.arena_max.x, gs.arena_min.y),
+					color);
+		drawer.line(glm::vec2(gs.arena_max.x, gs.arena_min.y),
+					glm::vec2(gs.arena_min.x, gs.arena_min.y),
+					color);
 	}
 
 	GL_ERRORS();
