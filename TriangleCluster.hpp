@@ -4,6 +4,8 @@
 #include <set>
 #include <vector>
 #include <map>
+#include "Hitbox.hpp"
+
 struct TriangleCluster {
     // "coordinates" are defined like so: https://imgur.com/a/ekUSVPs
     // even x means right-side-up, odd means upside-down
@@ -22,4 +24,7 @@ struct TriangleCluster {
     glm::vec2 getTrianglePosition(int i, int j);
 
     std::vector<glm::vec2> getTriangleCorners(int i, int j);
+
+    // nullptr if no intersect, otherwise the coords of a triangle that touches hitbox
+    std::pair<int,int>* intersect(const Hitbox& hitbox);
 };

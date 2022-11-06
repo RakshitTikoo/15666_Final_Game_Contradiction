@@ -132,14 +132,7 @@ void PlayMode::update(float elapsed) {
 		if(controls.space.pressed) {
 			begin_game = 1;
 		}
-	} else {
-		// =================
-		// game over logic
-		// =================
-		if (gs.player.cluster.triangles.size() == 0) {
-			Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
-			init(1);
-		}
+		return;
 	}
 
 	{ // update player
@@ -150,21 +143,28 @@ void PlayMode::update(float elapsed) {
 		for (Enemy* e : gs.enemies) {
 			e->update(elapsed, gs);
 		}
-		for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
-			if (gs.enemies[i]->destroyed) {
-				gs.enemies.erase(gs.enemies.begin() + i);
-			}
-		}
 	}
 
 	{ // update bullets
 		for (Bullet* b : gs.bullets) {
 			b->update(elapsed, gs);
 		}
+	}
+
+	{ // destroy dead things
+		for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
+			if (gs.enemies[i]->destroyed) {
+				gs.enemies.erase(gs.enemies.begin() + i);
+			}
+		}
 		for (int i = (int)gs.bullets.size()-1; i >= 0; i--) {
 			if (gs.bullets[i]->destroyed) {
 				gs.bullets.erase(gs.bullets.begin() + i);
 			}
+		}
+		if (gs.player.cluster.triangles.size() == 0) {
+			Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
+			init(1);
 		}
 	}
 
@@ -184,7 +184,7 @@ void PlayMode::update(float elapsed) {
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	Drawer drawer(drawable_size);
 	drawer.set_center(gs.player.cluster.pos);
-	drawer.set_width(30.f);
+	drawer.set_width(40.f);
 
 	{ // draw the player
 		gs.player.draw(drawer);

@@ -38,7 +38,6 @@ struct Player {
     void draw(Drawer& drawer);
     void update(float elapsed, GameState& state, Controls& controls);
 
-private:
     void addTriangle(int i, int j, PlayerTriangle t);
     void destroyTriangle(int i, int j);
     void destroyTriangles(std::vector<std::pair<int,int>> coords);
