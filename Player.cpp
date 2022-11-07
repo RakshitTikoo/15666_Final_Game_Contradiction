@@ -18,6 +18,7 @@ PlayerTriangle::PlayerTriangle(int type) {
 Player::Player() {
     cluster = TriangleCluster();
 	addTriangle(0, 0, PlayerTriangle(0));
+    cluster.pos = glm::vec2(0.f, 0.f);
 }
 
 void Player::draw(Drawer& drawer) {

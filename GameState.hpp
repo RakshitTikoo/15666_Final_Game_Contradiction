@@ -11,6 +11,8 @@
 struct GameState {
     GameState();
 
+    int state = 0;
+
     std::shared_ptr<Sound::PlayingSample> MainLoop;
 
     float sound_effect_volume = 1.f;

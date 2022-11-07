@@ -31,7 +31,7 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
-	void init(int state);
+	void init();
 
 	std::mt19937 mt; //rng stuff
 	float rand01() {
@@ -42,9 +42,6 @@ struct PlayMode : Mode {
 	//----- game state -----
 	//input tracking:
 	Controls controls;
-
-	// Game Control Values
-	int begin_game;
 
 	GameState gs;
 };

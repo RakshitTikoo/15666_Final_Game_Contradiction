@@ -15,4 +15,5 @@ struct Drawer {
     void set_width(float width);
     void line(glm::vec2 p1, glm::vec2 p2, glm::uvec4 color);
     void circle(glm::vec2 p, float rad, glm::uvec4 color);
+    void text(std::string text, glm::vec2 at, float scale);
 };

@@ -59,3 +59,12 @@ void Drawer::circle(glm::vec2 p, float rad, glm::uvec4 color) {
             color);
     }
 }
+
+// at: bottom left corner of text
+// size: how much to scale the text
+void Drawer::text(std::string text, glm::vec2 at, float size) {
+	this->lines.draw_text(text,
+						  glm::vec3(at.x, at.y, 0.0),
+						  glm::vec3(size, 0.0f, 0.0f), glm::vec3(0.0f, size, 0.0f),
+						  glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+}

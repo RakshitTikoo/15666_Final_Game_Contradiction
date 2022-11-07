@@ -26,23 +26,22 @@
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
-void PlayMode::init(int state){
-	this->begin_game = 0;
+void PlayMode::init(){
+	gs.player = Player();
 
-	if(state == 0) {
-		gs.player = Player();
-	}
+	gs.bullets.clear();
 
+	gs.food.clear();
 	for (int i = 0; i < 300; i++) {
 		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 		gs.food.push_back(pos);
 	}
 
+	gs.enemies.clear();
 	for (int i = 0; i < 25; i++) {
 		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 		gs.enemies.push_back(new Chaser(pos));
 	}
-
 	for (int i = 0; i < 10; i++) {
 		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 		gs.enemies.push_back(new Shooter(pos));
@@ -50,7 +49,7 @@ void PlayMode::init(int state){
 }
 
 PlayMode::PlayMode() {
-	init(0);
+	init();
 	std::cout << "Initialization successful\n"; 
 	
 	gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
@@ -128,9 +127,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-	if (begin_game == 0) {
+	if (gs.state == 0) {
 		if(controls.space.pressed) {
-			begin_game = 1;
+			gs.state = 1;
 		}
 		return;
 	}
@@ -164,7 +163,7 @@ void PlayMode::update(float elapsed) {
 		}
 		if (gs.player.cluster.triangles.size() == 0) {
 			Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
-			init(1);
+			init();
 		}
 	}
 
@@ -222,6 +221,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.line(glm::vec2(gs.arena_max.x, gs.arena_min.y),
 					glm::vec2(gs.arena_min.x, gs.arena_min.y),
 					color);
+	}
+
+	if (gs.state == 0) {
+		drawer.text("Press space to begin", glm::vec2(-0.4f, 0.1f), 0.1f);
+	} else {
+		drawer.text("Score: " + std::to_string(gs.score), glm::vec2(1.5f, 0.85f), 0.05f);
 	}
 
 	GL_ERRORS();
