@@ -52,3 +52,14 @@ std::vector<glm::vec2> TriangleCluster::getTriangleCorners(int i, int j) {
     }
     return res;
 }
+
+std::pair<int,int>* TriangleCluster::intersect(const Hitbox& hitbox) {
+    for (std::pair<int,int> p : triangles) {
+        std::vector<glm::vec2> corners = getTriangleCorners(p.first, p.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+        if (tri_hitbox.intersect(hitbox)) {
+            return new std::pair(p.first, p.second);
+        }
+    }
+    return nullptr;
+}
