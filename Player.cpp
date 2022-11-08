@@ -58,6 +58,16 @@ void Player::draw_explosion(Drawer& drawer) {
 		}
 }
 
+bool Player::explosion_intersect(const Hitbox& hitbox) {
+    
+    for (int i = 0 ; i < (int)explosion_pos.size(); i++) {
+            CircleHitbox explosion_hitbox = CircleHitbox(explosion_pos[i], explosion_rad[i]);
+            if(explosion_hitbox.intersect(hitbox)) return true;
+		}
+    return false;
+}
+
+
 
 void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // ===================

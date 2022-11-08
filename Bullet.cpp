@@ -83,8 +83,14 @@ void ShooterBullet::update(float elapsed, GameState& state) {
 	std::pair<int,int>* hit = state.player.cluster.intersect(ourHitbox);
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
+		Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
 		this->destroyed = true;
 	}
+
+	// Explosion hit logic 
+	if(state.in_arena(this->pos))
+		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
+
 }
 
 // =====================
@@ -101,10 +107,6 @@ SpiralBullet::SpiralBullet(glm::vec2 pos, glm::vec2 init_angle, float speed) {
 	if(init_angle.x == 0.f && init_angle.y == 1.f) this->angle = PI/2.f;
 	if(init_angle.x == -1.f && init_angle.y == 0.f) this->angle = PI;
 	if(init_angle.x == 0.f && init_angle.y == -1.f) this->angle = 3.f*PI/2.f;
-
-	//this->angle = glm::acos(glm::dot(init_angle, glm::vec2(1.f, 1.f))/(glm::length(init_angle)*glm::length(glm::vec2(1.f, 1.f))));
-	//printf("input angle = %f %f , cos = %f | result = %f \n", init_angle.x, init_angle.y, glm::dot(init_angle, glm::vec2(1.f, 1.f))/(glm::length(init_angle)*glm::length(glm::vec2(1.f, 1.f))) ,this->angle);
-
 }
 void SpiralBullet::draw(Drawer& drawer) {
 	drawer.circle(this->pos, this->rad, this->color);
@@ -128,6 +130,11 @@ void SpiralBullet::update(float elapsed, GameState& state) {
 	std::pair<int,int>* hit = state.player.cluster.intersect(ourHitbox);
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
+		Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
 		this->destroyed = true;
 	}
+
+	// Explosion hit logic 
+	if(state.in_arena(this->pos))
+		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
 }

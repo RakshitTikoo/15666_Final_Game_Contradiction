@@ -21,8 +21,14 @@ void Chaser::update(float elapsed, GameState& state) {
 	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
+        Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
 		this->destroyed = true;
 	}
+
+    // Explosion hit logic 
+    if(state.in_arena(this->pos))
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
 }
 Hitbox* Chaser::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
@@ -60,8 +66,14 @@ void Shooter::update(float elapsed, GameState& state) {
 	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
+        Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
 		this->destroyed = true;
 	}
+
+    // Explosion hit logic 
+    if(state.in_arena(this->pos))
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
 }
 Hitbox* Shooter::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
@@ -120,8 +132,13 @@ void Spiral::update(float elapsed, GameState& state) {
 	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
+        Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
 		this->destroyed = true;
 	}
+
+    // Explosion hit logic
+    if(state.in_arena(this->pos)) 
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
 }
 Hitbox* Spiral::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);

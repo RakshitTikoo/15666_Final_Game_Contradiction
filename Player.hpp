@@ -45,7 +45,7 @@ struct Player {
 
     // Explosion related functions
     void draw_explosion(Drawer& drawer);
-    void explosion_intersect(const Hitbox& hitbox);
+    bool explosion_intersect(const Hitbox& hitbox);
 
     float explosion_speed = 0.5f;
     std::vector<glm::vec2> explosion_pos;
