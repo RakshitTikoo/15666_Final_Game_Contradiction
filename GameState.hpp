@@ -7,6 +7,7 @@
 #include <vector>
 #include "Sound.hpp"
 #include "data_path.hpp"
+#include "Boss.hpp"
 
 struct GameState {
     GameState();
@@ -25,6 +26,9 @@ struct GameState {
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
     std::vector<glm::vec2> food;
+
+
+    Trojan TrojanBoss;
 
     uint32_t score = 0;
 

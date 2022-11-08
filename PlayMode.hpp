@@ -16,7 +16,7 @@
 
 #include "TriangleCluster.hpp"
 #include "Player.hpp"
-
+#include "Boss.hpp"
 #include "GameState.hpp"
 
 #include <random>
@@ -43,9 +43,9 @@ struct PlayMode : Mode {
 	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6};
 
 	int food_cnt = 300;
-	int chaser_cnt = 50;
-	int shooter_cnt = 10;
-	int spiral_cnt = 5;
+	int chaser_cnt = 100;
+	int shooter_cnt = 20;
+	int spiral_cnt = 10;
 
 	// Wave and Level Control
 	int current_wave; // Update wave when 25 % enemies left

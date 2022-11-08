@@ -84,7 +84,7 @@ void PlayMode::update_wave(int wave_num){
 			enemy_cnt = (int)gs.enemies.size();
 			break;
 		case 3: // Boss Battle 
-			init();
+			//init();
 			
 			break;
 	}
@@ -95,8 +95,10 @@ void PlayMode::init(){
 	gs.food.clear();
 	gs.enemies.clear();
 	current_wave = 0;
-	update_wave(current_wave);
+	//update_wave(current_wave);
 	
+	gs.TrojanBoss = Trojan();
+
 	gs.state = 0;
 	gs.score = 0;
 
@@ -138,8 +140,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_q) {
 			controls.e.downs += 1;
 			controls.e.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+		} else if (evt.key.keysym.sym == SDLK_SPACE && controls.space.once == 0) {
 			controls.space.downs += 1;
+			controls.space.once = 1;
 			controls.space.pressed = true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
@@ -163,6 +166,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			controls.space.pressed = false;
+			controls.space.once = 0;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -204,6 +208,10 @@ void PlayMode::update(float elapsed) {
 		for (Bullet* b : gs.bullets) {
 			b->update(elapsed, gs);
 		}
+	}
+
+	{ // update boss
+		gs.TrojanBoss.update(elapsed, gs, 1);
 	}
 
 	{ // destroy dead things
@@ -273,6 +281,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			b->draw(drawer);
 		}
 	}
+
+	{ // draw player explosions
+		gs.player.draw_explosion(drawer);
+	}
+
 
 	{ // draw bounds
 		glm::u8vec4 color = {255.f, 255.f, 255.f, 255.f};
