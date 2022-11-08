@@ -28,11 +28,36 @@ void Player::draw(Drawer& drawer) {
         std::vector<glm::vec2> corners = cluster.getTriangleCorners(coords.first, coords.second);
         PlayerTriangle t = triangle_info[coords];
 
-        drawer.line(corners[0], corners[1], t.color[t.type]);
-        drawer.line(corners[1], corners[2], t.color[t.type]);
-        drawer.line(corners[2], corners[0], t.color[t.type]);
+        //drawer.line(corners[0], corners[1], t.color[t.type]);
+        //drawer.line(corners[1], corners[2], t.color[t.type]);
+        //drawer.line(corners[2], corners[0], t.color[t.type]);
+
+        // Unnecessary time waste code to draw smaller triangle 
+        glm::vec2 offset_0 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[0]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[0]);
+        offset_0 = offset_0*0.05f;
+        glm::vec2 offset_1 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[1]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[1]);
+        offset_1 = offset_1*0.05f;
+        glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
+        offset_2 = offset_2*0.05f;
+
+        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
     }
 }
+
+void Player::draw_explosion(Drawer& drawer) {
+    for (int i = 0 ; i < (int)explosion_pos.size(); i++) {
+            drawer.circle(explosion_pos[i], explosion_rad[i], glm::uvec4(255.f, 255.f, 0.f, 255.f));
+            explosion_rad[i] += explosion_speed;
+            if(explosion_rad[i] >= explosion_max_rad[i]) {
+                explosion_pos.erase(explosion_pos.begin() + i);
+                explosion_rad.erase(explosion_rad.begin() + i);
+                explosion_max_rad.erase(explosion_max_rad.begin() + i);
+            }
+		}
+}
+
 
 void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // ===================
@@ -127,7 +152,9 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         }
     }
 
+    // =================
     // player shooting
+    // =================
     {
         time_since_shoot += elapsed;
         for (auto& k : triangle_info) if (k.second.type == 2) {
@@ -154,6 +181,33 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             }
         }
     }
+
+
+    // =====================
+    // player bomb attack
+    // =====================
+    if(controls.space.pressed && controls.space.once == 1) {
+        // enable bomb attack
+        controls.space.once = 2; // One Action per Press
+        //printf("Bomb Attack \n");
+        explosion_pos.push_back(cluster.pos);
+        explosion_max_rad.push_back(std::min((float)cluster.triangles.size() - 1.f, 10.f));
+        explosion_rad.push_back(0.0f);
+
+        // Destroy Triangles
+        for (auto& k : triangle_info)  {
+            std::pair<int, int> coords = k.first;
+
+            if(!(coords.first == 0 && coords.second == 0)) {
+                if(cluster.triangles.count({coords.first, coords.second})) { // Check if triagle in cluster
+                    //triangle_info[{coords.first, coords.second}] = 1; // Reset Hit Box
+                    destroyTriangle(coords.first, coords.second);
+                }    
+            }
+        
+        }
+    }
+
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {

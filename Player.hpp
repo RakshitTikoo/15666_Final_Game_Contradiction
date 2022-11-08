@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Drawer.hpp"
 #include "Controls.hpp"
+#include "Hitbox.hpp"
 
 struct GameState; // forward declaration
 
@@ -21,7 +22,7 @@ struct PlayerTriangle {
         glm::uvec4(0.f, 0.f, 0.f, 255.f)  // defence color
     };
 
-    int triangle_health[4] = {1, 1, 1, 5};
+    int triangle_health[4] = {1, 1, 1, 3};
 
     PlayerTriangle();
 
@@ -40,6 +41,22 @@ struct Player {
     Player();
 
     void draw(Drawer& drawer);
+
+
+    // Explosion related functions
+    void draw_explosion(Drawer& drawer);
+    void explosion_intersect(const Hitbox& hitbox);
+
+    float explosion_speed = 0.5f;
+    std::vector<glm::vec2> explosion_pos;
+    std::vector<float> explosion_rad;
+    std::vector<float> explosion_max_rad; 
+
+
+
+
+
+
     void update(float elapsed, GameState& state, Controls& controls);
 
     void addTriangle(int i, int j, PlayerTriangle t);
