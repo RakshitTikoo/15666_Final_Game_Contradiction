@@ -43,7 +43,7 @@ struct PlayMode : Mode {
 	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6};
 
 	int food_cnt = 300;
-	int chaser_cnt = 25;
+	int chaser_cnt = 50;
 	int shooter_cnt = 10;
 	int spiral_cnt = 5;
 

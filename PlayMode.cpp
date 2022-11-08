@@ -38,21 +38,21 @@ void PlayMode::spawn_entity(int count, int entity_type) {
 
 	case CHASER:
 		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
 			gs.enemies.push_back(new Chaser(pos));
 		}
 		break;
 	
 	case SHOOTER:
 		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
 			gs.enemies.push_back(new Shooter(pos));
 		}
 		break;
 
 	case SPIRAL:
 		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
 			gs.enemies.push_back(new Spiral(pos));
 		}
 		break;

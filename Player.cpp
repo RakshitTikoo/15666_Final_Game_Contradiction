@@ -9,15 +9,17 @@
 
 PlayerTriangle::PlayerTriangle() {
     this->type = 0;
+    this->health = 1;
 }
 
-PlayerTriangle::PlayerTriangle(int type) {
+PlayerTriangle::PlayerTriangle(int type, int health) {
     this->type = type;
+    this->health = health;
 }
 
 Player::Player() {
     cluster = TriangleCluster();
-	addTriangle(0, 0, PlayerTriangle(0));
+	addTriangle(0, 0, PlayerTriangle(0, 1));
     cluster.pos = glm::vec2(0.f, 0.f);
 }
 
@@ -86,7 +88,11 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     float minDist = fmin(d1, fmin(d2, d3));
 
                     auto addTriangle = [&](int x, int y) {
-                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%2 + 1)});
+                        int curr_type = std::rand()%3 + 1; 
+                        int curr_health = 1;
+                        if(curr_type == 3) curr_health = 5;
+
+                        toInsert.push_back({{x, y}, PlayerTriangle(curr_type, curr_health)});
                     };
 
                     if (minDist == d1) {
@@ -135,7 +141,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             if (time_since_shoot >= SHOOT_COOLDOWN) {
                 time_since_shoot = 0.f;
                 glm::vec2 dir = glm::normalize(controls.mouse_loc - cluster.pos);
-                gs.bullets.push_back(new CoreBullet(cluster.pos, 20.f * dir));
+                gs.bullets.push_back(new CoreBullet(cluster.pos, core_bullet_speed * dir));
                 Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.5f, 0.0f);
             }
             for (auto& k : triangle_info) if (k.second.type == 2) {
@@ -145,7 +151,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     t.time_since_shoot = 0.f;
                     glm::vec2 p = cluster.getTrianglePosition(coords.first, coords.second);
                     glm::vec2 dir = glm::normalize(controls.mouse_loc - p);
-                    gs.bullets.push_back(new TurretBullet(p, 8.f * dir));
+                    gs.bullets.push_back(new TurretBullet(p, turret_bullet_speed * dir));
                     Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.3f, 0.0f);
                 }
             }
@@ -161,8 +167,12 @@ void Player::addTriangle(int i, int j, PlayerTriangle t) {
 
 void Player::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
-    eraseSingleTriangle(i, j);
-    dfsEraseTriangles();
+    triangle_info[{i, j}].health -= 1;
+    if(triangle_info[{i, j}].health <= 0)
+    {
+        eraseSingleTriangle(i, j);
+        dfsEraseTriangles();
+    }  
 }
 
 void Player::destroyTriangles(std::vector<std::pair<int,int>> coords) {

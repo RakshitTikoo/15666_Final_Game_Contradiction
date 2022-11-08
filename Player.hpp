@@ -11,6 +11,7 @@ struct GameState; // forward declaration
 struct PlayerTriangle {
     static constexpr float SHOOT_COOLDOWN = 0.5f;
     int type; // 0 - core , 1 - basic, 2 - shooter1, 3 - defence
+    int health; // 1 - by default, defence - 5
     float time_since_shoot = SHOOT_COOLDOWN;
 
     glm::uvec4 color[4] = {
@@ -22,7 +23,7 @@ struct PlayerTriangle {
 
     PlayerTriangle();
 
-    PlayerTriangle(int type);
+    PlayerTriangle(int type, int health);
 };
 
 struct Player {
@@ -32,7 +33,8 @@ struct Player {
     float time_since_shoot = SHOOT_COOLDOWN;
 	float player_speed = 9.f;
 	float player_rot = 300.f;
-
+    float core_bullet_speed = 20.f;
+    float turret_bullet_speed = 20.f;
     Player();
 
     void draw(Drawer& drawer);
