@@ -9,17 +9,17 @@
 
 PlayerTriangle::PlayerTriangle() {
     this->type = 0;
-    this->health = 1;
+    this->health = triangle_health[0];
 }
 
-PlayerTriangle::PlayerTriangle(int type, int health) {
+PlayerTriangle::PlayerTriangle(int type) {
     this->type = type;
-    this->health = health;
+    this->health = triangle_health[type];
 }
 
 Player::Player() {
     cluster = TriangleCluster();
-	addTriangle(0, 0, PlayerTriangle(0, 1));
+	addTriangle(0, 0, PlayerTriangle(0));
     cluster.pos = glm::vec2(0.f, 0.f);
 }
 
@@ -88,11 +88,8 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     float minDist = fmin(d1, fmin(d2, d3));
 
                     auto addTriangle = [&](int x, int y) {
-                        int curr_type = std::rand()%3 + 1; 
-                        int curr_health = 1;
-                        if(curr_type == 3) curr_health = 5;
-
-                        toInsert.push_back({{x, y}, PlayerTriangle(curr_type, curr_health)});
+                        //int curr_type = ; 
+                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%3 + 1)});
                     };
 
                     if (minDist == d1) {
