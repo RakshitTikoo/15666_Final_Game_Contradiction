@@ -26,26 +26,60 @@
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
+void PlayMode::spawn_entity(int count, int entity_type) {
+	switch(entity_type) {
+	
+	case FOOD:
+		for (int i = 0; i < count; i++) {
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			gs.food.push_back(pos);
+		}
+		break;
+
+	case CHASER:
+		for (int i = 0; i < count; i++) {
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			gs.enemies.push_back(new Chaser(pos));
+		}
+		break;
+	
+	case SHOOTER:
+		for (int i = 0; i < count; i++) {
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			gs.enemies.push_back(new Shooter(pos));
+		}
+		break;
+
+	case SPIRAL:
+		for (int i = 0; i < count; i++) {
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			gs.enemies.push_back(new Spiral(pos));
+		}
+		break;
+
+	default: 
+		printf("\nError: Unknown Entity Type\n");
+		break;
+	}
+}
+
+
 void PlayMode::init(){
 	gs.player = Player();
 
 	gs.bullets.clear();
 
 	gs.food.clear();
-	for (int i = 0; i < 300; i++) {
-		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
-		gs.food.push_back(pos);
-	}
-
 	gs.enemies.clear();
-	for (int i = 0; i < 25; i++) {
-		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
-		gs.enemies.push_back(new Chaser(pos));
-	}
-	for (int i = 0; i < 10; i++) {
-		glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
-		gs.enemies.push_back(new Shooter(pos));
-	}
+
+	spawn_entity(300, FOOD);
+	//spawn_entity(10, CHASER);
+	//spawn_entity(10, SHOOTER);
+	spawn_entity(4, SPIRAL);
+	gs.score = 0;
+
+	
+
 }
 
 PlayMode::PlayMode() {
@@ -154,6 +188,7 @@ void PlayMode::update(float elapsed) {
 		for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
 			if (gs.enemies[i]->destroyed) {
 				gs.enemies.erase(gs.enemies.begin() + i);
+				gs.score += 1;
 			}
 		}
 		for (int i = (int)gs.bullets.size()-1; i >= 0; i--) {

@@ -17,7 +17,8 @@ struct Enemy {
 struct Chaser : Enemy {
     glm::vec2 pos = {0.f, 0.f};
     float rad = 0.25f;
-
+    float mov_speed = 4.f;
+    glm::uvec4 color = glm::uvec4(255.f, 0.f, 0.f, 255.f);
     Chaser(glm::vec2 pos);
 
     void draw(Drawer& drawer) override;
@@ -29,8 +30,30 @@ struct Shooter : Enemy {
     glm::vec2 pos = {0.f, 0.f};
     float bullet_cooldown = 0.f;
     float rad = 0.5f;
-
+    float mov_speed = 2.f;
+    float bullet_speed = 20.f;
+    glm::uvec4 color = glm::uvec4(255.f, 177.f, 0.f, 255.f);
     Shooter(glm::vec2 pos);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};
+
+struct Spiral : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    
+    float bullet_cooldown = 0.f;
+    float bullet_per_shot_cooldown = 0.f;
+    
+    int total_bullets_shot = 0;
+    int total_bullets_to_shoot = 20;
+
+    float rad = 0.5f;
+    float mov_speed = 1.f;
+    float bullet_speed = 20.f;
+    glm::uvec4 color = glm::uvec4(203.f, 10.f, 127.f, 255.f);
+    Spiral(glm::vec2 pos);
 
     void draw(Drawer& drawer) override;
     void update(float elapsed, GameState& state) override;

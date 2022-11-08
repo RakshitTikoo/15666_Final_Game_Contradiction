@@ -38,6 +38,26 @@ struct PlayMode : Mode {
 		static float mx = (float)mt.max();
 		return mt() / mx;
 	}
+	
+	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6};
+
+	void spawn_entity(int count, int entity_type);
+	void update_wave();
+
+	
+
+
+
+
+	// Wave Logic
+	// Score 0 - 50 - Spawn Chasers 
+	// Score 50 - 150 - Spawn Chasers + Shooters
+	// Score 150 - 500 - Spawn Chasers + Shooters + Spirals 
+	// Spawn 25 enemies of each type, and as soon as 50 % defeated spawn more
+	// Spawn more food after each wave 
+
+
+
 
 	//----- game state -----
 	//input tracking:
