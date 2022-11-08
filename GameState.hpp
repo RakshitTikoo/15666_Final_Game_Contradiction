@@ -7,6 +7,8 @@
 #include <vector>
 #include "Sound.hpp"
 #include "data_path.hpp"
+#include "Boss.hpp"
+
 
 struct GameState {
     GameState();
@@ -22,6 +24,9 @@ struct GameState {
     glm::vec2 arena_min = {-50.f, -50.f};
 
     Player player;
+    Trojan Trojan_Boss;
+
+
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
     std::vector<glm::vec2> food;

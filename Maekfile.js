@@ -167,7 +167,8 @@ const common_names = [
 	maek.CPP('Sound.cpp'),
 	maek.CPP('load_wav.cpp'),
 	maek.CPP('load_opus.cpp'),
-	maek.CPP('Hitbox.cpp')
+	maek.CPP('Hitbox.cpp'),
+	maek.CPP('Boss.cpp')
 ];
 
 const show_meshes_names = [

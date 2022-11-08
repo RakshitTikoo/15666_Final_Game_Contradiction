@@ -16,7 +16,7 @@
 
 #include "TriangleCluster.hpp"
 #include "Player.hpp"
-
+#include "Boss.hpp"
 #include "GameState.hpp"
 
 #include <random>

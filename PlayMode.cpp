@@ -96,7 +96,7 @@ void PlayMode::init(){
 	gs.enemies.clear();
 	current_wave = 0;
 	update_wave(current_wave);
-	
+	gs.Trojan_Boss = Trojan();
 	gs.state = 0;
 	gs.score = 0;
 
@@ -194,6 +194,12 @@ void PlayMode::update(float elapsed) {
 		gs.player.update(elapsed, gs, controls);
 	}
 
+	{ // update boss
+		gs.Trojan_Boss.update(elapsed, gs, 0);
+	}
+
+
+
 	{ // update enemies
 		for (Enemy* e : gs.enemies) {
 			e->update(elapsed, gs);
@@ -255,6 +261,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	{ // draw the player
 		gs.player.draw(drawer);
 	}
+
+	{ // draw boss
+		gs.Trojan_Boss.draw(drawer);
+	}
+
 
 	{ // draw food
 		for (auto& k : gs.food) {
