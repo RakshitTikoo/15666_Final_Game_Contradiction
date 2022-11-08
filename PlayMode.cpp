@@ -63,19 +63,41 @@ void PlayMode::spawn_entity(int count, int entity_type) {
 	}
 }
 
-
+void PlayMode::update_wave(int wave_num){
+	switch(wave_num) {
+		case 0:
+			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
+			spawn_entity(chaser_cnt, CHASER);
+			enemy_cnt = (int)gs.enemies.size();
+			break;
+		case 1:
+			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
+			spawn_entity(chaser_cnt, CHASER);
+			spawn_entity(shooter_cnt, SHOOTER);
+			enemy_cnt = (int)gs.enemies.size();
+			break;
+		case 2:
+			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
+			spawn_entity(chaser_cnt, CHASER);
+			spawn_entity(shooter_cnt, SHOOTER);
+			spawn_entity(spiral_cnt, SPIRAL);
+			enemy_cnt = (int)gs.enemies.size();
+			break;
+		case 3: // Boss Battle 
+			init();
+			
+			break;
+	}
+}
 void PlayMode::init(){
 	gs.player = Player();
-
 	gs.bullets.clear();
-
 	gs.food.clear();
 	gs.enemies.clear();
-
-	spawn_entity(300, FOOD);
-	//spawn_entity(10, CHASER);
-	//spawn_entity(10, SHOOTER);
-	spawn_entity(4, SPIRAL);
+	current_wave = 0;
+	update_wave(current_wave);
+	
+	gs.state = 0;
 	gs.score = 0;
 
 	
@@ -200,6 +222,16 @@ void PlayMode::update(float elapsed) {
 			Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
 			init();
 		}
+	}
+
+
+
+	{ // Update Wave
+		if(((int)gs.enemies.size()*1.f)/(1.f*enemy_cnt) <= 0.25f) {
+			current_wave += 1;
+			update_wave(current_wave);
+		}
+
 	}
 
 	//reset button press counters:
