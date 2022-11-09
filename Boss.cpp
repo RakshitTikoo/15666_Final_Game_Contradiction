@@ -20,19 +20,34 @@ TrojanTriangle::TrojanTriangle(int type) {
     this->health = triangle_health[type];
 }
 
+
+void Trojan::convert_map2_coordinates(int triangle_type_map_val[size_map][size_map], int triangle_coords_map_val[size_map][size_map]) {
+    for(int i = 0; i < size_map; i++){
+        for(int j = 0; j < size_map; j++){
+            if(triangle_coords_map_val[i][j] == 1) {// Place triangle here 
+                triangle_coords.push_back({i - size_map/2, j - size_map/2});
+                triangle_type.push_back(triangle_type_map_val[i][j]);
+            }
+        }
+    }
+}
+
+
+
 Trojan::Trojan() {
     cluster = TriangleCluster();
+    convert_map2_coordinates(triangle_type_map, triangle_coords_map);
 
     //Add triangles defined in the triangle_coords array
-    for(int i = 0; i < (int) sizeof(triangle_coords)/sizeof(triangle_coords[0]); i++)
+    for(int i = 0; i < (int) triangle_coords.size(); i++)
     {
-        
         std::pair<int, int> k = triangle_coords[i];
-        printf("Adding triangle %d %d %d\n", k.first, k.second, triangle_type[i]);
+        //printf("Adding triangle %d %d %d\n", k.first, k.second, triangle_type[i]);
         addTriangle(k.first, k.second, TrojanTriangle(triangle_type[i]));
     }
 	 
     cluster.pos = glm::vec2(0.f, 0.f);
+    cluster.angle = cluster_angle;
 }
 
 
@@ -59,14 +74,82 @@ void Trojan::draw(Drawer& drawer) {
     }
 }
 
+glm::vec2 Trojan::core_loc(){
+    for (auto& k : triangle_info) if (k.second.type == C) { // Core
+        
+        return cluster.getTrianglePosition(k.first.first, k.first.second);
+        break;
+    }
+    return cluster.pos;
+}
+
+
 void Trojan::update(float elapsed, GameState& gs, int state) {
-    //printf("Updating");
+    // =====================
+    // Boss movement logic
+    // =====================
 
-    // Add action for each mode
+    float px = gs.player.cluster.pos.x; 
+    float py = gs.player.cluster.pos.y; 
 
-    // Add collision
+    glm::vec2 core_pos = core_loc();
 
-    // Add all boss defeat logic
+    if(core_pos.x < px) {
+        cluster.pos.x += elapsed*mov_speed;
+        core_pos = core_loc();
+        if(core_pos.x > px) cluster.pos.x -= (core_pos.x - px);
+    }
+
+    if(core_pos.x > px) {
+        cluster.pos.x -= elapsed*mov_speed;
+        core_pos = core_loc();
+       if(core_pos.x < px) cluster.pos.x += (px - core_pos.x);
+    }
+
+    core_pos = core_loc();
+
+    if(std::abs(core_pos.y - py) < dist_from_player) {
+        cluster.pos.y += elapsed*mov_speed;
+        core_pos = core_loc();
+        if(std::abs(core_pos.y - py) > dist_from_player) cluster.pos.y -= (std::abs((core_pos.y - py) - dist_from_player));
+    }
+
+    if(std::abs(core_pos.y - py) > dist_from_player) {
+        cluster.pos.y -= elapsed*mov_speed;
+        core_pos = core_loc();
+        if(std::abs(core_pos.y - py) < dist_from_player) cluster.pos.y += (dist_from_player - std::abs((core_pos.y - py)));
+    }
+
+    // Bound Check
+    if(cluster.pos.x > gs.arena_max.x) cluster.pos.x = gs.arena_max.x;
+    if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;
+    if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
+    if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
+
+    // ================
+    // State Update
+    // ================
+
+    if(state == IDLE) {
+        return;
+    }
+
+    if(state == SHOOT1) {
+
+    }
+
+    if(state == SHOOT2) {
+
+    }
+
+    if(state == BOMB) {
+
+    }
+
+    if(state == CHARGE) {
+
+    }
+
 }
 
 void Trojan::addTriangle(int i, int j, TrojanTriangle t) {
