@@ -140,10 +140,14 @@ struct Trojan : Boss {
     void dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>& visited);
 
 
-    enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHARGE = 4};
+    void check_triangle_collision(GameState &gs);
+    void check_triangle_bomb_collision(GameState &gs);
+
+    enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHASE = 4};
 
     float cluster_angle = 0.f;
     float mov_speed = 8.f;
+    float chase_speed = 9.f;
 
 
     float dist_from_player = 10.f;

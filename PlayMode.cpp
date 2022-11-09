@@ -56,6 +56,14 @@ void PlayMode::spawn_entity(int count, int entity_type) {
 			gs.enemies.push_back(new Spiral(pos));
 		}
 		break;
+	
+	case BOMBER:
+		for (int i = 0; i < count; i++) {
+			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
+			gs.enemies.push_back(new Bomber(pos));
+		}
+		break;
+
 
 	default: 
 		printf("\nError: Unknown Entity Type\n");
@@ -85,7 +93,8 @@ void PlayMode::update_wave(int wave_num){
 			break;
 		case 3: // Boss Battle 
 			//init();
-			
+			//spawn_entity(20, BOMBER);
+			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
 			break;
 	}
 }
@@ -138,9 +147,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_q) {
 			controls.e.downs += 1;
 			controls.e.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+		} else if (evt.key.keysym.sym == SDLK_SPACE && controls.space.once == 0) {
 			controls.space.downs += 1;
 			controls.space.pressed = true;
+			controls.space.once = 1;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -163,6 +173,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			controls.space.pressed = false;
+			controls.space.once = 0;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -195,7 +206,7 @@ void PlayMode::update(float elapsed) {
 	}
 
 	{ // update boss
-		gs.Trojan_Boss.update(elapsed, gs, 0);
+		gs.Trojan_Boss.update(elapsed, gs, 3);
 	}
 
 
@@ -266,6 +277,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		gs.Trojan_Boss.draw(drawer);
 	}
 
+	{ // draw player explosion
+		gs.player.draw_explosion(drawer);
+
+	}
 
 	{ // draw food
 		for (auto& k : gs.food) {

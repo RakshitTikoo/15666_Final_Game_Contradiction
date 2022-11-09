@@ -59,3 +59,26 @@ struct Spiral : Enemy {
     void update(float elapsed, GameState& state) override;
     Hitbox* getHitbox() override;
 };
+
+
+struct Bomber : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    float rad = 0.25f;
+    float bomb_rad = rad*20.f; 
+    float mov_speed = 4.f;
+    
+    glm::uvec4 color = glm::uvec4(0xAA, 0xA9, 0xAD, 255.f);
+    Bomber(glm::vec2 pos);
+
+    int bomb_phase = 0;
+    int blink_time = 75;
+
+    int blink_render = 0;
+
+    void draw_explosion();
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};
+

@@ -197,7 +197,6 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // player bomb attack
     // =====================
     if(controls.space.pressed && controls.space.once == 1) {
-        // enable bomb attack
         controls.space.once = 2; // One Action per Press
         //printf("Bomb Attack \n");
         explosion_pos.push_back(cluster.pos);

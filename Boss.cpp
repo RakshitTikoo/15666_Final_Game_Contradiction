@@ -90,53 +90,14 @@ glm::vec2 Trojan::core_loc(){
 
 
 void Trojan::update(float elapsed, GameState& gs, int state) {
-    // =====================
-    // Boss movement logic
-    // =====================
-
-    float px = gs.player.cluster.pos.x; 
-    float py = gs.player.cluster.pos.y; 
-
+    
     glm::vec2 core_pos = core_loc();
-
-    if(core_pos.x < px) {
-        cluster.pos.x += elapsed*mov_speed;
-        core_pos = core_loc();
-        if(core_pos.x > px) cluster.pos.x -= (core_pos.x - px);
-    }
-
-    if(core_pos.x > px) {
-        cluster.pos.x -= elapsed*mov_speed;
-        core_pos = core_loc();
-       if(core_pos.x < px) cluster.pos.x += (px - core_pos.x);
-    }
-
-    core_pos = core_loc();
-
-    if(std::abs(core_pos.y - py) < dist_from_player) {
-        cluster.pos.y += elapsed*mov_speed;
-        core_pos = core_loc();
-        if(std::abs(core_pos.y - py) > dist_from_player) cluster.pos.y -= (std::abs((core_pos.y - py) - dist_from_player));
-    }
-
-    if(std::abs(core_pos.y - py) > dist_from_player) {
-        cluster.pos.y -= elapsed*mov_speed;
-        core_pos = core_loc();
-        if(std::abs(core_pos.y - py) < dist_from_player) cluster.pos.y += (dist_from_player - std::abs((core_pos.y - py)));
-    }
-
-    // Bound Check
-    if(cluster.pos.x > gs.arena_max.x) cluster.pos.x = gs.arena_max.x;
-    if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;
-    if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
-    if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
-
     // ================
     // State Update
     // ================
 
     if(state == IDLE) {
-        return;
+        
     }
 
     shoot1_cnt += elapsed;
@@ -176,16 +137,98 @@ void Trojan::update(float elapsed, GameState& gs, int state) {
         } 
     }
 
-    if(state == BOMB) {
-
+    bomb_cnt += elapsed;
+    if(state == BOMB) { // spawns bombers
+        if(bomb_cnt >= bomb_rate){
+        bomb_cnt = 0.f;
+        for (auto& k : triangle_info) if (k.second.type == B) { // Shooter
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                Bomber* b = new Bomber(loc);
+                gs.enemies.push_back(b); 
+            }
+        }
     }
 
-    if(state == CHARGE) {
-
+    if(state == CHASE) {
+        core_pos = core_loc();
+        glm::vec2 dir = glm::normalize(gs.player.cluster.pos - core_pos);
+        cluster.pos += elapsed*dir*chase_speed;
     }
+    
+    if(state != CHASE) {
+        // ============================
+        // Boss normal movement logic
+        // ============================
+
+        float px = gs.player.cluster.pos.x; 
+        float py = gs.player.cluster.pos.y; 
+
+        core_pos = core_loc();
+
+        if(core_pos.x < px) {
+            cluster.pos.x += elapsed*mov_speed;
+            core_pos = core_loc();
+            if(core_pos.x > px) cluster.pos.x -= (core_pos.x - px);
+        }
+
+        if(core_pos.x > px) {
+            cluster.pos.x -= elapsed*mov_speed;
+            core_pos = core_loc();
+           if(core_pos.x < px) cluster.pos.x += (px - core_pos.x);
+        }
+
+        core_pos = core_loc();
+
+        if(std::abs(core_pos.y - py) < dist_from_player) {
+            cluster.pos.y += elapsed*mov_speed;
+            core_pos = core_loc();
+            if(std::abs(core_pos.y - py) > dist_from_player) cluster.pos.y -= (std::abs((core_pos.y - py) - dist_from_player));
+        }
+
+        if(std::abs(core_pos.y - py) > dist_from_player) {
+            cluster.pos.y -= elapsed*mov_speed;
+            core_pos = core_loc();
+            if(std::abs(core_pos.y - py) < dist_from_player) cluster.pos.y += (dist_from_player - std::abs((core_pos.y - py)));
+        }
+    }
+    // Bound Check
+    if(cluster.pos.x > gs.arena_max.x) cluster.pos.x = gs.arena_max.x;
+    if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;
+    if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
+    if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
+
+    // Check collision between player and boss
+    //check_triangle_collision(gs); // Need to implement triangle triangle intersect
+
+    // Check collision between player bomb and boss
+    //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
 }
 
+void Trojan::check_triangle_bomb_collision(GameState &gs) {
+    // Explosion hit logic 
+    for (auto& k : triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+	    if(gs.player.explosion_intersect(tri_hitbox)) destroyTriangle(k.first.first, k.first.second);
+    }
+}
+
+void Trojan::check_triangle_collision(GameState &gs) {
+    // check player and boss triangle collision
+    for (auto& k : triangle_info) {
+        for (auto& j : gs.player.triangle_info) {
+            std::vector<glm::vec2> corners = gs.player.cluster.getTriangleCorners(j.first.first, j.first.second);
+            TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+            std::pair<int,int>* hit = cluster.intersect(tri_hitbox);
+            if (hit != nullptr) {
+	        	destroyTriangle(k.first.first, k.first.second);
+	        	gs.player.destroyTriangle(j.first.first, j.first.second);
+                break;
+	        }
+        }
+    }
+}
 void Trojan::addTriangle(int i, int j, TrojanTriangle t) {
     assert(!cluster.triangles.count({i, j}));
     cluster.insertTriangle(i, j);
@@ -195,9 +238,6 @@ void Trojan::addTriangle(int i, int j, TrojanTriangle t) {
 void Trojan::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
-
-    
-
     if(triangle_info[{i, j}].health <= 0)
     {
         if(triangle_info[{i, j}].type == C) { // Destroy all if core
