@@ -45,8 +45,13 @@ Trojan::Trojan() {
         //printf("Adding triangle %d %d %d\n", k.first, k.second, triangle_type[i]);
         addTriangle(k.first, k.second, TrojanTriangle(triangle_type[i]));
     }
-	 
-    cluster.pos = glm::vec2(0.f, 0.f);
+    
+    
+    // Adjusting to match player core
+    cluster.pos = glm::vec2(0.f, 4.f*dist_from_player);
+    //glm::vec2 cluster_loc = core_loc();
+    //if(cluster_loc.x < 0.f) cluster.pos.x += cluster_loc.x;
+    
     cluster.angle = cluster_angle;
 }
 
@@ -134,12 +139,41 @@ void Trojan::update(float elapsed, GameState& gs, int state) {
         return;
     }
 
+    shoot1_cnt += elapsed;
     if(state == SHOOT1) {
-
+        if(shoot1_cnt >= shoot1_rate) {
+            shoot1_cnt = 0.f;
+            for (auto& k : triangle_info) if (k.second.type == S) { // Shooter
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                glm::vec2 dir = glm::normalize(gs.player.cluster.pos - loc);
+                TrojanBullet* b = new TrojanBullet(loc,  bullet_speed1 * dir);
+                gs.bullets.push_back(b); 
+            }
+        } 
     }
 
+    shoot2_cnt += elapsed;
     if(state == SHOOT2) {
+        if(shoot2_cnt >= shoot2_rate) {
+            shoot2_cnt = 0.f;
 
+            // Spray bullets in a sprinkler like fashion
+            core_pos = core_loc();
+            glm::vec2 target = glm::vec2(core_pos.x + shoot2_dir_cnt, core_pos.y - 20.f);
+            
+            if(shoot2_dir == 0) shoot2_dir_cnt += 2.0f;
+            else shoot2_dir_cnt -= 2.0f;
+
+            if(shoot2_dir_cnt < -1.0f*shoot2_dir_max) {shoot2_dir = 0; shoot2_dir_cnt = -1.0f*shoot2_dir_max;}
+            if(shoot2_dir_cnt > shoot2_dir_max)       {shoot2_dir = 1; shoot2_dir_cnt = shoot2_dir_max;}
+
+            for (auto& k : triangle_info) if (k.second.type == S) { // Shooter
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                glm::vec2 dir = glm::normalize(target - cluster.pos);
+                TrojanBullet* b = new TrojanBullet(loc,  bullet_speed2 * dir);
+                gs.bullets.push_back(b); 
+            }
+        } 
     }
 
     if(state == BOMB) {

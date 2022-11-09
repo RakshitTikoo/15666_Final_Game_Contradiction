@@ -66,3 +66,14 @@ struct SpiralBullet : Bullet {
     void draw(Drawer& drawer) override;
     void update(float elapsed, GameState& state) override;
 };
+
+struct TrojanBullet : Bullet {
+    glm::vec2 pos;
+    glm::vec2 speed;
+    float rad = 0.1f;
+    glm::uvec4 color = glm::uvec4(255.f, 0.f, 255.f, 255.f);
+    TrojanBullet(glm::vec2 pos, glm::vec2 speed);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+};

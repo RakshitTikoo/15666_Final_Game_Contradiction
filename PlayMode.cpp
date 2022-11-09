@@ -84,7 +84,7 @@ void PlayMode::update_wave(int wave_num){
 			enemy_cnt = (int)gs.enemies.size();
 			break;
 		case 3: // Boss Battle 
-			init();
+			//init();
 			
 			break;
 	}
@@ -94,7 +94,7 @@ void PlayMode::init(){
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	current_wave = 0;
+	current_wave = 3;
 	update_wave(current_wave);
 	gs.Trojan_Boss = Trojan();
 	gs.state = 0;

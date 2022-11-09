@@ -150,15 +150,23 @@ struct Trojan : Boss {
 
 
 
-    float shoot1_rate = 5.f;
-    float shoot1_cnt = 5.f;
+    float shoot1_rate = 1.f;
+    float shoot1_cnt = 1.f;
 
-    float shoot2_rate = 0.5f;
-    float shoot2_cnt = 0.5f;
+    float shoot2_rate = 0.3f;
+    float shoot2_cnt = 0.3f;
 
-    float bomb_rate = 5.f;
-    float bomb_cnt = 5.f;
+    float shoot2_dir_max = 20.f;
+    float shoot2_dir_cnt = 0.f;
+    int shoot2_dir = 0;
+
+    float bomb_rate = 2.5f;
+    float bomb_cnt = 2.5f;
+
+    float bullet_speed1 = 20.f;
+    float bullet_speed2 = 20.f;
 
     glm::vec2 core_loc();
+    
 
 };

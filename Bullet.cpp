@@ -30,6 +30,14 @@ void CoreBullet::update(float elapsed, GameState& state) {
 			this->destroyed = true;
 		}
 	}
+
+	// Hit the Boss
+	std::pair<int,int>* hit = state.Trojan_Boss.cluster.intersect(ourHitbox);
+	if (hit != nullptr) {
+		state.Trojan_Boss.destroyTriangle(hit->first, hit->second);
+		this->destroyed = true;
+	}
+
 }
 
 // =====================
@@ -58,6 +66,14 @@ void TurretBullet::update(float elapsed, GameState& state) {
 			this->destroyed = true;
 		}
 	}
+
+	// Hit the Boss
+	std::pair<int,int>* hit = state.Trojan_Boss.cluster.intersect(ourHitbox);
+	if (hit != nullptr) {
+		state.Trojan_Boss.destroyTriangle(hit->first, hit->second);
+		this->destroyed = true;
+	}
+
 }
 
 
@@ -137,4 +153,37 @@ void SpiralBullet::update(float elapsed, GameState& state) {
 	// Explosion hit logic 
 	if(state.in_arena(this->pos))
 		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
+}
+
+
+// =====================
+// Trojan Bullet 
+// =====================
+
+TrojanBullet::TrojanBullet(glm::vec2 pos, glm::vec2 speed) {
+	this->pos = pos;
+	this->speed = speed;
+}
+void TrojanBullet::draw(Drawer& drawer) {
+	drawer.circle(this->pos, this->rad, this->color);
+}
+void TrojanBullet::update(float elapsed, GameState& state) {
+	this->pos += this->speed * elapsed;
+	if (!state.in_arena(this->pos)) {
+		destroyed = true;
+		return;
+	}
+
+	CircleHitbox ourHitbox(this->pos, this->rad);
+	std::pair<int,int>* hit = state.player.cluster.intersect(ourHitbox);
+	if (hit != nullptr) {
+		state.player.destroyTriangle(hit->first, hit->second);
+		Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
+		this->destroyed = true;
+	}
+
+	// Explosion hit logic 
+	if(state.in_arena(this->pos))
+		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
+
 }
