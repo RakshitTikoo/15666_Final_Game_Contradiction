@@ -195,12 +195,25 @@ void Trojan::addTriangle(int i, int j, TrojanTriangle t) {
 void Trojan::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
+
+    
+
     if(triangle_info[{i, j}].health <= 0)
     {
-        eraseSingleTriangle(i, j);
-        dfsEraseTriangles();
-    }  
+        if(triangle_info[{i, j}].type == C) { // Destroy all if core
+        for (auto& k : triangle_info) {
+            eraseSingleTriangle(k.first.first, k.first.second);
+        }
+        }
+
+        else 
+            eraseSingleTriangle(i, j);
+    } 
+
+    
+     
 }
+
 
 void Trojan::destroyTriangles(std::vector<std::pair<int,int>> coords) {
     for (std::pair<int,int> c : coords) {
