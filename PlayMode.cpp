@@ -79,6 +79,7 @@ void PlayMode::init(){
 	gs.enemies.clear();
 	gs.state = 0;
 	gs.score = 0;
+	gs.trojan = nullptr;
 
 	gs.current_level = 0;
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update

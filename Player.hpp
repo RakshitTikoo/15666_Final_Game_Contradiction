@@ -19,7 +19,7 @@ struct PlayerTriangle {
         glm::uvec4(255.f, 255.f, 0.f, 255.f),  // core color
         glm::uvec4(0.f, 255.f, 255.f, 255.f),  // basic color
         glm::uvec4(255.f, 0.f, 255.f, 255.f),  // shooter1 color
-        glm::uvec4(0.f, 0.f, 0.f, 255.f)  // defence color
+        glm::uvec4(128.f, 128.f, 128.f, 255.f)  // defence color
     };
 
     int triangle_health[4] = {1, 1, 1, 3};
