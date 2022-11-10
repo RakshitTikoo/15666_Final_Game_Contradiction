@@ -24,8 +24,7 @@ struct GameState {
     glm::vec2 arena_min = {-50.f, -50.f};
 
     Player player;
-    Trojan Trojan_Boss;
-
+    Trojan* trojan = nullptr;
 
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
@@ -38,6 +37,9 @@ struct GameState {
     Sound::Sample* player_grow;
     Sound::Sample* player_hit;
     Sound::Sample* player_bullet;
+
+	int current_wave = 0;
+    int current_level = 0;
 
     bool in_arena(glm::vec2 p);
 };

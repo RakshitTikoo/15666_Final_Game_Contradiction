@@ -52,11 +52,6 @@ struct Player {
     std::vector<float> explosion_rad;
     std::vector<float> explosion_max_rad; 
 
-
-
-
-
-
     void update(float elapsed, GameState& state, Controls& controls);
 
     void addTriangle(int i, int j, PlayerTriangle t);

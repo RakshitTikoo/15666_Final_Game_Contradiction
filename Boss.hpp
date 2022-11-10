@@ -39,7 +39,7 @@ struct TrojanTriangle : BossTriangle {
 };
 
 struct Trojan : Boss { 
-    Trojan();
+    Trojan(glm::vec2 pos);
     
     std::map<std::pair<int, int>, TrojanTriangle> triangle_info; // stores information for each triangle in the cluster
     TriangleCluster cluster; // stores the triangle cluster itself
@@ -129,7 +129,7 @@ struct Trojan : Boss {
 
 
     void draw(Drawer& drawer);
-    void update(float elapsed, GameState& gs, int state); // state 0 - rest | 1 - shooting mode 1 | 2 - shooting mode 2 | 3 - RAM Mode | 4 - Bomb Mode
+    void update(float elapsed, GameState& gs); // state 0 - rest | 1 - shooting mode 1 | 2 - shooting mode 2 | 3 - RAM Mode | 4 - Bomb Mode
 
 
     void addTriangle(int i, int j, TrojanTriangle t);
@@ -145,9 +145,11 @@ struct Trojan : Boss {
 
     enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHASE = 4};
 
+    float alive_time = 0.f;
+
     float cluster_angle = 0.f;
     float mov_speed = 8.f;
-    float chase_speed = 9.f;
+    float chase_speed = 3.f;
 
 
     float dist_from_player = 10.f;

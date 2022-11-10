@@ -48,26 +48,23 @@ void Player::draw(Drawer& drawer) {
 
 void Player::draw_explosion(Drawer& drawer) {
     for (int i = 0 ; i < (int)explosion_pos.size(); i++) {
-            drawer.circle(explosion_pos[i], explosion_rad[i], glm::uvec4(255.f, 255.f, 0.f, 255.f));
-            explosion_rad[i] += explosion_speed;
-            if(explosion_rad[i] >= explosion_max_rad[i]) {
-                explosion_pos.erase(explosion_pos.begin() + i);
-                explosion_rad.erase(explosion_rad.begin() + i);
-                explosion_max_rad.erase(explosion_max_rad.begin() + i);
-            }
-		}
+        drawer.circle(explosion_pos[i], explosion_rad[i], glm::uvec4(255.f, 255.f, 0.f, 255.f));
+        explosion_rad[i] += explosion_speed;
+        if (explosion_rad[i] >= explosion_max_rad[i]) {
+            explosion_pos.erase(explosion_pos.begin() + i);
+            explosion_rad.erase(explosion_rad.begin() + i);
+            explosion_max_rad.erase(explosion_max_rad.begin() + i);
+        }
+    }
 }
 
 bool Player::explosion_intersect(const Hitbox& hitbox) {
-    
     for (int i = 0 ; i < (int)explosion_pos.size(); i++) {
-            CircleHitbox explosion_hitbox = CircleHitbox(explosion_pos[i], explosion_rad[i]);
-            if(explosion_hitbox.intersect(hitbox)) return true;
-		}
+        CircleHitbox explosion_hitbox = CircleHitbox(explosion_pos[i], explosion_rad[i]);
+        if (explosion_hitbox.intersect(hitbox)) return true;
+    }
     return false;
 }
-
-
 
 void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // ===================

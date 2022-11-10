@@ -26,91 +26,62 @@
 // throws on compilation error.
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
-void PlayMode::spawn_entity(int count, int entity_type) {
+void PlayMode::spawn_entity(int entity_type) {
+	glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+	if (entity_type != FOOD) {
+		// reroll until far enough away
+		while (glm::length(pos - gs.player.cluster.pos) < 30) {
+			pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+		}
+	}
+
 	switch(entity_type) {
-	
-	case FOOD:
-		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+		case FOOD:
 			gs.food.push_back(pos);
-		}
-		break;
+			break;
 
-	case CHASER:
-		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
+		case CHASER:
 			gs.enemies.push_back(new Chaser(pos));
-		}
-		break;
-	
-	case SHOOTER:
-		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
+			break;
+		
+		case SHOOTER:
 			gs.enemies.push_back(new Shooter(pos));
-		}
-		break;
+			break;
 
-	case SPIRAL:
-		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
+		case SPIRAL:
 			gs.enemies.push_back(new Spiral(pos));
-		}
-		break;
-	
-	case BOMBER:
-		for (int i = 0; i < count; i++) {
-			glm::vec2 pos = glm::vec2(rand01(), rand01()) * 2.f*(gs.arena_max - gs.arena_min) + gs.arena_min;
+			break;
+		
+		case BOMBER:
 			gs.enemies.push_back(new Bomber(pos));
-		}
-		break;
+			break;
+		
+		case TROJAN:
+			gs.trojan = new Trojan(pos);
+			break;
 
-
-	default: 
-		printf("\nError: Unknown Entity Type\n");
-		break;
+		default: 
+			printf("\nError: Unknown Entity Type\n");
+			break;
 	}
 }
 
-void PlayMode::update_wave(int wave_num){
-	switch(wave_num) {
-		case 0:
-			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
-			spawn_entity(chaser_cnt, CHASER);
-			enemy_cnt = (int)gs.enemies.size();
-			break;
-		case 1:
-			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
-			spawn_entity(chaser_cnt, CHASER);
-			spawn_entity(shooter_cnt, SHOOTER);
-			enemy_cnt = (int)gs.enemies.size();
-			break;
-		case 2:
-			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
-			spawn_entity(chaser_cnt, CHASER);
-			spawn_entity(shooter_cnt, SHOOTER);
-			spawn_entity(spiral_cnt, SPIRAL);
-			enemy_cnt = (int)gs.enemies.size();
-			break;
-		case 3: // Boss Battle 
-			//init();
-			//spawn_entity(20, BOMBER);
-			spawn_entity(food_cnt - (int)gs.food.size(), FOOD);
-			break;
+void PlayMode::spawn_entities(int count, int entity_type) {
+	for (int i = 0; i < count; i++) {
+		spawn_entity(entity_type);
 	}
 }
+
 void PlayMode::init(){
 	gs.player = Player();
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	current_wave = 3;
-	update_wave(current_wave);
-	gs.Trojan_Boss = Trojan();
 	gs.state = 0;
 	gs.score = 0;
 
-	
-
+	gs.current_level = 0;
+	gs.current_wave = -1; // hacky way to get first wave to spawn on update
 }
 
 PlayMode::PlayMode() {
@@ -206,10 +177,10 @@ void PlayMode::update(float elapsed) {
 	}
 
 	{ // update boss
-		gs.Trojan_Boss.update(elapsed, gs, 3);
+		if (gs.trojan != nullptr) {
+			gs.trojan->update(elapsed, gs);
+		}
 	}
-
-
 
 	{ // update enemies
 		for (Enemy* e : gs.enemies) {
@@ -241,14 +212,23 @@ void PlayMode::update(float elapsed) {
 		}
 	}
 
-
-
-	{ // Update Wave
-		if(((int)gs.enemies.size()*1.f)/(1.f*enemy_cnt) <= 0.25f) {
-			current_wave += 1;
-			update_wave(current_wave);
+	{ // Update wave
+		if (gs.enemies.empty() && gs.trojan == nullptr) {
+			gs.current_wave++;
+			if (gs.current_wave == levels[gs.current_level].size()) {
+				gs.current_level++;
+				gs.current_wave = 0;
+			}
+			if (gs.current_level == NUM_LEVELS) {
+				gs.state = 0;
+				return;
+			}
+			// Spawn wave
+			spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD);
+			for (pair<int, int> to_spawn : levels[gs.current_level][gs.current_wave]) {
+				spawn_entities(to_spawn.first, to_spawn.second);
+			}
 		}
-
 	}
 
 	//reset button press counters:
@@ -274,7 +254,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	{ // draw boss
-		gs.Trojan_Boss.draw(drawer);
+		if (gs.trojan != nullptr) {
+			gs.trojan->draw(drawer);
+		}
 	}
 
 	{ // draw player explosion
@@ -319,7 +301,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	if (gs.state == 0) {
 		drawer.text("Press space to begin", glm::vec2(-0.4f, 0.1f), 0.1f);
 	} else {
-		drawer.text("Score: " + std::to_string(gs.score), glm::vec2(1.5f, 0.85f), 0.05f);
+		drawer.text("Wave " + std::to_string(gs.current_wave), glm::vec2(1.5f, 0.85f), 0.05f);
 	}
 
 	GL_ERRORS();

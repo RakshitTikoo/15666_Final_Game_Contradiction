@@ -32,12 +32,13 @@ void CoreBullet::update(float elapsed, GameState& state) {
 	}
 
 	// Hit the Boss
-	std::pair<int,int>* hit = state.Trojan_Boss.cluster.intersect(ourHitbox);
-	if (hit != nullptr) {
-		state.Trojan_Boss.destroyTriangle(hit->first, hit->second);
-		this->destroyed = true;
+	if (state.trojan != nullptr) {
+		std::pair<int,int>* hit = state.trojan->cluster.intersect(ourHitbox);
+		if (hit != nullptr) {
+			state.trojan->destroyTriangle(hit->first, hit->second);
+			this->destroyed = true;
+		}
 	}
-
 }
 
 // =====================
@@ -52,6 +53,8 @@ void TurretBullet::draw(Drawer& drawer) {
 	drawer.circle(pos, this->rad, this->color);
 }
 void TurretBullet::update(float elapsed, GameState& state) {
+	this->lifespan -= elapsed;
+	if (this->lifespan <= 0) this->destroyed = true;
 	this->pos += this->speed * elapsed;
 	if (!state.in_arena(this->pos)) {
 		destroyed = true;
@@ -68,14 +71,14 @@ void TurretBullet::update(float elapsed, GameState& state) {
 	}
 
 	// Hit the Boss
-	std::pair<int,int>* hit = state.Trojan_Boss.cluster.intersect(ourHitbox);
-	if (hit != nullptr) {
-		state.Trojan_Boss.destroyTriangle(hit->first, hit->second);
-		this->destroyed = true;
+	if (state.trojan != nullptr) {
+		std::pair<int,int>* hit = state.trojan->cluster.intersect(ourHitbox);
+		if (hit != nullptr) {
+			state.trojan->destroyTriangle(hit->first, hit->second);
+			this->destroyed = true;
+		}
 	}
-
 }
-
 
 // =====================
 // Shooter Bullet 
@@ -89,6 +92,8 @@ void ShooterBullet::draw(Drawer& drawer) {
 	drawer.circle(this->pos, this->rad, this->color);
 }
 void ShooterBullet::update(float elapsed, GameState& state) {
+	this->lifespan -= elapsed;
+	if (this->lifespan <= 0) this->destroyed = true;
 	this->pos += this->speed * elapsed;
 	if (!state.in_arena(this->pos)) {
 		destroyed = true;
@@ -128,7 +133,8 @@ void SpiralBullet::draw(Drawer& drawer) {
 	drawer.circle(this->pos, this->rad, this->color);
 }
 void SpiralBullet::update(float elapsed, GameState& state) {
-	//this->pos += this->speed * elapsed;
+	this->lifespan -= elapsed;
+	if (this->lifespan <= 0) this->destroyed = true;
 	if (!state.in_arena(this->pos)) {
 		destroyed = true;
 		return;
@@ -155,11 +161,9 @@ void SpiralBullet::update(float elapsed, GameState& state) {
 		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
 }
 
-
 // =====================
 // Trojan Bullet 
 // =====================
-
 TrojanBullet::TrojanBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->pos = pos;
 	this->speed = speed;

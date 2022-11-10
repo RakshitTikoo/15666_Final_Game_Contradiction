@@ -1,12 +1,9 @@
 #include "Enemy.hpp"
 #include "GameState.hpp"
 
-
-
 // ================== 
 // CHASER
 // ================== 
-
 Chaser::Chaser(glm::vec2 pos) {
     this->pos = pos;
 }
@@ -34,12 +31,9 @@ Hitbox* Chaser::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
 }
 
-
-
 // ================== 
 // SHOOTER
 // ================== 
-
 Shooter::Shooter(glm::vec2 pos) {
     this->pos = pos;
 }

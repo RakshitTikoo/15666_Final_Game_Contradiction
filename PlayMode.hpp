@@ -22,6 +22,8 @@
 #include <random>
 #include "Controls.hpp"
 
+using namespace std;
+
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
@@ -40,29 +42,21 @@ struct PlayMode : Mode {
 	}
 	
 	// Entity Control
-	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6};
+	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7};
+	void spawn_entity(int entity_type);
+	void spawn_entities(int count, int entity_type);
 
-	int food_cnt = 300;
-	int chaser_cnt = 50;
-	int shooter_cnt = 10;
-	int spiral_cnt = 5;
-
-	// Wave and Level Control
-	int current_wave; // Update wave when 25 % enemies left
-	int enemy_cnt; 
-
-	void spawn_entity(int count, int entity_type);
-	void update_wave(int wavenum);
-
-	
-
-
-
-
-	
-
-
-
+	static constexpr int MAX_FOOD = 300;
+	static constexpr int NUM_LEVELS = 1;
+	vector<vector<pair<int, int>>> levels[NUM_LEVELS] = {
+		{ // Level 0
+			{{10, CHASER}},
+			{{20, CHASER}, {3, SHOOTER}},
+			{{40, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
+			{{50, CHASER}, {10, SHOOTER}, {5, SPIRAL}},
+			{{1, TROJAN}}
+		}
+	};
 
 	//----- game state -----
 	//input tracking:

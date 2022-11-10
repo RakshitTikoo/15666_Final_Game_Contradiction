@@ -20,7 +20,6 @@ TrojanTriangle::TrojanTriangle(int type) {
     this->health = triangle_health[type];
 }
 
-
 void Trojan::convert_map2_coordinates(int triangle_type_map_val[size_map][size_map], int triangle_coords_map_val[size_map][size_map]) {
     for(int i = 0; i < size_map; i++){
         for(int j = 0; j < size_map; j++){
@@ -32,29 +31,19 @@ void Trojan::convert_map2_coordinates(int triangle_type_map_val[size_map][size_m
     }
 }
 
-
-
-Trojan::Trojan() {
+Trojan::Trojan(glm::vec2 pos) {
     cluster = TriangleCluster();
     convert_map2_coordinates(triangle_type_map, triangle_coords_map);
 
     //Add triangles defined in the triangle_coords array
-    for(int i = 0; i < (int) triangle_coords.size(); i++)
-    {
+    for(int i = 0; i < (int) triangle_coords.size(); i++) {
         std::pair<int, int> k = triangle_coords[i];
-        //printf("Adding triangle %d %d %d\n", k.first, k.second, triangle_type[i]);
         addTriangle(k.first, k.second, TrojanTriangle(triangle_type[i]));
     }
     
-    
     // Adjusting to match player core
-    cluster.pos = glm::vec2(0.f, 4.f*dist_from_player);
-    //glm::vec2 cluster_loc = core_loc();
-    //if(cluster_loc.x < 0.f) cluster.pos.x += cluster_loc.x;
-    
-    cluster.angle = cluster_angle;
+    cluster.pos = pos;
 }
-
 
 void Trojan::draw(Drawer& drawer) {
     for (std::pair<int,int> coords : cluster.triangles) {
@@ -81,7 +70,6 @@ void Trojan::draw(Drawer& drawer) {
 
 glm::vec2 Trojan::core_loc(){
     for (auto& k : triangle_info) if (k.second.type == C) { // Core
-        
         return cluster.getTrianglePosition(k.first.first, k.first.second);
         break;
     }
@@ -89,15 +77,22 @@ glm::vec2 Trojan::core_loc(){
 }
 
 
-void Trojan::update(float elapsed, GameState& gs, int state) {
+void Trojan::update(float elapsed, GameState& gs) {
     
     glm::vec2 core_pos = core_loc();
     // ================
     // State Update
     // ================
 
-    if(state == IDLE) {
-        
+    alive_time += elapsed;
+    float f = fmodf(alive_time, 20);
+    int state = IDLE;
+    if (f < 5) {
+        state = SHOOT1;
+    } else if (f < 12) {
+        state = SHOOT2;
+    } else {
+        state = BOMB;
     }
 
     shoot1_cnt += elapsed;
@@ -149,48 +144,12 @@ void Trojan::update(float elapsed, GameState& gs, int state) {
         }
     }
 
-    if(state == CHASE) {
-        core_pos = core_loc();
-        glm::vec2 dir = glm::normalize(gs.player.cluster.pos - core_pos);
+    glm::vec2 dir = gs.player.cluster.pos - core_pos;
+    if (glm::length(dir) > 10) {
+        dir = glm::normalize(dir);
         cluster.pos += elapsed*dir*chase_speed;
     }
     
-    if(state != CHASE) {
-        // ============================
-        // Boss normal movement logic
-        // ============================
-
-        float px = gs.player.cluster.pos.x; 
-        float py = gs.player.cluster.pos.y; 
-
-        core_pos = core_loc();
-
-        if(core_pos.x < px) {
-            cluster.pos.x += elapsed*mov_speed;
-            core_pos = core_loc();
-            if(core_pos.x > px) cluster.pos.x -= (core_pos.x - px);
-        }
-
-        if(core_pos.x > px) {
-            cluster.pos.x -= elapsed*mov_speed;
-            core_pos = core_loc();
-           if(core_pos.x < px) cluster.pos.x += (px - core_pos.x);
-        }
-
-        core_pos = core_loc();
-
-        if(std::abs(core_pos.y - py) < dist_from_player) {
-            cluster.pos.y += elapsed*mov_speed;
-            core_pos = core_loc();
-            if(std::abs(core_pos.y - py) > dist_from_player) cluster.pos.y -= (std::abs((core_pos.y - py) - dist_from_player));
-        }
-
-        if(std::abs(core_pos.y - py) > dist_from_player) {
-            cluster.pos.y -= elapsed*mov_speed;
-            core_pos = core_loc();
-            if(std::abs(core_pos.y - py) < dist_from_player) cluster.pos.y += (dist_from_player - std::abs((core_pos.y - py)));
-        }
-    }
     // Bound Check
     if(cluster.pos.x > gs.arena_max.x) cluster.pos.x = gs.arena_max.x;
     if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;

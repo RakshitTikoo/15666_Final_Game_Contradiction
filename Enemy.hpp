@@ -17,7 +17,7 @@ struct Enemy {
 struct Chaser : Enemy {
     glm::vec2 pos = {0.f, 0.f};
     float rad = 0.25f;
-    float mov_speed = 4.f;
+    float mov_speed = 8.f;
     glm::uvec4 color = glm::uvec4(255.f, 0.f, 0.f, 255.f);
     Chaser(glm::vec2 pos);
 

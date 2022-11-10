@@ -18,6 +18,7 @@ struct CoreBullet : Bullet {
     glm::vec2 pos = {0.f, 0.f};
     glm::vec2 speed = {0.f, 0.f};
     float rad = 0.1f;
+    float lifespan = 0.7f;
     glm::uvec4 color = glm::uvec4(255.f, 255.f, 0.f, 255.f);
     CoreBullet(glm::vec2 pos, glm::vec2 speed);
 
@@ -29,6 +30,7 @@ struct TurretBullet : Bullet {
     glm::vec2 pos = {0.f, 0.f};
     glm::vec2 speed = {0.f, 0.f};
     float rad = 0.1f;
+    float lifespan = 0.5f;
     glm::uvec4 color = glm::uvec4(255.f, 0.f, 255.f, 255.f);
     TurretBullet(glm::vec2 pos, glm::vec2 speed);
 
@@ -40,6 +42,7 @@ struct ShooterBullet : Bullet {
     glm::vec2 pos;
     glm::vec2 speed;
     float rad = 0.1f;
+    float lifespan = 0.5f;
     glm::uvec4 color = glm::uvec4(255.f, 127.f, 0.f, 255.f);
     ShooterBullet(glm::vec2 pos, glm::vec2 speed);
 
@@ -60,6 +63,7 @@ struct SpiralBullet : Bullet {
     float rot_rad = 1.f;
     glm::vec2 ori_pos;
     
+    float lifespan = 3.f;
     glm::uvec4 color = glm::uvec4(203.f, 10.f, 127.f, 255.f);
     SpiralBullet(glm::vec2 pos, glm::vec2 init_angle, float speed);
 
