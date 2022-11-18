@@ -343,6 +343,7 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Drawer drawer(drawable_size);
 	if (gs.state == 0) {
 		TextRenderer.draw_msg("Poly Defence", 100.f, 650.f, 1.f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
 		TextRenderer.draw_msg(title_options[0], 100.f, 500.f, title_options_scale[0], drawable_size, title_options_color[0]);
@@ -359,10 +360,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		TextRenderer.draw_msg("Space - Player Bomb Attack", 100.f, 200.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 	else if(gs.state == 1) {
-		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 900.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
-	
-
-		Drawer drawer(drawable_size);
+		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 800.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);
 		
