@@ -83,10 +83,17 @@ void PlayMode::init(){
 
 	gs.current_level = 0;
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update
+
+
 }
 
 PlayMode::PlayMode() {
 	init();
+
+	// Init Text Renderer
+	TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
+
+
 	std::cout << "Initialization successful\n"; 
 	
 	gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
@@ -246,6 +253,7 @@ void PlayMode::update(float elapsed) {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
+	
 	Drawer drawer(drawable_size);
 	drawer.set_center(gs.player.cluster.pos);
 	drawer.set_width(40.f);
@@ -300,10 +308,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	if (gs.state == 0) {
-		drawer.text("Press space to begin", glm::vec2(-0.4f, 0.1f), 0.1f);
+		TextRenderer.draw_msg("Press space to begin", 450.f, 550.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
 	} else {
-		drawer.text("Wave " + std::to_string(gs.current_wave), glm::vec2(1.5f, 0.85f), 0.05f);
+		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 900.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
 	}
-
+	
 	GL_ERRORS();
 }

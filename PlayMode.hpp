@@ -22,6 +22,8 @@
 #include <random>
 #include "Controls.hpp"
 
+#include "DrawText.hpp"
+
 using namespace std;
 
 struct PlayMode : Mode {
@@ -63,4 +65,7 @@ struct PlayMode : Mode {
 	Controls controls;
 
 	GameState gs;
+
+	DrawText TextRenderer;
+
 };
