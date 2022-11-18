@@ -96,7 +96,7 @@ PlayMode::PlayMode() {
 
 	std::cout << "Initialization successful\n"; 
 	
-	gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+	
 }
 
 PlayMode::~PlayMode() {
@@ -130,7 +130,23 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			controls.space.downs += 1;
 			controls.space.pressed = true;
 			controls.space.once = 1;
+		} else if (evt.key.keysym.sym == SDLK_RETURN && controls.enter.once == 0) {
+			controls.enter.downs += 1;
+			controls.enter.pressed = true;
+			controls.enter.once = 1;
 		}
+		else if (evt.key.keysym.sym == SDLK_UP && controls.arrow_up.once == 0) {
+			controls.arrow_up.downs += 1;
+			controls.arrow_up.pressed = true;
+			controls.arrow_up.once = 1;
+		}
+		else if (evt.key.keysym.sym == SDLK_DOWN && controls.arrow_down.once == 0) {
+			controls.arrow_down.downs += 1;
+			controls.arrow_down.pressed = true;
+			controls.arrow_down.once = 1;
+		}
+
+
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
 			controls.left.pressed = false;
@@ -154,6 +170,18 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			controls.space.pressed = false;
 			controls.space.once = 0;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_RETURN) {
+			controls.enter.pressed = false;
+			controls.enter.once = 0;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_UP) {
+			controls.arrow_up.pressed = false;
+			controls.arrow_up.once = 0;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_DOWN) {
+			controls.arrow_down.pressed = false;
+			controls.arrow_down.once = 0;
+			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
 		controls.mouse.downs += 1;
@@ -173,9 +201,52 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-	if (gs.state == 0) {
-		if(controls.space.pressed) {
-			gs.state = 1;
+	if (gs.state == 0) { 
+		// =========================
+		// Title Screen Settings
+		// =========================
+
+		if(controls.arrow_up.pressed && controls.arrow_up.once == 1) {
+			controls.arrow_up.once = 2;
+			selected_option -= 1;
+		}
+		
+		if(controls.arrow_down.pressed && controls.arrow_down.once == 1) {
+			controls.arrow_down.once = 2;
+			selected_option += 1;
+		}
+
+		if(selected_option < 0) selected_option = 0;
+		if(selected_option > 5) selected_option = 5;
+
+
+		if (gs.MainLoop != nullptr){
+			gs.MainLoop->volume = 0.f;
+		}
+		for(int i = 0; i < 6; i++) {
+			if(i != selected_option) {
+				title_options_color[i] = glm::vec3(0.5f, 0.5f, 0.5f);
+				title_options_scale[i] = 0.5f;
+			}
+			else {
+				title_options_color[i] = glm::vec3(1.0f, 1.0f, 1.0f);
+				title_options_scale[i] = 0.75f;
+			}
+		}
+
+		
+		 
+		if(controls.enter.pressed) {
+			if(selected_option == 0) { // Level 1 select
+				gs.state = 1;
+				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			}
+			
+
+			if(selected_option == 5) { // Quit select
+				exit(0);
+			}
+
 		}
 		return;
 	}
@@ -249,68 +320,77 @@ void PlayMode::update(float elapsed) {
 		controls.e.downs = 0;
 		controls.mouse.downs = 0;
 		controls.space.pressed = 0;
+		controls.enter.pressed = 0;
 	}
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
-	
-	Drawer drawer(drawable_size);
-	drawer.set_center(gs.player.cluster.pos);
-	drawer.set_width(40.f);
-
-	{ // draw the player
-		gs.player.draw(drawer);
-	}
-
-	{ // draw boss
-		if (gs.trojan != nullptr) {
-			gs.trojan->draw(drawer);
-		}
-	}
-
-	{ // draw player explosion
-		gs.player.draw_explosion(drawer);
-
-	}
-
-	{ // draw food
-		for (auto& k : gs.food) {
-			drawer.circle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
-		}
-	}
-
-	{ // draw basic_enemys
-		for (Enemy* e : gs.enemies) {
-			e->draw(drawer);
-		}
-	}
-
-	{ // draw bullets
-		for (Bullet* b : gs.bullets) {
-			b->draw(drawer);
-		}
-	}
-
-	{ // draw bounds
-		glm::u8vec4 color = {255.f, 255.f, 255.f, 255.f};
-		drawer.line(glm::vec2(gs.arena_min.x, gs.arena_min.y),
-					glm::vec2(gs.arena_min.x, gs.arena_max.y),
-					color);
-		drawer.line(glm::vec2(gs.arena_min.x, gs.arena_max.y),
-					glm::vec2(gs.arena_max.x, gs.arena_max.y),
-					color);
-		drawer.line(glm::vec2(gs.arena_max.x, gs.arena_max.y),
-					glm::vec2(gs.arena_max.x, gs.arena_min.y),
-					color);
-		drawer.line(glm::vec2(gs.arena_max.x, gs.arena_min.y),
-					glm::vec2(gs.arena_min.x, gs.arena_min.y),
-					color);
-	}
-
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if (gs.state == 0) {
-		TextRenderer.draw_msg("Press space to begin", 450.f, 550.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		TextRenderer.draw_msg("Poly Defence", 100.f, 650.f, 1.f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		TextRenderer.draw_msg(title_options[0], 100.f, 500.f, title_options_scale[0], drawable_size, title_options_color[0]);
+		TextRenderer.draw_msg(title_options[1], 100.f, 450.f, title_options_scale[1], drawable_size, title_options_color[1]);
+		TextRenderer.draw_msg(title_options[2], 100.f, 400.f, title_options_scale[2], drawable_size, title_options_color[2]);
+		TextRenderer.draw_msg(title_options[3], 100.f, 350.f, title_options_scale[3], drawable_size, title_options_color[3]);
+		TextRenderer.draw_msg(title_options[4], 100.f, 300.f, title_options_scale[4], drawable_size, title_options_color[4]);
+		TextRenderer.draw_msg(title_options[5], 100.f, 250.f, title_options_scale[5], drawable_size, title_options_color[5]);
 	} else {
 		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 900.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+	
+
+		Drawer drawer(drawable_size);
+		drawer.set_center(gs.player.cluster.pos);
+		drawer.set_width(40.f);
+		
+		{ // draw the player
+			gs.player.draw(drawer);
+		}
+		
+		{ // draw boss
+			if (gs.trojan != nullptr) {
+				gs.trojan->draw(drawer);
+			}
+		}
+		
+		{ // draw player explosion
+			gs.player.draw_explosion(drawer);
+		
+		}
+		
+		{ // draw food
+			for (auto& k : gs.food) {
+				drawer.circle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
+			}
+		}
+		
+		{ // draw basic_enemys
+			for (Enemy* e : gs.enemies) {
+				e->draw(drawer);
+			}
+		}
+		
+		{ // draw bullets
+			for (Bullet* b : gs.bullets) {
+				b->draw(drawer);
+			}
+		}
+		
+		{ // draw bounds
+			glm::u8vec4 color = {255.f, 255.f, 255.f, 255.f};
+			drawer.line(glm::vec2(gs.arena_min.x, gs.arena_min.y),
+						glm::vec2(gs.arena_min.x, gs.arena_max.y),
+						color);
+			drawer.line(glm::vec2(gs.arena_min.x, gs.arena_max.y),
+						glm::vec2(gs.arena_max.x, gs.arena_max.y),
+						color);
+			drawer.line(glm::vec2(gs.arena_max.x, gs.arena_max.y),
+						glm::vec2(gs.arena_max.x, gs.arena_min.y),
+						color);
+			drawer.line(glm::vec2(gs.arena_max.x, gs.arena_min.y),
+						glm::vec2(gs.arena_min.x, gs.arena_min.y),
+						color);
+		}
+		
 	}
 	
 	GL_ERRORS();

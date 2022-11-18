@@ -66,6 +66,25 @@ struct PlayMode : Mode {
 
 	GameState gs;
 
+	// Title screen options
+	int selected_option = 0;
+	const char* title_options[6] = {
+		"Level 1", "Level 2", "Level 3", "Free Mode", "Controls", "Quit" 
+	};
+
+	float title_options_scale[6] = {
+		0.75f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f
+	};
+
+	glm::vec3 title_options_color[6] = {
+		glm::vec3(1.0f, 1.0f, 1.0f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(0.5f, 0.5f, 0.5f),
+		glm::vec3(0.5f, 0.5f, 0.5f) 
+	}; 
+
 	DrawText TextRenderer;
 
 };
