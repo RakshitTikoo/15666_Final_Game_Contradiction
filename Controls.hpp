@@ -7,6 +7,6 @@ struct Controls {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
 		uint8_t once = 0;
-	} left, right, down, up, q, e, mouse, space, enter, c, arrow_down, arrow_up;
+	} left, right, down, up, q, e, mouse, space, enter, escape, arrow_down, arrow_up;
 	glm::vec2 mouse_loc;
 };

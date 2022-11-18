@@ -145,6 +145,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			controls.arrow_down.pressed = true;
 			controls.arrow_down.once = 1;
 		}
+		else if (evt.key.keysym.sym == SDLK_ESCAPE && controls.escape.once == 0) {
+			controls.escape.downs += 1;
+			controls.escape.pressed = true;
+			controls.escape.once = 1;
+		}
 
 
 	} else if (evt.type == SDL_KEYUP) {
@@ -181,6 +186,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_DOWN) {
 			controls.arrow_down.pressed = false;
 			controls.arrow_down.once = 0;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_ESCAPE) {
+			controls.escape.pressed = false;
+			controls.escape.once = 0;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -241,7 +250,10 @@ void PlayMode::update(float elapsed) {
 				gs.state = 1;
 				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
 			}
-			
+
+			if(selected_option == 4) { // Controls select
+				gs.state = 4;
+			}
 
 			if(selected_option == 5) { // Quit select
 				exit(0);
@@ -250,6 +262,11 @@ void PlayMode::update(float elapsed) {
 		}
 		return;
 	}
+
+	if(gs.state == 4) { // Control menu
+		if(controls.escape.pressed) gs.state = 0;
+		return;
+	};
 
 	{ // update player
 		gs.player.update(elapsed, gs, controls);
@@ -334,7 +351,14 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		TextRenderer.draw_msg(title_options[3], 100.f, 350.f, title_options_scale[3], drawable_size, title_options_color[3]);
 		TextRenderer.draw_msg(title_options[4], 100.f, 300.f, title_options_scale[4], drawable_size, title_options_color[4]);
 		TextRenderer.draw_msg(title_options[5], 100.f, 250.f, title_options_scale[5], drawable_size, title_options_color[5]);
-	} else {
+	} 
+	else if(gs.state == 4) { // Controls
+		TextRenderer.draw_msg("W A S D - Move Player", 100.f, 500.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		TextRenderer.draw_msg("Q - Player Rotate Anti-Clockwise", 100.f, 400.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		TextRenderer.draw_msg("E - Player Rotate Clockwise", 100.f, 300.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+		TextRenderer.draw_msg("Space - Player Bomb Attack", 100.f, 200.f, 0.75f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
+	}
+	else if(gs.state == 1) {
 		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 900.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
 	
 
