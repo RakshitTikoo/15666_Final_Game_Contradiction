@@ -55,10 +55,16 @@ void PlayMode::spawn_entity(int entity_type) {
 		case BOMBER:
 			gs.enemies.push_back(new Bomber(pos));
 			break;
+
+		case INFECTOR:
+			gs.enemies.push_back(new Infector(pos));
+			break;
 		
 		case TROJAN:
 			gs.trojan = new Trojan(pos);
 			break;
+
+			
 
 		default: 
 			printf("\nError: Unknown Entity Type\n");
@@ -83,6 +89,9 @@ void PlayMode::init(){
 
 	gs.current_level = 0;
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update
+
+	spawn_entities(100, FOOD);
+	spawn_entities(10, INFECTOR);
 
 
 }

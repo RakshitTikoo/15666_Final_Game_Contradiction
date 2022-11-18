@@ -201,3 +201,42 @@ void Bomber::update(float elapsed, GameState& state) {
 Hitbox* Bomber::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
 }
+
+
+// ================== 
+// INFECTOR
+// ================== 
+Infector::Infector(glm::vec2 pos) {
+    this->pos = pos;
+}
+void Infector::draw(Drawer& drawer) {
+    drawer.circle(this->pos, this->rad, this->color);
+}
+void Infector::update(float elapsed, GameState& state) {
+    // Walk towards player
+    glm::vec2 dir = glm::normalize(state.player.cluster.pos - this->pos);
+    float dist = glm::length(state.player.cluster.pos - this->pos);
+    if (dist >= 2.0f) {
+        this->pos += dir * elapsed * mov_speed;
+    }
+    else {
+        this->pos += dir * elapsed * mov_speed/10.f; // Slower movement when closer
+    }
+	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
+	if (hit != nullptr) {
+        // Do not destroy, but spawn another infector
+        state.enemies.push_back(new Infector(state.player.cluster.getTrianglePosition(hit->first, hit->second)));
+        //this->destroyed = true;
+		state.player.destroyTriangle(hit->first, hit->second);
+        Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
+		
+	}
+
+    // Explosion hit logic 
+    if(state.in_arena(this->pos))
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+}
+Hitbox* Infector::getHitbox() {
+    return new CircleHitbox(this->pos, this->rad);
+}

@@ -82,3 +82,14 @@ struct Bomber : Enemy {
     Hitbox* getHitbox() override;
 };
 
+struct Infector : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    float rad = 0.25f;
+    float mov_speed = 8.f;
+    glm::uvec4 color = glm::uvec4(50.f, 255.f, 50.f, 255.f);
+    Infector(glm::vec2 pos);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};
