@@ -97,12 +97,13 @@ struct Infector : Enemy {
 
 struct Worm : Enemy {
     glm::vec2 pos = {0.f, 0.f};
-    float rad;
+    glm::vec2 dir = glm::vec2(0.f, 0.f);
+    float rad = 0.25f;
     float mov_speed = 5.f;
     Worm *head;
     Worm *tail;
-    glm::uvec4 color = glm::uvec4(100.f, 100.f, 100.f, 255.f);
-    Worm(glm::vec2 pos, Worm *head, Worm *tail, GameState& state); // if head = nullptr --> main head, else tails. Like a Linked List
+    glm::uvec4 color = glm::uvec4(0xDD, 0x6E, 0x0F, 0xFF);
+    Worm(glm::vec2 pos, Worm *head); // if head = nullptr --> main head, else tails. Like a Linked List
 
     void draw(Drawer& drawer) override;
     void update(float elapsed, GameState& state) override;

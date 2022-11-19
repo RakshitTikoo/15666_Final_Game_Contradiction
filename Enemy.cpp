@@ -247,27 +247,59 @@ Hitbox* Infector::getHitbox() {
 // TODO: Make a worm tail like linked list
 // TODO: The worm element when hit, kill everything below, upto the tail
 // TODO: Worm Grows on eating food (1 added at the tail)
-Worm::Worm(glm::vec2 pos, Worm *head, Worm *tail, GameState& state) {
+Worm::Worm(glm::vec2 pos, Worm *head) {
     this->pos = pos;
     this->head = head;
-    this->tail = tail;
-
-    if(head == nullptr) {
-        this->rad = 0.5f;
-        // Spawn tail entities
-    }
-    else {
-        this->rad = 0.25f;
-    }
+    this->tail = nullptr;
 }
 void Worm::draw(Drawer& drawer) {
     drawer.circle(this->pos, this->rad, this->color);
 }
 void Worm::update(float elapsed, GameState& state) {
-    // Walk towards player
-    glm::vec2 dir = glm::normalize(state.player.cluster.pos - this->pos);
+    
+
+    // -------------- Movement logic --------------
+    dir = glm::vec2(0.f, 0.f);
+    if(this->head == nullptr) { // If this is head
+            // Walk towards nearest food
+            
+            if(state.food.size() > 0){
+                float mindist = glm::length(state.food[0] - this->pos);
+                dir = glm::normalize(state.food[0] - this->pos);
+                for (int i = 0; i < (int)state.food.size(); i++) { // Find closest food
+                   float dist = glm::length(state.food[i] - this->pos);
+                   if(dist < mindist) {
+                    mindist = dist;
+                    dir = glm::normalize(state.food[i] - this->pos);
+                   } 
+                }
+            }
+    }
+    else  {
+        dir = glm::normalize(this->head->pos - this->pos);
+    }
+
     this->pos += dir * elapsed * mov_speed;
 
+
+    // ------------ Food hit and worm growth ------------
+    // Only grow if eaten by head
+    if(this->head == nullptr) {
+        for (int i = 0; i < (int)state.food.size(); i++) {
+            if(GeoHelpers::pointInCircle(state.food[i], this->pos, this->rad)) {
+                state.food.erase(state.food.begin() + i); // Erase food;
+                Worm *temptail;
+                temptail = this;
+                while(temptail->tail != nullptr) temptail = temptail->tail; // Get the last position
+                state.enemies.push_back(new Worm((temptail->rad + 0.25f)*temptail->dir*-1.f + temptail->pos, temptail)); // TODO:: Check how tail should grow
+                break;
+            }
+        }
+
+    }
+    
+    
+    // -------------- Snake player hit --------------
 	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
@@ -278,6 +310,18 @@ void Worm::update(float elapsed, GameState& state) {
     // Explosion hit logic 
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+
+    // ------------- Destroyed Logic -------------
+    if(this->destroyed) { // TODO:: If tail destruction if perfect
+        if(this->head != nullptr) this->head->tail = nullptr;
+        Worm *temptail;
+        temptail = this;
+        while(temptail->tail != nullptr) {
+            temptail->destroyed = true;
+            temptail = temptail->tail;
+        }
+    }
 
 }
 Hitbox* Worm::getHitbox() {

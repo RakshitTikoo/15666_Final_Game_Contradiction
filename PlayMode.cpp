@@ -60,6 +60,10 @@ void PlayMode::spawn_entity(int entity_type) {
 			gs.enemies.push_back(new Infector(pos));
 			break;
 		
+		case WORM:
+			gs.enemies.push_back(new Worm(pos, nullptr));
+			break;
+		
 		case TROJAN:
 			gs.trojan = new Trojan(pos);
 			break;
@@ -90,8 +94,8 @@ void PlayMode::init(){
 	gs.current_level = 0;
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update
 
-	spawn_entities(100, FOOD);
-	spawn_entities(10, INFECTOR);
+	spawn_entities(500, FOOD);
+	spawn_entities(10, WORM);
 
 
 }
