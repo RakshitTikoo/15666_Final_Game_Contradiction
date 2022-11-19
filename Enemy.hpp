@@ -93,3 +93,18 @@ struct Infector : Enemy {
     void update(float elapsed, GameState& state) override;
     Hitbox* getHitbox() override;
 };
+
+
+struct Worm : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    float rad;
+    float mov_speed = 5.f;
+    Worm *head;
+    Worm *tail;
+    glm::uvec4 color = glm::uvec4(100.f, 100.f, 100.f, 255.f);
+    Worm(glm::vec2 pos, Worm *head, Worm *tail, GameState& state); // if head = nullptr --> main head, else tails. Like a Linked List
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};

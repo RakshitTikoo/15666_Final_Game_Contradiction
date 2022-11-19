@@ -240,3 +240,46 @@ void Infector::update(float elapsed, GameState& state) {
 Hitbox* Infector::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
 }
+
+// ================== 
+// WORM
+// ================== 
+// TODO: Make a worm tail like linked list
+// TODO: The worm element when hit, kill everything below, upto the tail
+// TODO: Worm Grows on eating food (1 added at the tail)
+Worm::Worm(glm::vec2 pos, Worm *head, Worm *tail, GameState& state) {
+    this->pos = pos;
+    this->head = head;
+    this->tail = tail;
+
+    if(head == nullptr) {
+        this->rad = 0.5f;
+        // Spawn tail entities
+    }
+    else {
+        this->rad = 0.25f;
+    }
+}
+void Worm::draw(Drawer& drawer) {
+    drawer.circle(this->pos, this->rad, this->color);
+}
+void Worm::update(float elapsed, GameState& state) {
+    // Walk towards player
+    glm::vec2 dir = glm::normalize(state.player.cluster.pos - this->pos);
+    this->pos += dir * elapsed * mov_speed;
+
+	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
+	if (hit != nullptr) {
+		state.player.destroyTriangle(hit->first, hit->second);
+        Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
+		this->destroyed = true;
+	}
+
+    // Explosion hit logic 
+    if(state.in_arena(this->pos))
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+}
+Hitbox* Worm::getHitbox() {
+    return new CircleHitbox(this->pos, this->rad);
+}

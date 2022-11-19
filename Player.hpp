@@ -11,18 +11,22 @@ struct GameState; // forward declaration
 
 struct PlayerTriangle {
     static constexpr float SHOOT_COOLDOWN = 0.5f;
-    int type; // 0 - core , 1 - basic, 2 - shooter1, 3 - defence
-    int health; // 1 - by default, defence - 5
+    int type; // 0 - core , 1 - basic, 2 - shooter1, 3 - defence, 4 - Infector, 5 - Game Freeze
+    int health; // 1 - by default, defence - 3
     float time_since_shoot = SHOOT_COOLDOWN;
 
-    glm::uvec4 color[4] = {
+    enum TriangleType {CORE = 0, BASIC = 1, SHOOTER = 2, DEFENCE = 3, INFECTOR = 4};
+
+    glm::uvec4 color[5] = {
         glm::uvec4(255.f, 255.f, 0.f, 255.f),  // core color
         glm::uvec4(0.f, 255.f, 255.f, 255.f),  // basic color
         glm::uvec4(255.f, 0.f, 255.f, 255.f),  // shooter1 color
-        glm::uvec4(128.f, 128.f, 128.f, 255.f)  // defence color
+        glm::uvec4(128.f, 128.f, 128.f, 255.f),  // defence color
+        glm::uvec4(50.f, 255.f, 50.f, 255.f) // Infector 
+        //glm::uvec4(128.f, 128.f, 128.f, 255.f) // Time freeze
     };
 
-    int triangle_health[4] = {1, 1, 1, 3};
+    int triangle_health[5] = {1, 1, 1, 3, 1};
 
     PlayerTriangle();
 

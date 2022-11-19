@@ -8,7 +8,7 @@
 #include "Sound.hpp"
 
 PlayerTriangle::PlayerTriangle() {
-    this->type = 0;
+    this->type = CORE;
     this->health = triangle_health[0];
 }
 
@@ -121,7 +121,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
 
                     auto addTriangle = [&](int x, int y) {
                         //int curr_type = ; 
-                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%3 + 1)});
+                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%4 + 1)});
                     };
 
                     if (minDist == d1) {
@@ -225,11 +225,38 @@ void Player::addTriangle(int i, int j, PlayerTriangle t) {
 void Player::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
+    bool inf_fl = (triangle_info[{i, j}].type == PlayerTriangle::INFECTOR);
     if(triangle_info[{i, j}].health <= 0)
     {
         eraseSingleTriangle(i, j);
         dfsEraseTriangles();
-    }  
+    }
+    if(inf_fl) {
+        addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
+        // Randomly add a triangle 
+        std::pair<int, int> next_triangle[3];
+        if(i % 2 == 0)
+        {
+            // (i+1,j), (i-1,j), and (i+1,j-1)
+            next_triangle[0] = {i+1,j};
+            next_triangle[1] = {i-1,j};
+            next_triangle[2] = {i+1,j-1};
+        }
+        else {
+            // (i+1,j), (i-1,j), and (i-1,j+1)
+            next_triangle[0] = {i+1,j};
+            next_triangle[1] = {i-1,j};
+            next_triangle[2] = {i-1,j+1};
+        }
+        int selection = std::rand() % 3;
+        while(triangle_info.find(next_triangle[selection]) != triangle_info.end()) {
+          // found
+          selection += 1;
+          if(selection >= 3) selection = 0;
+        } 
+        
+        addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
+    }
 }
 
 void Player::destroyTriangles(std::vector<std::pair<int,int>> coords) {
