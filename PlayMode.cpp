@@ -27,11 +27,11 @@
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
 void PlayMode::spawn_entity(int entity_type) {
-	glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+	glm::vec2 pos = glm::vec2(rng::rand01(), rng::rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 	if (entity_type != FOOD) {
 		// reroll until far enough away
 		while (glm::length(pos - gs.player.cluster.pos) < 30) {
-			pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			pos = glm::vec2(rng::rand01(), rng::rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 		}
 	}
 
@@ -61,7 +61,7 @@ void PlayMode::spawn_entity(int entity_type) {
 			break;
 		
 		case WORM:
-			gs.enemies.push_back(new Worm(pos, nullptr));
+			gs.enemies.push_back(new WormSegment(pos, nullptr));
 			break;
 		
 		case TROJAN:
@@ -96,20 +96,15 @@ void PlayMode::init(){
 
 	spawn_entities(500, FOOD);
 	spawn_entities(10, WORM);
-
-
 }
 
 PlayMode::PlayMode() {
-	init();
-
 	// Init Text Renderer
 	TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
 
+	init();
 
 	std::cout << "Initialization successful\n"; 
-	
-	
 }
 
 PlayMode::~PlayMode() {
@@ -249,15 +244,11 @@ void PlayMode::update(float elapsed) {
 			if(i != selected_option) {
 				title_options_color[i] = glm::vec3(0.5f, 0.5f, 0.5f);
 				title_options_scale[i] = 0.5f;
-			}
-			else {
+			} else {
 				title_options_color[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 				title_options_scale[i] = 0.75f;
 			}
 		}
-
-		
-		 
 		if(controls.enter.pressed) {
 			if(selected_option == 0) { // Level 1 select
 				gs.state = 1;

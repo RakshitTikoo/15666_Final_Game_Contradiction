@@ -44,6 +44,15 @@ void Player::draw(Drawer& drawer) {
         drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
         drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
     }
+
+    if (draw_bbox) {
+        glm::uvec4 white = {255.f, 255.f, 255.f, 255.f};
+        std::vector<glm::vec2> p = cluster.get_bbox_corners();
+        drawer.line(p[0], p[1], white);
+        drawer.line(p[1], p[2], white);
+        drawer.line(p[2], p[3], white);
+        drawer.line(p[3], p[0], white);
+    }
 }
 
 void Player::draw_explosion(Drawer& drawer) {

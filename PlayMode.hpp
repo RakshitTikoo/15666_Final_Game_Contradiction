@@ -19,7 +19,7 @@
 #include "Boss.hpp"
 #include "GameState.hpp"
 
-#include <random>
+#include "rng.hpp"
 #include "Controls.hpp"
 
 #include "DrawText.hpp"
@@ -37,12 +37,6 @@ struct PlayMode : Mode {
 
 	void init();
 
-	std::mt19937 mt; //rng stuff
-	float rand01() {
-		static float mx = (float)mt.max();
-		return mt() / mx;
-	}
-	
 	// Entity Control
 	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7};
 	void spawn_entity(int entity_type);

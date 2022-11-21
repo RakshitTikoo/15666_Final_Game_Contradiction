@@ -42,6 +42,7 @@ struct Player {
 	float player_rot = 300.f;
     float core_bullet_speed = 20.f;
     float turret_bullet_speed = 20.f;
+    bool draw_bbox = false;
     Player();
 
     void draw(Drawer& drawer);

@@ -1,5 +1,6 @@
 #include "Enemy.hpp"
 #include "GameState.hpp"
+#include "rng.hpp"
 
 // ================== 
 // CHASER
@@ -244,86 +245,87 @@ Hitbox* Infector::getHitbox() {
 // ================== 
 // WORM
 // ================== 
-// TODO: Make a worm tail like linked list
-// TODO: The worm element when hit, kill everything below, upto the tail
-// TODO: Worm Grows on eating food (1 added at the tail)
-Worm::Worm(glm::vec2 pos, Worm *head) {
+WormSegment::WormSegment(glm::vec2 pos, WormSegment *follow) {
     this->pos = pos;
-    this->head = head;
-    this->tail = nullptr;
+    this->follow = follow;
+    float wander_angle = rng::randab(0, 2*acosf(-1.f));
+    this->wander_dir = {cosf(wander_angle), sinf(wander_angle)};
+    if (follow != nullptr) {
+        follow->follower = this;
+    }
 }
-void Worm::draw(Drawer& drawer) {
+void WormSegment::draw(Drawer& drawer) {
     drawer.circle(this->pos, this->rad, this->color);
 }
-void Worm::update(float elapsed, GameState& state) {
-    
+void WormSegment::update(float elapsed, GameState& state) {
+    // if follow is destroyed, we should be a new worm
+    if (this->follow != nullptr && this->follow->destroyed) {
+        this->follow = nullptr;
+    }
+    // also take care of case where follower got destroyed
+    if (this->follower != nullptr && this->follower->destroyed) {
+        this->follower = nullptr;
+    }
 
-    // -------------- Movement logic --------------
-    dir = glm::vec2(0.f, 0.f);
-    if(this->head == nullptr) { // If this is head
-            // Walk towards nearest food
-            
-            if(state.food.size() > 0){
-                float mindist = glm::length(state.food[0] - this->pos);
-                dir = glm::normalize(state.food[0] - this->pos);
-                for (int i = 0; i < (int)state.food.size(); i++) { // Find closest food
-                   float dist = glm::length(state.food[i] - this->pos);
-                   if(dist < mindist) {
-                    mindist = dist;
-                    dir = glm::normalize(state.food[i] - this->pos);
-                   } 
+    // movement
+    if(this->follow == nullptr) { // If this is head
+        // Update wander/follow state
+        this->wander_timer -= elapsed;
+        if (this->wander_timer < 0) {
+            if (!this->wandering) { // switch to wander
+                this->wander_timer = rng::randab(1.f, 2.f);
+                float wander_angle = rng::randab(0, 2*acosf(-1.f));
+                this->wander_dir = {cosf(wander_angle), sinf(wander_angle)};
+                
+                // grow a segment if there's not too many enemies already
+                if ((int)state.enemies.size() < 200) {
+                    // first, find the last segment in our chain
+                    WormSegment* cur = this;
+                    while (cur->follower != nullptr) {
+                        cur = cur->follower;
+                    }
+                    // next, add a follower to it
+                    // try to add it so there's 3 collinearly, otherwise random
+                    float angle = rng::randab(0, 2*acosf(-1.f));
+                    glm::vec2 dir = {cosf(angle), sinf(angle)};
+                    if (cur->follow != nullptr) {
+                        dir = glm::normalize(cur->pos - cur->follow->pos);
+                    }
+                    glm::vec2 new_pos = cur->pos + dir;
+                    state.enemies.push_back(new WormSegment(new_pos, cur));
                 }
+            } else { // switch to follow
+                this->wander_timer = rng::randab(2.f, 3.f);
             }
-    }
-    else  {
-        dir = glm::normalize(this->head->pos - this->pos);
-    }
-
-    this->pos += dir * elapsed * mov_speed;
-
-
-    // ------------ Food hit and worm growth ------------
-    // Only grow if eaten by head
-    if(this->head == nullptr) {
-        for (int i = 0; i < (int)state.food.size(); i++) {
-            if(GeoHelpers::pointInCircle(state.food[i], this->pos, this->rad)) {
-                state.food.erase(state.food.begin() + i); // Erase food;
-                Worm *temptail;
-                temptail = this;
-                while(temptail->tail != nullptr) temptail = temptail->tail; // Get the last position
-                state.enemies.push_back(new Worm((temptail->rad + 0.25f)*temptail->dir*-1.f + temptail->pos, temptail)); // TODO:: Check how tail should grow
-                break;
-            }
+            this->wandering = !this->wandering;
         }
 
+        if (!this->wandering) {
+            // Follow player
+            glm::vec2 dir = glm::normalize(state.player.cluster.pos - this->pos);
+            this->pos += dir * elapsed * mov_speed;
+        } else {
+            // Wander
+            this->pos += wander_dir * elapsed * mov_speed;
+        }
+    } else {
+        // follow the segment in front
+        glm::vec2 towards = glm::normalize(this->pos - follow->pos);
+        this->pos = follow->pos + towards * (follow->rad + this->rad);
     }
-    
-    
-    // -------------- Snake player hit --------------
+
+    // Collide with player
 	std::pair<int,int>* hit = state.player.cluster.intersect(*getHitbox());
 	if (hit != nullptr) {
 		state.player.destroyTriangle(hit->first, hit->second);
         Sound::play(*state.player_hit, state.sound_effect_volume*2.f, 0.0f);
-		this->destroyed = true;
+        this->destroyed = true;
 	}
 
     // Explosion hit logic 
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
-
-
-    // ------------- Destroyed Logic -------------
-    if(this->destroyed) { // TODO:: If tail destruction if perfect
-        if(this->head != nullptr) this->head->tail = nullptr;
-        Worm *temptail;
-        temptail = this;
-        while(temptail->tail != nullptr) {
-            temptail->destroyed = true;
-            temptail = temptail->tail;
-        }
-    }
-
 }
-Hitbox* Worm::getHitbox() {
+Hitbox* WormSegment::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
 }

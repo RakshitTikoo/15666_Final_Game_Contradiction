@@ -94,17 +94,18 @@ struct Infector : Enemy {
     Hitbox* getHitbox() override;
 };
 
-
-struct Worm : Enemy {
+struct WormSegment : Enemy {
     glm::vec2 pos = {0.f, 0.f};
-    glm::vec2 dir = glm::vec2(0.f, 0.f);
     float rad = 0.25f;
     float mov_speed = 5.f;
-    Worm *head;
-    Worm *tail;
+    WormSegment* follow;
+    WormSegment* follower = nullptr;
     glm::uvec4 color = glm::uvec4(0xDD, 0x6E, 0x0F, 0xFF);
-    Worm(glm::vec2 pos, Worm *head); // if head = nullptr --> main head, else tails. Like a Linked List
+    bool wandering = true;
+    float wander_timer = 2.f;
+    glm::vec2 wander_dir;
 
+    WormSegment(glm::vec2 pos, WormSegment *follow); // if head = nullptr --> this is the head
     void draw(Drawer& drawer) override;
     void update(float elapsed, GameState& state) override;
     Hitbox* getHitbox() override;

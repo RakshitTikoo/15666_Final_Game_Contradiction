@@ -14,6 +14,8 @@ struct TriangleCluster {
     float angle = 0.f; // angle of rotation of the whole cluster
     float size = 1.f; // side length of one triangle
     std::set<std::pair<int, int>> triangles; // coordinates -> Triangle
+    glm::vec2 bbox_mins;
+    glm::vec2 bbox_maxes;
     
     TriangleCluster();
 
@@ -27,4 +29,6 @@ struct TriangleCluster {
 
     // nullptr if no intersect, otherwise the coords of a triangle that touches hitbox
     std::pair<int,int>* intersect(const Hitbox& hitbox);
+
+    std::vector<glm::vec2> get_bbox_corners();
 };
