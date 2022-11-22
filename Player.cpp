@@ -9,17 +9,17 @@
 
 PlayerTriangle::PlayerTriangle() {
     this->type = CORE;
-    this->health = triangle_health[0];
+    this->health = triangleTypeMap[CORE].health;
 }
 
 PlayerTriangle::PlayerTriangle(int type) {
     this->type = type;
-    this->health = triangle_health[type];
+    this->health = triangleTypeMap[type].health;
 }
 
 Player::Player() {
     cluster = TriangleCluster();
-	addTriangle(0, 0, PlayerTriangle(0));
+	addTriangle(0, 0, PlayerTriangle(PlayerTriangle::CORE));
     cluster.pos = glm::vec2(0.f, 0.f);
 }
 
@@ -40,9 +40,10 @@ void Player::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        glm::uvec4 color = PlayerTriangle::triangleTypeMap[t.type].color;
+        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, color);
+        drawer.line(corners[1] + offset_1, corners[2] + offset_2, color);
+        drawer.line(corners[2] + offset_2, corners[0] + offset_0, color);
     }
 
     if (draw_bbox) {
@@ -129,7 +130,6 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     float minDist = fmin(d1, fmin(d2, d3));
 
                     auto addTriangle = [&](int x, int y) {
-                        //int curr_type = ; 
                         toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%4 + 1)});
                     };
 

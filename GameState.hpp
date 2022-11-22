@@ -9,11 +9,13 @@
 #include "data_path.hpp"
 #include "Boss.hpp"
 #include "DrawText.hpp"
+#include "Builder.hpp"
 
 struct GameState {
     GameState();
 
-    int state = 0; //0 - level select, 1 - level 1 
+    enum State { Menu, Controls, Building, Playing };
+    State state = Menu;
 
     std::shared_ptr<Sound::PlayingSample> MainLoop;
 
@@ -42,7 +44,4 @@ struct GameState {
     int current_level = 0;
 
     bool in_arena(glm::vec2 p);
-
-
-    //DrawText* TextRenderer = nullptr;
 };

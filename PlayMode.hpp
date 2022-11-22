@@ -18,6 +18,7 @@
 #include "Player.hpp"
 #include "Boss.hpp"
 #include "GameState.hpp"
+#include "Builder.hpp"
 
 #include "rng.hpp"
 #include "Controls.hpp"
@@ -60,6 +61,8 @@ struct PlayMode : Mode {
 
 	GameState gs;
 
+	Builder builder;
+
 	// Title screen options
 	int selected_option = 0;
 	const char* title_options[6] = {
@@ -78,7 +81,5 @@ struct PlayMode : Mode {
 		glm::vec3(0.5f, 0.5f, 0.5f),
 		glm::vec3(0.5f, 0.5f, 0.5f) 
 	}; 
-
-	DrawText TextRenderer;
 
 };

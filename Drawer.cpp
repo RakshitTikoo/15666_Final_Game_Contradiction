@@ -4,6 +4,7 @@
 #include <array>
 
 Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
+	this->drawable_size = drawable_size;
     this->center = {0.f, 0.f};
     this->scale = 1.f;
 
@@ -22,6 +23,7 @@ Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
 	);
 
     this->lines = DrawLines(world_to_clip);
+	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
 }
 
 void Drawer::set_center(glm::vec2 c) {
@@ -62,9 +64,10 @@ void Drawer::circle(glm::vec2 p, float rad, glm::uvec4 color) {
 
 // at: bottom left corner of text
 // size: how much to scale the text
-void Drawer::text(std::string text, glm::vec2 at, float size) {
+void Drawer::text(std::string text, glm::vec2 at, float size, glm::vec3 color) {
 	this->lines.draw_text(text,
 						  glm::vec3(at.x, at.y, 0.0),
 						  glm::vec3(size, 0.0f, 0.0f), glm::vec3(0.0f, size, 0.0f),
 						  glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+	this->TextRenderer.draw_msg(text, at.x, at.y, size, drawable_size, color);
 }

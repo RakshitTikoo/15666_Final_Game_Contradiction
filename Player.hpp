@@ -6,27 +6,58 @@
 #include "Drawer.hpp"
 #include "Controls.hpp"
 #include "Hitbox.hpp"
+#include <string>
+
+using namespace std;
 
 struct GameState; // forward declaration
 
 struct PlayerTriangle {
-    static constexpr float SHOOT_COOLDOWN = 0.5f;
-    int type; // 0 - core , 1 - basic, 2 - shooter1, 3 - defence, 4 - Infector, 5 - Game Freeze
-    int health; // 1 - by default, defence - 3
-    float time_since_shoot = SHOOT_COOLDOWN;
-
-    enum TriangleType {CORE = 0, BASIC = 1, SHOOTER = 2, DEFENCE = 3, INFECTOR = 4};
-
-    glm::uvec4 color[5] = {
-        glm::uvec4(255.f, 255.f, 0.f, 255.f),  // core color
-        glm::uvec4(0.f, 255.f, 255.f, 255.f),  // basic color
-        glm::uvec4(255.f, 0.f, 255.f, 255.f),  // shooter1 color
-        glm::uvec4(128.f, 128.f, 128.f, 255.f),  // defence color
-        glm::uvec4(50.f, 255.f, 50.f, 255.f) // Infector 
-        //glm::uvec4(128.f, 128.f, 128.f, 255.f) // Time freeze
+    static constexpr int NUM_TRIANGLE_TYPES = 5;
+    struct TriangleTypeInfo {
+        string name;
+        glm::uvec4 color;
+        int health;
+        string description;
+    };
+    enum TriangleType : int {CORE, BASIC, SHOOTER, DEFENCE, INFECTOR};
+    static inline TriangleTypeInfo triangleTypeMap[NUM_TRIANGLE_TYPES] = {
+        {
+            "Core",
+            {255.f, 255.f, 0.f, 255.f},
+            1,
+            "The one you need to protect"
+        },
+        {
+            "Basic",
+            {0.f, 255.f, 255.f, 255.f},
+            1,
+            "Does nothing but can take one shot"
+        },
+        {
+            "Shooter",
+            {255.f, 0.f, 255.f, 255.f},
+            1,
+            "Shoots bullets where you aim"
+        },
+        {
+            "Defense",
+            {128.f, 128.f, 128.f, 255.f},
+            3,
+            "Takes 3 shots"
+        },
+        {
+            "Infector",
+            {50.f, 255.f, 50.f, 255.f},
+            1,
+            "Splits into 2 basic triangles once hit"
+        }
     };
 
-    int triangle_health[5] = {1, 1, 1, 3, 1};
+    static constexpr float SHOOT_COOLDOWN = 0.5f;
+    int type;
+    int health;
+    float time_since_shoot = SHOOT_COOLDOWN;
 
     PlayerTriangle();
 
