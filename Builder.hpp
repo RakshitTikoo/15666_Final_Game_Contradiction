@@ -11,5 +11,7 @@ struct Builder {
 	Player* update(float elapsed);
 	void draw(glm::uvec2 const &drawable_size);
 
+    private:
     int remaining_money;
+    pair<glm::vec2, glm::vec2> get_menu_item_bounds(int idx);
 };
