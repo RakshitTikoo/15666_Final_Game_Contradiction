@@ -63,6 +63,8 @@ struct PlayMode : Mode {
 
 	Builder builder;
 
+	DrawText TextRenderer;
+
 	// Title screen options
 	int selected_option = 0;
 	const char* title_options[6] = {

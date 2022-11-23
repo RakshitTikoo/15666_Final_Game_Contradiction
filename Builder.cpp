@@ -14,6 +14,7 @@ Builder::Builder() {
 
 Builder::Builder(int money) {
     this->remaining_money = money;
+    this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
 }
 
 bool Builder::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
@@ -25,7 +26,7 @@ Player* Builder::update(float elapsed) {
 }
 
 void Builder::draw(glm::uvec2 const &drawable_size) {
-	Drawer drawer(drawable_size);
+	Drawer drawer(drawable_size, this->TextRenderer);
     float width = 40.f;
     drawer.set_center({20.f, 20.f});
     drawer.set_width(40.f);

@@ -99,6 +99,8 @@ void PlayMode::init(){
 }
 
 PlayMode::PlayMode() {
+	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
+
 	init();
 
 	std::cout << "Initialization successful\n"; 
@@ -363,7 +365,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		return;
 	}
 
-	Drawer drawer(drawable_size);
+	Drawer drawer(drawable_size, TextRenderer);
 	if (gs.state == gs.Menu) {
 		drawer.text("Poly Defense", {100.f, 650.f}, 1.f);
 		drawer.text(title_options[0], {100.f, 500.f}, title_options_scale[0], title_options_color[0]);
