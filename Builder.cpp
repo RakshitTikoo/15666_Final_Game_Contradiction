@@ -31,7 +31,7 @@ Player* Builder::update(float elapsed) {
 
         menu_hover = -1;
 
-        if (mouse_absolute.x >= menu_min_x) {
+        if (mouse_absolute.x >= menu_min_x) { // Mouse over menu
             // Check for hover over a menu item
             for (int i = 0; i < PlayerTriangle::NUM_TRIANGLE_TYPES; i++) {
                 auto box = get_menu_item_bounds(i);
@@ -45,6 +45,10 @@ Player* Builder::update(float elapsed) {
             if (controls.mouse.pressed && menu_hover != -1) {
                 menu_selected = menu_hover;
             }
+        } else { // Mouse over building area
+            // Coordinates of mouse in building space
+            vec2 building_space_coords = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min) * (this->drawer_max - this->drawer_min) + this->drawer_min;
+
         }
     }
 
@@ -116,8 +120,14 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
             line_absolute(p3, p0, color);
         };
 
-        // Draw a gray box over hovered menu item
-        if (menu_hover != -1) draw_selection_box(menu_hover, {50.f, 50.f, 50.f, 255.f});
+        if (menu_hover != -1) {
+            // Draw a gray box over hovered menu item
+            draw_selection_box(menu_hover, {50.f, 50.f, 50.f, 255.f});
+
+            // Show description of the hovered item in bottom left
+            string desc = PlayerTriangle::triangleTypeMap[menu_hover].description;
+            drawer.text(desc, {20.f, 20.f}, 0.4f);
+        }
 
         // Draw a white box over selected item
         if (menu_selected != -1) draw_selection_box(menu_selected, {255.f, 255.f, 255.f, 255.f});
