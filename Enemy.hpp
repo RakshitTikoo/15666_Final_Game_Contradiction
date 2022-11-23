@@ -9,6 +9,11 @@ struct GameState; // forward declaration
 struct Enemy {
     bool destroyed = false;
 
+    float timestop_hit_cooldown = 10.f;
+    float timestop_hit_cnt;
+    bool timestop_hit = false;
+
+
     virtual void draw(Drawer& drawer) = 0;
     virtual void update(float elapsed, GameState& state) = 0;
     virtual Hitbox* getHitbox() = 0;

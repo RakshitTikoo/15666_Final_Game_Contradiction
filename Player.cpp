@@ -76,6 +76,26 @@ bool Player::explosion_intersect(const Hitbox& hitbox) {
     return false;
 }
 
+void Player::draw_timestop(Drawer& drawer) {
+    for (int i = 0 ; i < (int)timestop_pos.size(); i++) {
+        drawer.circle(timestop_pos[i], timestop_rad[i], glm::uvec4(250.f, 250.f, 250.f, 255.f));
+        timestop_rad[i] += timestop_speed;
+        if (timestop_rad[i] >= timestop_max_rad) {
+            timestop_pos.erase(timestop_pos.begin() + i);
+            timestop_rad.erase(timestop_rad.begin() + i);
+        }
+    }
+}
+
+bool Player::timestop_intersect(const Hitbox& hitbox) {
+    for (int i = 0 ; i < (int)timestop_pos.size(); i++) {
+        CircleHitbox timestop_hitbox = CircleHitbox(timestop_pos[i], timestop_rad[i]);
+        if (timestop_hitbox.intersect(hitbox)) return true;
+    }
+    return false;
+}
+
+
 void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // ===================
     // player movement
@@ -130,7 +150,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     float minDist = fmin(d1, fmin(d2, d3));
 
                     auto addTriangle = [&](int x, int y) {
-                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%4 + 1)});
+                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%5 + 1)});
                     };
 
                     if (minDist == d1) {
@@ -173,7 +193,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // =================
     {
         time_since_shoot += elapsed;
-        for (auto& k : triangle_info) if (k.second.type == 2) {
+        for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::SHOOTER) {
             k.second.time_since_shoot += elapsed;
         }
 
@@ -184,7 +204,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                 gs.bullets.push_back(new CoreBullet(cluster.pos, core_bullet_speed * dir));
                 Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.5f, 0.0f);
             }
-            for (auto& k : triangle_info) if (k.second.type == 2) {
+            for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::SHOOTER) {
                 std::pair<int, int> coords = k.first;
                 PlayerTriangle& t = k.second;
                 if (t.time_since_shoot >= t.SHOOT_COOLDOWN) {
@@ -213,7 +233,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         for (auto& k : triangle_info)  {
             std::pair<int, int> coords = k.first;
 
-            if(!(coords.first == 0 && coords.second == 0)) {
+            if(k.second.type != PlayerTriangle::CORE) {
                 if(cluster.triangles.count({coords.first, coords.second})) { // Check if triagle in cluster
                     //triangle_info[{coords.first, coords.second}] = 1; // Reset Hit Box
                     destroyTriangle(coords.first, coords.second);
@@ -222,6 +242,20 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         
         }
     }
+
+
+    // =========================
+    // player timestop attack
+    // =========================
+    if(controls.f.pressed && controls.f.once == 1) {
+        controls.f.once = 2; // One Action per Press 
+        for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::TIMESTOP) {
+            timestop_pos.push_back(cluster.getTrianglePosition(k.first.first, k.first.second));
+            timestop_rad.push_back(0.0f);
+        }
+    }
+
+
 
 }
 

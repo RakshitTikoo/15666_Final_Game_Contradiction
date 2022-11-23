@@ -13,14 +13,14 @@ using namespace std;
 struct GameState; // forward declaration
 
 struct PlayerTriangle {
-    static constexpr int NUM_TRIANGLE_TYPES = 5;
+    static constexpr int NUM_TRIANGLE_TYPES = 6;
     struct TriangleTypeInfo {
         string name;
         glm::uvec4 color;
         int health;
         string description;
     };
-    enum TriangleType : int {CORE, BASIC, SHOOTER, DEFENCE, INFECTOR};
+    enum TriangleType : int {CORE, BASIC, SHOOTER, DEFENCE, INFECTOR, TIMESTOP};
     static inline TriangleTypeInfo triangleTypeMap[NUM_TRIANGLE_TYPES] = {
         {
             "Core",
@@ -51,6 +51,12 @@ struct PlayerTriangle {
             {50.f, 255.f, 50.f, 255.f},
             1,
             "Splits into 2 basic triangles once hit"
+        },
+        {
+            "Timestop",
+            {250.f, 250.f, 250.f, 255.f},
+            1,
+            "Creates a time stop explosion which slows down enemies"
         }
     };
 
@@ -82,6 +88,18 @@ struct Player {
     // Explosion related functions
     void draw_explosion(Drawer& drawer);
     bool explosion_intersect(const Hitbox& hitbox);
+
+
+    // Time stop explosion
+    void draw_timestop(Drawer& drawer);
+    bool timestop_intersect(const Hitbox& hitbox);
+
+    float timestop_max_rad = 5.f;
+    float timestop_speed = 0.5f;
+    std::vector<glm::vec2> timestop_pos;
+    std::vector<float> timestop_rad;
+
+
 
     float explosion_speed = 0.5f;
     std::vector<glm::vec2> explosion_pos;

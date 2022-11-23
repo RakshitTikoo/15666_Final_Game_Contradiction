@@ -112,6 +112,22 @@ void ShooterBullet::update(float elapsed, GameState& state) {
 	if(state.in_arena(this->pos))
 		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
 
+	// Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(ourHitbox)  && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->speed *= 10.f; 
+        }
+    }
+
 }
 
 // =====================
@@ -159,6 +175,23 @@ void SpiralBullet::update(float elapsed, GameState& state) {
 	// Explosion hit logic 
 	if(state.in_arena(this->pos))
 		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
+
+	// Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(ourHitbox)  && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->speed *= 10.f; 
+        }
+    }
+
 }
 
 // =====================
@@ -189,5 +222,21 @@ void TrojanBullet::update(float elapsed, GameState& state) {
 	// Explosion hit logic 
 	if(state.in_arena(this->pos))
 		if(state.player.explosion_intersect(ourHitbox)) this->destroyed = true;
+
+	// Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(ourHitbox)  && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->speed *= 10.f; 
+        }
+    }
 
 }

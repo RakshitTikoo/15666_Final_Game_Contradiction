@@ -26,6 +26,22 @@ void Chaser::update(float elapsed, GameState& state) {
     // Explosion hit logic 
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+    
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
 
 }
 Hitbox* Chaser::getHitbox() {
@@ -67,7 +83,23 @@ void Shooter::update(float elapsed, GameState& state) {
 
     // Explosion hit logic 
     if(state.in_arena(this->pos))
-	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;\
+    
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
 
 }
 Hitbox* Shooter::getHitbox() {
@@ -134,6 +166,22 @@ void Spiral::update(float elapsed, GameState& state) {
     // Explosion hit logic
     if(state.in_arena(this->pos)) 
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
 }
 Hitbox* Spiral::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
@@ -198,6 +246,22 @@ void Bomber::update(float elapsed, GameState& state) {
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
 
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
+
 }
 Hitbox* Bomber::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
@@ -236,6 +300,22 @@ void Infector::update(float elapsed, GameState& state) {
     // Explosion hit logic 
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
 
 }
 Hitbox* Infector::getHitbox() {
@@ -325,6 +405,26 @@ void WormSegment::update(float elapsed, GameState& state) {
     // Explosion hit logic 
     if(state.in_arena(this->pos))
 	    if(state.player.explosion_intersect(*getHitbox())) this->destroyed = true;
+
+    // Time stop hit logic 
+    if(state.in_arena(this->pos))
+        if(state.player.timestop_intersect(*getHitbox()) && this->timestop_hit == false) {
+            this->timestop_hit = true;
+            this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+            this->mov_speed /= 10.f; 
+        }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+            this->mov_speed *= 10.f; 
+        }
+    }
+    
+
+
+
 }
 Hitbox* WormSegment::getHitbox() {
     return new CircleHitbox(this->pos, this->rad);
