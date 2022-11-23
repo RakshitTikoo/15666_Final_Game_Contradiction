@@ -198,9 +198,11 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         }
 
         if (controls.mouse.pressed) {
+            // translate location from window coordinates to game coordinates
+            glm::vec2 mouse_loc = ((controls.mouse_loc - gs.window_min) / (gs.window_max - gs.window_min)) * (gs.drawer_max - gs.drawer_min) + gs.drawer_min;
             if (time_since_shoot >= SHOOT_COOLDOWN) {
                 time_since_shoot = 0.f;
-                glm::vec2 dir = glm::normalize(controls.mouse_loc - cluster.pos);
+                glm::vec2 dir = glm::normalize(mouse_loc - cluster.pos);
                 gs.bullets.push_back(new CoreBullet(cluster.pos, core_bullet_speed * dir));
                 Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.5f, 0.0f);
             }
@@ -210,7 +212,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                 if (t.time_since_shoot >= t.SHOOT_COOLDOWN) {
                     t.time_since_shoot = 0.f;
                     glm::vec2 p = cluster.getTrianglePosition(coords.first, coords.second);
-                    glm::vec2 dir = glm::normalize(controls.mouse_loc - p);
+                    glm::vec2 dir = glm::normalize(mouse_loc - p);
                     gs.bullets.push_back(new TurretBullet(p, turret_bullet_speed * dir));
                     Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.3f, 0.0f);
                 }

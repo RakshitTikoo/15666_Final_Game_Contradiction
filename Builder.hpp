@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "Player.hpp"
 #include "DrawText.hpp"
+#include "Controls.hpp"
 
 struct Builder {
     Builder();
@@ -15,5 +16,8 @@ struct Builder {
     private:
     int remaining_money;
     DrawText TextRenderer;
+    Player player;
+    Controls controls;
+    float aspect = 1.f;
     pair<glm::vec2, glm::vec2> get_menu_item_bounds(int idx);
 };

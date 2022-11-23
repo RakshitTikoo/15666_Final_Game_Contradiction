@@ -6,7 +6,6 @@
 Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat4()) {
 	this->drawable_size = drawable_size;
     this->center = {0.f, 0.f};
-    this->scale = 1.f;
 
 	// Not sure what these do but we can change when necessary
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -14,6 +13,7 @@ Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat
 	glDisable(GL_DEPTH_TEST);
 
 	this->aspect = float(drawable_size.x) / float(drawable_size.y);
+    this->width = 2.f / this->aspect;
 	glm::vec2 offset = {0.f, 0.f};
 	glm::mat4 world_to_clip = glm::mat4(
 		1.f / this->aspect, 0.0f, 0.0f, offset.x,
@@ -30,11 +30,12 @@ void Drawer::set_center(glm::vec2 c) {
     this->center = c;
 }
 
-void Drawer::set_width(float width) {
-    this->scale = 1.f / (width/2) * this->aspect;
+void Drawer::set_width(float w) {
+	this->width = w;
 }
 
 void Drawer::line(glm::vec2 p1, glm::vec2 p2, glm::uvec4 color) {
+	float scale = 1.f / (this->width/2) * this->aspect;
     glm::vec2 p1_ = (p1 - center) * scale;
     glm::vec2 p2_ = (p2 - center) * scale;
     this->lines.draw({p1_.x, p1_.y, 0.f},

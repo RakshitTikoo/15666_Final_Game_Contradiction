@@ -122,119 +122,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		return builder.handle_event(evt, window_size);
 	}
 
-	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.downs += 1;
-			controls.left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.downs += 1;
-			controls.right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.downs += 1;
-			controls.up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.downs += 1;
-			controls.down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.downs += 1;
-			controls.q.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.downs += 1;
-			controls.e.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE && controls.space.once == 0) {
-			controls.space.downs += 1;
-			controls.space.pressed = true;
-			controls.space.once = 1;
-		} else if (evt.key.keysym.sym == SDLK_RETURN && controls.enter.once == 0) {
-			controls.enter.downs += 1;
-			controls.enter.pressed = true;
-			controls.enter.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_UP && controls.arrow_up.once == 0) {
-			controls.arrow_up.downs += 1;
-			controls.arrow_up.pressed = true;
-			controls.arrow_up.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_DOWN && controls.arrow_down.once == 0) {
-			controls.arrow_down.downs += 1;
-			controls.arrow_down.pressed = true;
-			controls.arrow_down.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_ESCAPE && controls.escape.once == 0) {
-			controls.escape.downs += 1;
-			controls.escape.pressed = true;
-			controls.escape.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_f && controls.f.once == 0) {
-			controls.f.downs += 1;
-			controls.f.pressed = true;
-			controls.f.once = 1;
-		}
-
-
-	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE) {
-			controls.space.pressed = false;
-			controls.space.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_RETURN) {
-			controls.enter.pressed = false;
-			controls.enter.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_UP) {
-			controls.arrow_up.pressed = false;
-			controls.arrow_up.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_DOWN) {
-			controls.arrow_down.pressed = false;
-			controls.arrow_down.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			controls.escape.pressed = false;
-			controls.escape.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_f) {
-			controls.f.pressed = false;
-			controls.f.once = 0;
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		controls.mouse.downs += 1;
-		controls.mouse.pressed = true;
-		return true;
-	} else if (evt.type == SDL_MOUSEBUTTONUP) {
-		controls.mouse.pressed = false;
-		return true;
-	}
-
-	int x, y; SDL_GetMouseState(&x, &y);
-	controls.mouse_loc = glm::vec2();
-	controls.mouse_loc.x = x - float(window_size.x) / 2.f;
-	controls.mouse_loc.y = float(window_size.y) / 2.f - y;
-
-	return false;
+	gs.window_min = {0.f, 0.f};
+	gs.window_max = window_size;
+	return controls.handle_event(evt, window_size);
 }
 
 void PlayMode::update(float elapsed) {
@@ -492,6 +382,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 		
 	}
+
+	gs.drawer_min = drawer.center - glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
+	gs.drawer_max = drawer.center + glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
 	
 	GL_ERRORS();
 }

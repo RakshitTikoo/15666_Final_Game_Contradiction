@@ -3,11 +3,14 @@
 #include <glm/glm.hpp>
 #include "DrawLines.hpp"
 #include "DrawText.hpp"
+#include "TriangleCluster.hpp"
+
+using namespace std;
 
 struct Drawer {
     glm::vec2 drawable_size;
     glm::vec2 center = {0.f, 0.f};
-    float scale = 1.f;
+    float width = 1.f;
     float aspect = 1.f;
     DrawLines lines;
     DrawText TextRenderer;
