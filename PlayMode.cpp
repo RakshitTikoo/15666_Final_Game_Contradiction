@@ -385,10 +385,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.text(title_options[5], {100.f, 250.f}, title_options_scale[5], title_options_color[5]);
 	} 
 	else if(gs.state == gs.Controls) { // Controls
-		drawer.text("W A S D - Move Player", {100.f, 500.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Q - Player Rotate Anti-Clockwise", {100.f, 400.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("E - Player Rotate Clockwise", {100.f, 300.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Space - Player Bomb Attack", {100.f, 200.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("You are an antivirus software, fighting through hordes of", {100.f, 650.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
+		drawer.text("viruses. Keep on building your antivirus software by combining", {100.f, 600.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
+		drawer.text("different power triangles at beginning of each level.", {100.f, 550.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
+
+		drawer.text("W A S D - Move Player", {100.f, 450.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("Q - Player Rotate Anti-Clockwise", {100.f, 350.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("E - Player Rotate Clockwise", {100.f, 250.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("Space - Player Bomb Attack", {100.f, 150.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("F - Player Timestop Attack", {100.f, 50.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 	else if(gs.state == gs.Playing) {
 		drawer.text("Wave " + std::to_string(gs.current_wave), {800.f, 650.f}, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
