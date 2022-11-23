@@ -18,6 +18,12 @@ struct Builder {
     DrawText TextRenderer;
     Player player;
     Controls controls;
-    float aspect = 1.f;
+    glm::vec2 drawer_min;
+    glm::vec2 drawer_max;
+    glm::vec2 window_min;
+    glm::vec2 window_max;
+    int menu_hover = -1;
+    int menu_selected = -1;
+    
     pair<glm::vec2, glm::vec2> get_menu_item_bounds(int idx);
 };
