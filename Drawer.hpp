@@ -10,9 +10,9 @@ struct Drawer {
     float scale = 1.f;
     float aspect = 1.f;
     DrawLines lines;
-	DrawText TextRenderer;
+    DrawText TextRenderer;
 
-    Drawer(glm::vec2 drawable_size);
+    Drawer(glm::vec2 drawable_size, DrawText& textRenderer);
 
     void set_center(glm::vec2 c);
     void set_width(float width);

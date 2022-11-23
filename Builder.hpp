@@ -3,6 +3,7 @@
 #include "TriangleCluster.hpp"
 #include <SDL.h>
 #include "Player.hpp"
+#include "DrawText.hpp"
 
 struct Builder {
     Builder();
@@ -13,5 +14,6 @@ struct Builder {
 
     private:
     int remaining_money;
+    DrawText TextRenderer;
     pair<glm::vec2, glm::vec2> get_menu_item_bounds(int idx);
 };
