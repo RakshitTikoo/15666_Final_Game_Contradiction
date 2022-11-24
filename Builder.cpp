@@ -207,6 +207,12 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
             drawer.line(corners[2], corners[0], color);
         }
     }
+
+    { // Warn player if structure is disconnected
+        if (player.structureDisconnected()) {
+            drawer.text_align_centered("Structure is disconnected", {window_max.x/2, window_max.y*4.f/5.f}, 0.3f, {1.f, 0.4f, 0.4f});
+        }
+    }
 }
 
 pair<vec2, vec2> Builder::get_menu_item_bounds(int idx) {

@@ -23,4 +23,5 @@ struct Drawer {
     void circle(glm::vec2 p, float rad, glm::uvec4 color);
     void text(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
     void text_align_right(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
+    void text_align_centered(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
 };

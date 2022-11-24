@@ -72,3 +72,7 @@ void Drawer::text(std::string text, glm::vec2 at, float size, glm::vec3 color) {
 void Drawer::text_align_right(std::string text, glm::vec2 at, float size, glm::vec3 color) {
 	this->TextRenderer.draw_msg_align_right(text, at.x, at.y, size, drawable_size, color);
 }
+
+void Drawer::text_align_centered(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	this->TextRenderer.draw_msg_align_centered(text, at.x, at.y, size, drawable_size, color);
+}

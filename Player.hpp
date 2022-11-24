@@ -118,4 +118,5 @@ struct Player {
     void eraseSingleTriangle(int i, int j);
     void dfsEraseTriangles();
     void dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>& visited);
+    bool Player::structureDisconnected();
 };

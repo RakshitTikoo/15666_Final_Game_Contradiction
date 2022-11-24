@@ -44,4 +44,5 @@ struct DrawText{
     void load_char(char *fontfile);
     void draw_msg(std::string text, float x, float y, float scale, glm::uvec2 const &drawable_size, glm::vec3 color);
     void draw_msg_align_right(std::string text, float x, float y, float scale, glm::uvec2 const &drawable_size, glm::vec3 color);
+    void draw_msg_align_centered(std::string text, float x, float y, float scale, glm::uvec2 const &drawable_size, glm::vec3 color);
 };

@@ -349,7 +349,6 @@ void Player::eraseSingleTriangle(int i, int j) {
 }
 
 void Player::dfsEraseTriangles() {
-    std::function<void(int, int, std::set<std::pair<int, int>>)> do_dfs;
     std::set<std::pair<int, int>> visited;
     dfsEraseTrianglesInner(0, 0, visited);
     
@@ -359,6 +358,15 @@ void Player::dfsEraseTriangles() {
         if (!visited.count(t)) toErase.push_back(t);
     }
     for (std::pair<int, int> t : toErase) eraseSingleTriangle(t.first, t.second);
+}
+
+bool Player::structureDisconnected() {
+    std::set<std::pair<int, int>> visited;
+    dfsEraseTrianglesInner(0, 0, visited);
+    for (std::pair<int, int> t : cluster.triangles) {
+        if (!visited.count(t)) return true;
+    }
+    return false;
 }
 
 void Player::dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>& visited) {
