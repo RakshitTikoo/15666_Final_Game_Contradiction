@@ -30,6 +30,8 @@ struct GameState {
 
     Infboss* infboss = nullptr;
 
+    Timestopboss* timestopboss = nullptr;
+
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
     std::vector<glm::vec2> food;

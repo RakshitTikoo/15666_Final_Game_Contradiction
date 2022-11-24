@@ -72,6 +72,9 @@ void PlayMode::spawn_entity(int entity_type) {
 			gs.infboss = new Infboss(pos);
 			break;
 
+		case TIMESTOPBOSS:
+			gs.timestopboss = new Timestopboss(pos);
+			break;
 			
 
 		default: 
@@ -100,7 +103,7 @@ void PlayMode::init(){
 
 	spawn_entities(500, FOOD);
 	//spawn_entities(10, WORM);
-	spawn_entity(INFBOSS);
+	spawn_entity(TIMESTOPBOSS);
 }
 
 PlayMode::PlayMode() {
@@ -314,6 +317,12 @@ void PlayMode::update(float elapsed) {
 		}
 	}
 
+	{ // update boss
+		if (gs.timestopboss != nullptr) {
+			gs.timestopboss->update(elapsed, gs);
+		}
+	}
+
 
 	{ // update enemies
 		for (Enemy* e : gs.enemies) {
@@ -428,6 +437,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				gs.infboss->draw(drawer);
 			}
 		}
+
+		
+		{ // draw boss
+			if (gs.timestopboss != nullptr) {
+				gs.timestopboss->draw(drawer);
+				gs.timestopboss->draw_timestop(drawer);
+			}
+		}
+
 		
 		{ // draw player explosion
 			gs.player.draw_explosion(drawer);

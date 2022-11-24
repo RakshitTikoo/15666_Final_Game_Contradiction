@@ -256,6 +256,37 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     }
 
 
+    // =========================
+    // Boss timestop attack
+    // =========================
+    for (auto& k : gs.player.triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+        if(gs.timestopboss->timestop_intersect(tri_hitbox)  && boss_timestop_hit == false) {
+            boss_timestop_hit = true;
+            boss_timestop_hit_cnt = boss_timestop_hit_cooldown;
+            time_since_shoot    /= 10.f;
+            player_speed        /= 10.f;
+            player_rot          /= 10.f;
+            core_bullet_speed   /= 10.f;
+            turret_bullet_speed /= 10.f; 
+        }
+    }
+    
+    if(boss_timestop_hit) {
+        boss_timestop_hit_cnt -= elapsed;
+        if(boss_timestop_hit_cnt <= 0.f) {
+            boss_timestop_hit = false;
+            time_since_shoot    *= 10.f;
+            player_speed        *= 10.f;
+            player_rot          *= 10.f;
+            core_bullet_speed   *= 10.f;
+            turret_bullet_speed *= 10.f;  
+        }
+    }
+    
+
+
 
 }
 

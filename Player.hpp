@@ -99,6 +99,10 @@ struct Player {
     std::vector<glm::vec2> timestop_pos;
     std::vector<float> timestop_rad;
 
+    // Boss timestop 
+    float boss_timestop_hit_cooldown = 5.f;
+    float boss_timestop_hit_cnt;
+    bool  boss_timestop_hit = false;
 
 
     float explosion_speed = 0.5f;

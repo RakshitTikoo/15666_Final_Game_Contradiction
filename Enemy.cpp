@@ -91,6 +91,7 @@ void Shooter::update(float elapsed, GameState& state) {
             this->timestop_hit = true;
             this->timestop_hit_cnt = this-> timestop_hit_cooldown;
             this->mov_speed /= 10.f; 
+            this->bullet_speed /= 10.f;
         }
     
     if(this->timestop_hit) {
@@ -98,6 +99,7 @@ void Shooter::update(float elapsed, GameState& state) {
         if(this->timestop_hit_cnt <= 0.f) {
             this->timestop_hit = false;
             this->mov_speed *= 10.f; 
+            this->bullet_speed *= 10.f;
         }
     }
 
@@ -173,6 +175,7 @@ void Spiral::update(float elapsed, GameState& state) {
             this->timestop_hit = true;
             this->timestop_hit_cnt = this-> timestop_hit_cooldown;
             this->mov_speed /= 10.f; 
+            this->bullet_speed /= 10.f;
         }
     
     if(this->timestop_hit) {
@@ -180,6 +183,7 @@ void Spiral::update(float elapsed, GameState& state) {
         if(this->timestop_hit_cnt <= 0.f) {
             this->timestop_hit = false;
             this->mov_speed *= 10.f; 
+            this->bullet_speed *= 10.f;
         }
     }
 }

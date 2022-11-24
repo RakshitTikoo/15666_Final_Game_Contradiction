@@ -39,7 +39,7 @@ struct PlayMode : Mode {
 	void init();
 
 	// Entity Control
-	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7, INFBOSS = 8};
+	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7, INFBOSS = 8, TIMESTOPBOSS = 9};
 	void spawn_entity(int entity_type);
 	void spawn_entities(int count, int entity_type);
 
@@ -47,10 +47,10 @@ struct PlayMode : Mode {
 	static constexpr int NUM_LEVELS = 1;
 	vector<vector<pair<int, int>>> levels[NUM_LEVELS] = {
 		{ // Level 0
-			{{10, CHASER}},
-			{{20, CHASER}, {3, SHOOTER}},
-			{{40, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
-			{{50, CHASER}, {10, SHOOTER}, {5, SPIRAL}},
+			{{1, CHASER}},
+			{{2, CHASER}, {3, SHOOTER}},
+			{{4, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
+			{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}},
 			{{1, TROJAN}}
 		}
 	};
