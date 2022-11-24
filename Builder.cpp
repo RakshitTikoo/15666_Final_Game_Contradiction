@@ -54,8 +54,12 @@ Player* Builder::update(float elapsed) {
 
             // Try to place a triangle
             bool contains_triangle = player.triangle_info.count({building_hover.first, building_hover.second});
-            if (controls.mouse.pressed && !contains_triangle && menu_selected != -1) {
-                player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+            if (controls.mouse.pressed) {
+                if (!contains_triangle && menu_selected > 1) {
+                    player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+                } else if (contains_triangle && menu_selected == 0 && building_hover != make_pair(0, 0)) {
+                    player.eraseSingleTriangle(building_hover.first, building_hover.second);
+                }
             }
         }
     }
@@ -127,14 +131,25 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
             vec2 box_maxs = box.second;
             vec2 mid = (box_mins + box_maxs) / 2.f;
 
-            vec2 p0 = mid + vec2(-triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
-            vec2 p1 = mid + vec2( triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
-            vec2 p2 = mid + vec2(0.f, sqrtf(3.f)*triangle_sz/3.f);
+            if (i == 0) { // Instead of core, draw eraser icon
+                float cross_sz = menu_item_sz * 0.3f;
+                vec2 p0 = mid + vec2(-cross_sz/2, -cross_sz/2);
+                vec2 p1 = mid + vec2( cross_sz/2, -cross_sz/2);
+                vec2 p2 = mid + vec2( cross_sz/2,  cross_sz/2);
+                vec2 p3 = mid + vec2(-cross_sz/2,  cross_sz/2);
+                glm::uvec4 color = {250, 50, 50, 255};
+                line_absolute(p0, p2, color);
+                line_absolute(p1, p3, color);
+            } else {
+                vec2 p0 = mid + vec2(-triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
+                vec2 p1 = mid + vec2( triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
+                vec2 p2 = mid + vec2(0.f, sqrtf(3.f)*triangle_sz/3.f);
 
-            glm::uvec4 color = PlayerTriangle::triangleTypeMap[i].color;
-            line_absolute(p0, p1, color);
-            line_absolute(p1, p2, color);
-            line_absolute(p2, p0, color);
+                glm::uvec4 color = PlayerTriangle::triangleTypeMap[i].color;
+                line_absolute(p0, p1, color);
+                line_absolute(p1, p2, color);
+                line_absolute(p2, p0, color);
+            }
         }
 
         auto draw_selection_box = [&](int idx, uvec4 color) {
@@ -162,10 +177,12 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
 
             // Show description of the hovered item in bottom left
             string desc = PlayerTriangle::triangleTypeMap[menu_hover].description;
+            if (menu_hover == 0) desc = "";
             drawer.text(desc, {10.f, 10.f}, 0.4f);
 
             // Draw name of hovered item to the left of the menu
             string name = PlayerTriangle::triangleTypeMap[menu_hover].name;
+            if (menu_hover == 0) name = "Eraser";
             auto box = get_menu_item_bounds(menu_hover);
             float name_x = box.first.x * (window_max.x - window_min.x) + window_min.x;
             float name_y = (box.second.y*drawer.aspect) * (window_max.y - window_min.y) + window_min.y;
@@ -181,7 +198,7 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
         if (building_hovered) {
             vector<vec2> corners = player.cluster.getTriangleCorners(building_hover.first, building_hover.second);
             uvec4 color = {100.f, 100.f, 100.f, 255.f};
-            if (menu_selected != -1) {
+            if (menu_selected >= 1) {
                 color = PlayerTriangle::triangleTypeMap[menu_selected].color;
                 color.a = 128;
             }
