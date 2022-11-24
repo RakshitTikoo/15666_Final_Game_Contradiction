@@ -85,3 +85,35 @@ struct TrojanBullet : Bullet {
     void draw(Drawer& drawer) override;
     void update(float elapsed, GameState& state) override;
 };
+
+struct InfbossBullet : Bullet {
+    glm::vec2 pos;
+    glm::vec2 speed;
+    float rad = 0.1f;
+    glm::uvec4 color = glm::uvec4(255.f, 0.f, 255.f, 255.f);
+    InfbossBullet(glm::vec2 pos, glm::vec2 speed);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+};
+
+struct InfbossSpiralBullet : Bullet {
+    glm::vec2 pos;
+    float speed;
+    glm::vec2 init_angle;
+    float rad = 0.1f;
+    
+    float angular_speed = PI/100.f;
+    float radial_speed = 0.5f;
+
+    float angle;
+    float rot_rad = 1.f;
+    glm::vec2 ori_pos;
+    
+    float lifespan = 8.f;
+    glm::uvec4 color = glm::uvec4(255.f, 0.f, 255.f, 255.f);
+    InfbossSpiralBullet(glm::vec2 pos, glm::vec2 init_angle, float speed);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+};

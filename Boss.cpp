@@ -136,7 +136,7 @@ void Trojan::update(float elapsed, GameState& gs) {
     if(state == BOMB) { // spawns bombers
         if(bomb_cnt >= bomb_rate){
         bomb_cnt = 0.f;
-        for (auto& k : triangle_info) if (k.second.type == B) { // Shooter
+        for (auto& k : triangle_info) if (k.second.type == B) { // bombers
                 glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
                 Bomber* b = new Bomber(loc);
                 gs.enemies.push_back(b); 
@@ -261,3 +261,275 @@ void Trojan::dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>&
 
 
 
+// ==================
+// INFBOSS
+// ==================
+InfbossTriangle::InfbossTriangle() {
+    this->type = 0;
+    this->health = triangle_health[0];
+}
+
+InfbossTriangle::InfbossTriangle(int type) {
+    this->type = type;
+    this->health = triangle_health[type];
+}
+
+void Infboss::convert_map2_coordinates(int triangle_type_map_val[size_map][size_map], int triangle_coords_map_val[size_map][size_map]) {
+    for(int i = 0; i < size_map; i++){
+        for(int j = 0; j < size_map; j++){
+            if(triangle_coords_map_val[i][j] == 1) {// Place triangle here 
+                triangle_coords.push_back({i - size_map/2, j - size_map/2});
+                triangle_type.push_back(triangle_type_map_val[i][j]);
+            }
+        }
+    }
+}
+
+Infboss::Infboss(glm::vec2 pos) {
+    cluster = TriangleCluster();
+    convert_map2_coordinates(triangle_type_map, triangle_coords_map);
+
+    //Add triangles defined in the triangle_coords array
+    for(int i = 0; i < (int) triangle_coords.size(); i++) {
+        std::pair<int, int> k = triangle_coords[i];
+        addTriangle(k.first, k.second, InfbossTriangle(triangle_type[i]));
+    }
+    
+    // Adjusting to match player core
+    cluster.pos = pos;
+}
+
+void Infboss::draw(Drawer& drawer) {
+    for (std::pair<int,int> coords : cluster.triangles) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(coords.first, coords.second);
+        InfbossTriangle t = triangle_info[coords];
+
+        //drawer.line(corners[0], corners[1], t.color[t.type]);
+        //drawer.line(corners[1], corners[2], t.color[t.type]);
+        //drawer.line(corners[2], corners[0], t.color[t.type]);
+
+        // Unnecessary time waste code to draw smaller triangle 
+        glm::vec2 offset_0 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[0]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[0]);
+        offset_0 = offset_0*0.05f;
+        glm::vec2 offset_1 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[1]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[1]);
+        offset_1 = offset_1*0.05f;
+        glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
+        offset_2 = offset_2*0.05f;
+
+        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+    }
+}
+
+glm::vec2 Infboss::core_loc(){
+    for (auto& k : triangle_info) if (k.second.type == C) { // Core
+        return cluster.getTrianglePosition(k.first.first, k.first.second);
+        break;
+    }
+    return cluster.pos;
+}
+
+
+void Infboss::update(float elapsed, GameState& gs) {
+    
+    glm::vec2 core_pos = core_loc();
+    // ================
+    // State Update
+    // ================
+
+    alive_time += elapsed;
+    float f = fmodf(alive_time, 25);
+    int state = IDLE;
+    if (f < 5) {
+        state = SHOOT1;
+    } else if (f < 12) {
+        state = SHOOT2;
+    } else if (f < 18) {
+        state = BOMB;
+    } else {
+        state = INFECT;
+    }
+
+    shoot1_cnt += elapsed;
+    if(state == SHOOT1) {
+        if(shoot1_cnt >= shoot1_rate) {
+            shoot1_cnt = 0.f;
+            for (auto& k : triangle_info) if (k.second.type == S) { // Shooter
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                glm::vec2 dir = glm::normalize(gs.player.cluster.pos - loc);
+                InfbossBullet* b = new InfbossBullet(loc,  bullet_speed1 * dir);
+                gs.bullets.push_back(b); 
+            }
+        } 
+    }
+
+    shoot2_cnt += elapsed;
+    shoot2_bullet_per_shot_cnt += elapsed;
+    // Shoot in a spiral 
+    if(state == SHOOT2) { 
+        if(shoot2_cnt >= shoot2_rate) {
+            if(shoot2_bullet_per_shot_cnt >= shoot2_bullet_per_shot_rate) {
+                shoot2_bullet_per_shot_cnt = 0.0f;
+                shoot2_bullet_cnt += 1;
+                if(shoot2_bullet_cnt >= shoot2_bullet_max) {
+                    shoot2_bullet_cnt = 0;
+                    shoot2_cnt = 0.f; 
+                }
+                 for (auto& k : triangle_info) if (k.second.type == S) { // Spiral from shooter
+                    glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                    InfbossSpiralBullet* b_1 = new InfbossSpiralBullet(loc,   glm::vec2(0.0f, 0.0f), bullet_speed2);
+                    gs.bullets.push_back(b_1);
+                    InfbossSpiralBullet* b_2 = new InfbossSpiralBullet(loc, glm::vec2(0.0f, 1.0f), bullet_speed2);
+                    gs.bullets.push_back(b_2);
+                    InfbossSpiralBullet* b_3 = new InfbossSpiralBullet(loc,   glm::vec2(1.0f, 0.0f), bullet_speed2);
+                    gs.bullets.push_back(b_3);
+                    InfbossSpiralBullet* b_4 = new InfbossSpiralBullet(loc,   glm::vec2(1.0f, 1.0f), bullet_speed2);
+                    gs.bullets.push_back(b_4);
+                    InfbossSpiralBullet* b_5 = new InfbossSpiralBullet(loc,   glm::vec2(0.0f, -1.0f), bullet_speed2);
+                    gs.bullets.push_back(b_5);
+                    InfbossSpiralBullet* b_6 = new InfbossSpiralBullet(loc,   glm::vec2(1.0f, -1.0f), bullet_speed2);
+                    gs.bullets.push_back(b_6);
+                }
+
+            }
+        } 
+    }
+
+    bomb_cnt += elapsed;
+    if(state == BOMB) { // spawns bombers
+        if(bomb_cnt >= bomb_rate){
+        bomb_cnt = 0.f;
+        for (auto& k : triangle_info) if (k.second.type == B) { // Bomber
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                Bomber* b = new Bomber(loc);
+                gs.enemies.push_back(b); 
+            }
+        }
+    }
+
+
+    infect_cnt += elapsed;
+    if(state == INFECT) { // spawns infector
+        if(infect_cnt >= infect_rate){
+        infect_cnt = 0.f;
+        for (auto& k : triangle_info) if (k.second.type == I) { // Infector
+                glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
+                Infector* b = new Infector(loc);
+                gs.enemies.push_back(b); 
+            }
+        }
+    }
+
+    glm::vec2 dir = gs.player.cluster.pos - core_pos;
+    if (glm::length(dir) > 10) {
+        dir = glm::normalize(dir);
+        cluster.pos += elapsed*dir*chase_speed;
+    }
+    
+    // Bound Check
+    if(cluster.pos.x > gs.arena_max.x) cluster.pos.x = gs.arena_max.x;
+    if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;
+    if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
+    if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
+
+    // Check collision between player and boss
+    //check_triangle_collision(gs); // Need to implement triangle triangle intersect
+
+    // Check collision between player bomb and boss
+    //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+
+}
+
+void Infboss::check_triangle_bomb_collision(GameState &gs) {
+    // Explosion hit logic 
+    for (auto& k : triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+	    if(gs.player.explosion_intersect(tri_hitbox)) destroyTriangle(k.first.first, k.first.second);
+    }
+}
+
+void Infboss::check_triangle_collision(GameState &gs) {
+    // check player and boss triangle collision
+    for (auto& k : triangle_info) {
+        for (auto& j : gs.player.triangle_info) {
+            std::vector<glm::vec2> corners = gs.player.cluster.getTriangleCorners(j.first.first, j.first.second);
+            TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+            std::pair<int,int>* hit = cluster.intersect(tri_hitbox);
+            if (hit != nullptr) {
+	        	destroyTriangle(k.first.first, k.first.second);
+	        	gs.player.destroyTriangle(j.first.first, j.first.second);
+                break;
+	        }
+        }
+    }
+}
+void Infboss::addTriangle(int i, int j, InfbossTriangle t) {
+    assert(!cluster.triangles.count({i, j}));
+    cluster.insertTriangle(i, j);
+    triangle_info[{i,j}] = t;
+}
+
+void Infboss::destroyTriangle(int i, int j) {
+    assert(cluster.triangles.count({i, j}));
+    triangle_info[{i, j}].health -= 1;
+    if(triangle_info[{i, j}].health <= 0)
+    {
+        if(triangle_info[{i, j}].type == C) { // Destroy all if core
+        for (auto& k : triangle_info) {
+            eraseSingleTriangle(k.first.first, k.first.second);
+        }
+        }
+
+        else 
+            eraseSingleTriangle(i, j);
+    } 
+
+    
+     
+}
+
+
+void Infboss::destroyTriangles(std::vector<std::pair<int,int>> coords) {
+    for (std::pair<int,int> c : coords) {
+        eraseSingleTriangle(c.first, c.second);
+    }
+    dfsEraseTriangles();
+}
+
+void Infboss::eraseSingleTriangle(int i, int j) {
+    assert(cluster.triangles.count({i, j}));
+    cluster.eraseTriangle(i, j);
+    triangle_info.erase({i, j});
+}
+
+void Infboss::dfsEraseTriangles() {
+    std::function<void(int, int, std::set<std::pair<int, int>>)> do_dfs;
+    std::set<std::pair<int, int>> visited;
+    dfsEraseTrianglesInner(0, 0, visited);
+    
+    // delete triangles that are not visited
+    std::vector<std::pair<int, int>> toErase;
+    for (std::pair<int, int> t : cluster.triangles) {
+        if (!visited.count(t)) toErase.push_back(t);
+    }
+    for (std::pair<int, int> t : toErase) eraseSingleTriangle(t.first, t.second);
+}
+
+void Infboss::dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>& visited) {
+    if (!cluster.triangles.count({i, j})) return;
+    if (visited.count({i, j})) return;
+    
+    visited.insert({i, j});
+
+    if (i % 2 == 0) {
+        dfsEraseTrianglesInner(i + 1, j, visited);
+        dfsEraseTrianglesInner(i + 1, j - 1, visited);
+        dfsEraseTrianglesInner(i - 1, j, visited);
+    } else {
+        dfsEraseTrianglesInner(i + 1, j, visited);
+        dfsEraseTrianglesInner(i - 1, j + 1, visited);
+        dfsEraseTrianglesInner(i - 1, j, visited);
+    }
+}

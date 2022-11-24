@@ -68,6 +68,10 @@ void PlayMode::spawn_entity(int entity_type) {
 			gs.trojan = new Trojan(pos);
 			break;
 
+		case INFBOSS:
+			gs.infboss = new Infboss(pos);
+			break;
+
 			
 
 		default: 
@@ -95,7 +99,8 @@ void PlayMode::init(){
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update
 
 	spawn_entities(500, FOOD);
-	spawn_entities(10, WORM);
+	//spawn_entities(10, WORM);
+	spawn_entity(INFBOSS);
 }
 
 PlayMode::PlayMode() {
@@ -303,6 +308,13 @@ void PlayMode::update(float elapsed) {
 		}
 	}
 
+	{ // update boss
+		if (gs.infboss != nullptr) {
+			gs.infboss->update(elapsed, gs);
+		}
+	}
+
+
 	{ // update enemies
 		for (Enemy* e : gs.enemies) {
 			e->update(elapsed, gs);
@@ -408,6 +420,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		{ // draw boss
 			if (gs.trojan != nullptr) {
 				gs.trojan->draw(drawer);
+			}
+		}
+
+		{ // draw boss
+			if (gs.infboss != nullptr) {
+				gs.infboss->draw(drawer);
 			}
 		}
 		

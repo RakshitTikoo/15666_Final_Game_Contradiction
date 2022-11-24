@@ -39,7 +39,7 @@ struct PlayMode : Mode {
 	void init();
 
 	// Entity Control
-	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7};
+	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7, INFBOSS = 8};
 	void spawn_entity(int entity_type);
 	void spawn_entities(int count, int entity_type);
 

@@ -28,6 +28,8 @@ struct GameState {
     Player player;
     Trojan* trojan = nullptr;
 
+    Infboss* infboss = nullptr;
+
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
     std::vector<glm::vec2> food;
