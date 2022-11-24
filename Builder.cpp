@@ -51,6 +51,12 @@ Player* Builder::update(float elapsed) {
             vec2 building_space_coords = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min) * (this->drawer_max - this->drawer_min) + this->drawer_min;
             building_hovered = true;
             building_hover = get_triangle_coords(building_space_coords);
+
+            // Try to place a triangle
+            bool contains_triangle = player.triangle_info.count({building_hover.first, building_hover.second});
+            if (controls.mouse.pressed && !contains_triangle && menu_selected != -1) {
+                player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+            }
         }
     }
 
@@ -93,7 +99,6 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
             }
         }
     }
-
 
     // Draw player
     player.draw(drawer);
@@ -176,6 +181,10 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
         if (building_hovered) {
             vector<vec2> corners = player.cluster.getTriangleCorners(building_hover.first, building_hover.second);
             uvec4 color = {100.f, 100.f, 100.f, 255.f};
+            if (menu_selected != -1) {
+                color = PlayerTriangle::triangleTypeMap[menu_selected].color;
+                color.a = 128;
+            }
             drawer.line(corners[0], corners[1], color);
             drawer.line(corners[1], corners[2], color);
             drawer.line(corners[2], corners[0], color);
