@@ -325,11 +325,14 @@ void Player::destroyTriangle(int i, int j) {
             next_triangle[2] = {i-1,j+1};
         }
         int selection = std::rand() % 3;
+        int mx = 3;
         while(triangle_info.find(next_triangle[selection]) != triangle_info.end()) {
+          mx--;
+          if (mx < 0) break;
           // found
           selection += 1;
           if(selection >= 3) selection = 0;
-        } 
+        }
         
         addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
     }
