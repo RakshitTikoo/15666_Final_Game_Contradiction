@@ -203,18 +203,27 @@ void DrawText::draw_msg_align_right(std::string text, float x, float y, float sc
 
 void DrawText::draw_msg_align_centered(std::string text, float x, float y, float scale, glm::uvec2 const &drawable_size, glm::vec3 color) {
     float x_ori = x;
+    float y_ori = y;
     float width = 0;
+    float lines = 0;
+    float height = 0;
     x = 0;
+    y = 0;
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++) 
     {
 		if(*c == '\n') { // new line logic
 			x = x_ori;
+            lines += 50.f;
+            height = 0.f;
 			continue;
 		}
         Character ch = Characters[*c];
+        float h = ch.Size.y * scale;
+        height = fmax(height, h);
         x += (ch.Advance >> 6) * scale;
         width = fmax(width, x);
     }
-    draw_msg(text, x_ori - width/2.f, y, scale, drawable_size, color);
+    height += lines;
+    draw_msg(text, x_ori - width/2.f, y_ori - height/2.f, scale, drawable_size, color);
 }

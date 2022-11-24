@@ -29,36 +29,51 @@ Player* Builder::update(float elapsed) {
         mouse_absolute.y *= (window_max.y - window_min.y) / (window_max.x - window_min.x);
         auto menu_min_x = get_menu_item_bounds(0).first.x;
 
+        done_hovered = false;
         building_hovered = false;
         menu_hover = -1;
 
-        if (mouse_absolute.x >= menu_min_x) { // Mouse over menu
-            // Check for hover over a menu item
-            for (int i = 0; i < PlayerTriangle::NUM_TRIANGLE_TYPES; i++) {
-                auto box = get_menu_item_bounds(i);
-                if (box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
-                    box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
-                    menu_hover = i;
+        
+        { // Check for hover over done button
+            auto box = get_finished_button_bounds();
+            if (box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
+                box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
+                done_hovered = true;
+                if (controls.mouse.pressed) {
+                    return &player;
                 }
             }
+        }
+        
+        if (!done_hovered) {
+            if (mouse_absolute.x >= menu_min_x) { // Mouse over menu
+                // Check for hover over a menu item
+                for (int i = 0; i < PlayerTriangle::NUM_TRIANGLE_TYPES; i++) {
+                    auto box = get_menu_item_bounds(i);
+                    if (box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
+                        box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
+                        menu_hover = i;
+                    }
+                }
 
-            // Check for new selected item
-            if (controls.mouse.pressed && menu_hover != -1) {
-                menu_selected = menu_hover;
-            }
-        } else { // Mouse over building area
-            // Coordinates of mouse in building space
-            vec2 building_space_coords = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min) * (this->drawer_max - this->drawer_min) + this->drawer_min;
-            building_hovered = true;
-            building_hover = get_triangle_coords(building_space_coords);
+                // Check for new selected item
+                if (controls.mouse.pressed && menu_hover != -1) {
+                    menu_selected = menu_hover;
+                }
+            } else { // Mouse over building area
+                // Coordinates of mouse in building space
+                vec2 building_space_coords = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min) * (this->drawer_max - this->drawer_min) + this->drawer_min;
+                building_hovered = true;
+                building_hover = get_triangle_coords(building_space_coords);
 
-            // Try to place a triangle
-            bool contains_triangle = player.triangle_info.count({building_hover.first, building_hover.second});
-            if (controls.mouse.pressed) {
-                if (!contains_triangle && menu_selected > 1) {
-                    player.addTriangle(building_hover.first, building_hover.second, menu_selected);
-                } else if (contains_triangle && menu_selected == 0 && building_hover != make_pair(0, 0)) {
-                    player.eraseSingleTriangle(building_hover.first, building_hover.second);
+                // Try to place a triangle
+                bool contains_triangle = player.triangle_info.count({building_hover.first, building_hover.second});
+                if (controls.mouse.pressed) {
+                    if (!contains_triangle && menu_selected >= 1) {
+                        player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+                    } else if (contains_triangle && menu_selected == 0 && building_hover != make_pair(0, 0)) {
+                        player.eraseSingleTriangle(building_hover.first, building_hover.second);
+                    }
                 }
             }
         }
@@ -73,6 +88,10 @@ Player* Builder::update(float elapsed) {
         // make it so that moving diagonally doesn't go faster:
         if (move != glm::vec2(0.0f)) move = 10.f * glm::normalize(move) * elapsed;
         center += move;
+    }
+
+    { // Check if the structure is disconnected
+        disconnected = player.structureDisconnected();
     }
 
     return nullptr;
@@ -182,7 +201,7 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
 
             // Draw name of hovered item to the left of the menu
             string name = PlayerTriangle::triangleTypeMap[menu_hover].name;
-            if (menu_hover == 0) name = "Eraser";
+            if (menu_hover == 0) name = "Erase";
             auto box = get_menu_item_bounds(menu_hover);
             float name_x = box.first.x * (window_max.x - window_min.x) + window_min.x;
             float name_y = (box.second.y*drawer.aspect) * (window_max.y - window_min.y) + window_min.y;
@@ -208,9 +227,28 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
         }
     }
 
-    { // Warn player if structure is disconnected
-        if (player.structureDisconnected()) {
+    { // Warn player if structure is disconnected, otherwise draw "done" button
+        if (disconnected) {
             drawer.text_align_centered("Structure is disconnected", {window_max.x/2, window_max.y*4.f/5.f}, 0.3f, {1.f, 0.4f, 0.4f});
+        } else {
+            vec3 color = done_hovered ? vec3(0.f, 1.f, 0.f) : vec3(.4f, .8f, .4f);
+            uvec4 color4 = uvec4(int(color.r*255), int(color.g*255), int(color.b*255), 255);
+
+            auto box = get_finished_button_bounds();
+            vec2 p0 = {box.first.x, box.first.y};
+            vec2 p1 = {box.second.x, box.first.y};
+            vec2 p2 = {box.second.x, box.second.y};
+            vec2 p3 = {box.first.x, box.second.y};
+        
+            line_absolute(p0, p1, color4);
+            line_absolute(p1, p2, color4);
+            line_absolute(p2, p3, color4);
+            line_absolute(p3, p0, color4);
+
+            vec2 mid = (box.first + box.second) / 2.f;
+            float tx = mid.x * window_max.x;
+            float ty = mid.y * drawer.aspect * window_max.y;
+            drawer.text_align_centered("Done", {tx, ty}, 0.6f, color);
         }
     }
 }
@@ -234,4 +272,8 @@ pair<int, int> Builder::get_triangle_coords(vec2 drawer_coords) {
     int cx = 2*tx + (tx+ty+tz)%2;
     int cy = ty;
     return make_pair(cx, cy);
+}
+
+pair<glm::vec2, glm::vec2> Builder::get_finished_button_bounds() {
+    return make_pair(vec2(0.88, 0.02), vec2(0.98, 0.08));
 }

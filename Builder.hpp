@@ -25,9 +25,12 @@ struct Builder {
     int menu_hover = -1;
     int menu_selected = -1;
     bool building_hovered = false;
+    bool done_hovered = false;
+    bool disconnected = false;
     std::pair<int,int> building_hover;
     glm::vec2 center = {0.f, 0.f};
     
     pair<glm::vec2, glm::vec2> get_menu_item_bounds(int idx);
     pair<int, int> get_triangle_coords(glm::vec2 drawer_coords);
+    pair<glm::vec2, glm::vec2> get_finished_button_bounds();
 };
