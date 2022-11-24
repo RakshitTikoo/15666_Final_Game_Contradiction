@@ -29,6 +29,7 @@ Player* Builder::update(float elapsed) {
         mouse_absolute.y *= (window_max.y - window_min.y) / (window_max.x - window_min.x);
         auto menu_min_x = get_menu_item_bounds(0).first.x;
 
+        building_hovered = false;
         menu_hover = -1;
 
         if (mouse_absolute.x >= menu_min_x) { // Mouse over menu
@@ -48,8 +49,20 @@ Player* Builder::update(float elapsed) {
         } else { // Mouse over building area
             // Coordinates of mouse in building space
             vec2 building_space_coords = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min) * (this->drawer_max - this->drawer_min) + this->drawer_min;
-
+            building_hovered = true;
+            building_hover = get_triangle_coords(building_space_coords);
         }
+    }
+
+    { // Moving around
+        glm::vec2 move = glm::vec2(0.0f);
+        if (controls.left.pressed && !controls.right.pressed) move.x =-1.0f;
+        if (!controls.left.pressed && controls.right.pressed) move.x = 1.0f;
+        if (controls.down.pressed && !controls.up.pressed) move.y =-1.0f;
+        if (!controls.down.pressed && controls.up.pressed) move.y = 1.0f;
+        // make it so that moving diagonally doesn't go faster:
+        if (move != glm::vec2(0.0f)) move = 10.f * glm::normalize(move) * elapsed;
+        center += move;
     }
 
     return nullptr;
@@ -58,16 +71,35 @@ Player* Builder::update(float elapsed) {
 void Builder::draw(glm::uvec2 const &drawable_size) {
 	Drawer drawer(drawable_size, this->TextRenderer);
     float width = 40.f;
-    drawer.set_center({0.f, 0.f});
+    drawer.set_center(center);
     drawer.set_width(width);
     this->drawer_min = drawer.center - glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
     this->drawer_max = drawer.center + glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
+
+    // Draw lattice dots
+    {
+        pair<int, int> tmp = get_triangle_coords(drawer.center + vec2(-drawer.width/2 - 1, drawer.width/(2*drawer.aspect) + 1));
+        int minx = tmp.first;
+        int maxy = tmp.second;
+        tmp = get_triangle_coords(drawer.center + vec2(drawer.width/2 + 1, -drawer.width/(2*drawer.aspect)-1));
+        int maxx = tmp.first;
+        int miny = tmp.second;
+        for (int i = minx; i <= maxx; i++) {
+            for (int j = miny; j <= maxy; j++) {
+                if (i%2 == 0) {
+                    vec2 c = player.cluster.getTriangleCorners(i, j)[0];
+                    drawer.circle(c, 0.05f, {55.f, 55.f, 55.f, 255.f});
+                }
+            }
+        }
+    }
+
 
     // Draw player
     player.draw(drawer);
 
     // Draw remaining money
-    drawer.text("$" + to_string(remaining_money), {20.f, 680.f}, 0.4f);
+    drawer.text("$" + to_string(remaining_money), {10.f, window_max.y-30.f}, 0.4f);
 
     // x from 0 to 1, y from 0 to 1/drawer.aspect
     auto line_absolute = [&](vec2 p0, vec2 p1, uvec4 color={255.f,255.f,255.f,255.f}) {
@@ -82,7 +114,6 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
         auto tmp = get_menu_item_bounds(0);
         float menu_item_sz = tmp.second.x - tmp.first.x;
         float triangle_sz = menu_item_sz * 0.5f;
-        line_absolute({1-menu_item_sz, 0}, {1-menu_item_sz, 1.f/drawer.aspect});
 
         // Draw available triangle types
         for (int i = 0; i < PlayerTriangle::NUM_TRIANGLE_TYPES; i++) {
@@ -126,11 +157,29 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
 
             // Show description of the hovered item in bottom left
             string desc = PlayerTriangle::triangleTypeMap[menu_hover].description;
-            drawer.text(desc, {20.f, 20.f}, 0.4f);
+            drawer.text(desc, {10.f, 10.f}, 0.4f);
+
+            // Draw name of hovered item to the left of the menu
+            string name = PlayerTriangle::triangleTypeMap[menu_hover].name;
+            auto box = get_menu_item_bounds(menu_hover);
+            float name_x = box.first.x * (window_max.x - window_min.x) + window_min.x;
+            float name_y = (box.second.y*drawer.aspect) * (window_max.y - window_min.y) + window_min.y;
+            drawer.text_align_right(name, {name_x - 5.f, name_y - ((box.second.y - box.first.y)/2.f * (window_max.y - window_min.y) * drawer.aspect)}, 0.3f);
         }
 
         // Draw a white box over selected item
         if (menu_selected != -1) draw_selection_box(menu_selected, {255.f, 255.f, 255.f, 255.f});
+    }
+
+    { // Draw building area
+        // Draw hovered triangle
+        if (building_hovered) {
+            vector<vec2> corners = player.cluster.getTriangleCorners(building_hover.first, building_hover.second);
+            uvec4 color = {100.f, 100.f, 100.f, 255.f};
+            drawer.line(corners[0], corners[1], color);
+            drawer.line(corners[1], corners[2], color);
+            drawer.line(corners[2], corners[0], color);
+        }
     }
 }
 
@@ -140,4 +189,17 @@ pair<vec2, vec2> Builder::get_menu_item_bounds(int idx) {
     static float max_y = max_x * (window_max.y - window_min.y)/(window_max.x - window_min.x);
     return make_pair(vec2(max_x - sidelen, max_y - idx*sidelen - sidelen),
                      vec2(max_x, max_y - idx*sidelen));
+}
+
+pair<int, int> Builder::get_triangle_coords(vec2 drawer_coords) {
+    float bx = drawer_coords.x - 1;
+    float by = drawer_coords.y - sqrtf(3.f) / 3.f;
+    // Weird voodoo math calculations (https://www.boristhebrave.com/2021/05/23/triangle-grids/)
+    int tx = (int)ceilf(bx - sqrtf(3.f) / 3.f * by);
+    int ty = (int)floorf(sqrtf(3.f) * 2 / 3.f * by) + 1;
+    int tz = (int)ceilf(-1.f * bx - sqrtf(3.f)/3.f * by);
+    // Convert to own triangle coordinate system
+    int cx = 2*tx + (tx+ty+tz)%2;
+    int cy = ty;
+    return make_pair(cx, cy);
 }

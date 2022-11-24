@@ -287,13 +287,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	Drawer drawer(drawable_size, TextRenderer);
 	if (gs.state == gs.Menu) {
-		drawer.text("Poly Defense", {100.f, 650.f}, 1.f);
-		drawer.text(title_options[0], {100.f, 500.f}, title_options_scale[0], title_options_color[0]);
-		drawer.text(title_options[1], {100.f, 450.f}, title_options_scale[1], title_options_color[1]);
-		drawer.text(title_options[2], {100.f, 400.f}, title_options_scale[2], title_options_color[2]);
-		drawer.text(title_options[3], {100.f, 350.f}, title_options_scale[3], title_options_color[3]);
-		drawer.text(title_options[4], {100.f, 300.f}, title_options_scale[4], title_options_color[4]);
-		drawer.text(title_options[5], {100.f, 250.f}, title_options_scale[5], title_options_color[5]);
+		drawer.text("Poly Defense", {100.f, 450.f}, 1.f);
+		drawer.text(title_options[0], {100.f, 380.f}, title_options_scale[0], title_options_color[0]);
+		drawer.text(title_options[1], {100.f, 330.f}, title_options_scale[1], title_options_color[1]);
+		drawer.text(title_options[2], {100.f, 280.f}, title_options_scale[2], title_options_color[2]);
+		drawer.text(title_options[3], {100.f, 230.f}, title_options_scale[3], title_options_color[3]);
+		drawer.text(title_options[4], {100.f, 180.f}, title_options_scale[4], title_options_color[4]);
+		drawer.text(title_options[5], {100.f, 130.f}, title_options_scale[5], title_options_color[5]);
 	} 
 	else if(gs.state == gs.Controls) { // Controls
 		drawer.text("You are an antivirus software, fighting through hordes of", {100.f, 650.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
@@ -307,7 +307,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.text("F - Player Timestop Attack", {100.f, 50.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
 	}
 	else if(gs.state == gs.Playing) {
-		drawer.text("Wave " + std::to_string(gs.current_wave), {800.f, 650.f}, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("Wave " + std::to_string(gs.current_wave), {800.f, 450.f}, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
 		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);

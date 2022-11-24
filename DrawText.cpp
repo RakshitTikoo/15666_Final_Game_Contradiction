@@ -183,6 +183,20 @@ void DrawText::draw_msg(std::string text, float x, float y, float scale, glm::uv
 	glUseProgram(0);
 }
 
-
-
-
+void DrawText::draw_msg_align_right(std::string text, float x, float y, float scale, glm::uvec2 const &drawable_size, glm::vec3 color) {
+    float x_ori = x;
+    float width = 0;
+    x = 0;
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++) 
+    {
+		if(*c == '\n') { // new line logic
+			x = x_ori;
+			continue;
+		}
+        Character ch = Characters[*c];
+        x += (ch.Advance >> 6) * scale;
+        width = fmax(width, x);
+    }
+    draw_msg(text, x_ori - width, y, scale, drawable_size, color);
+}
