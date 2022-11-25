@@ -94,7 +94,6 @@ void PlayMode::init(){
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	builder = Builder(1000);
 	gs.score = 0;
 	gs.trojan = nullptr;
 
@@ -122,119 +121,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		return builder.handle_event(evt, window_size);
 	}
 
-	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.downs += 1;
-			controls.left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.downs += 1;
-			controls.right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.downs += 1;
-			controls.up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.downs += 1;
-			controls.down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.downs += 1;
-			controls.q.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.downs += 1;
-			controls.e.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE && controls.space.once == 0) {
-			controls.space.downs += 1;
-			controls.space.pressed = true;
-			controls.space.once = 1;
-		} else if (evt.key.keysym.sym == SDLK_RETURN && controls.enter.once == 0) {
-			controls.enter.downs += 1;
-			controls.enter.pressed = true;
-			controls.enter.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_UP && controls.arrow_up.once == 0) {
-			controls.arrow_up.downs += 1;
-			controls.arrow_up.pressed = true;
-			controls.arrow_up.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_DOWN && controls.arrow_down.once == 0) {
-			controls.arrow_down.downs += 1;
-			controls.arrow_down.pressed = true;
-			controls.arrow_down.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_ESCAPE && controls.escape.once == 0) {
-			controls.escape.downs += 1;
-			controls.escape.pressed = true;
-			controls.escape.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_f && controls.f.once == 0) {
-			controls.f.downs += 1;
-			controls.f.pressed = true;
-			controls.f.once = 1;
-		}
-
-
-	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE) {
-			controls.space.pressed = false;
-			controls.space.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_RETURN) {
-			controls.enter.pressed = false;
-			controls.enter.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_UP) {
-			controls.arrow_up.pressed = false;
-			controls.arrow_up.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_DOWN) {
-			controls.arrow_down.pressed = false;
-			controls.arrow_down.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			controls.escape.pressed = false;
-			controls.escape.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_f) {
-			controls.f.pressed = false;
-			controls.f.once = 0;
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		controls.mouse.downs += 1;
-		controls.mouse.pressed = true;
-		return true;
-	} else if (evt.type == SDL_MOUSEBUTTONUP) {
-		controls.mouse.pressed = false;
-		return true;
-	}
-
-	int x, y; SDL_GetMouseState(&x, &y);
-	controls.mouse_loc = glm::vec2();
-	controls.mouse_loc.x = x - float(window_size.x) / 2.f;
-	controls.mouse_loc.y = float(window_size.y) / 2.f - y;
-
-	return false;
+	gs.window_min = {0.f, 0.f};
+	gs.window_max = window_size;
+	return controls.handle_event(evt, window_size);
 }
 
 void PlayMode::update(float elapsed) {
@@ -271,8 +160,8 @@ void PlayMode::update(float elapsed) {
 		}
 		if(controls.enter.pressed) {
 			if(selected_option == 0) { // Level 1 select
-				gs.state = gs.Playing;
-				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+				gs.state = gs.Building;
+				builder = Builder(gs.money);
 			}
 
 			if(selected_option == 4) { // Controls select
@@ -293,10 +182,13 @@ void PlayMode::update(float elapsed) {
 	}
 
 	if (gs.state == gs.Building) {
-		Player* p = builder.update(elapsed);
-		if (p != nullptr) {
+		// returns {remaining money, player} if done, otherwise the first number is -1
+		pair<int, Player> result = builder.update(elapsed);
+		if (result.first != -1) {
 			gs.state = gs.Playing;
-			gs.player = *p;
+			gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			gs.money = result.first;
+			gs.player = result.second;
 		}
 		return;
 	}
@@ -397,27 +289,36 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	Drawer drawer(drawable_size, TextRenderer);
 	if (gs.state == gs.Menu) {
-		drawer.text("Poly Defense", {100.f, 650.f}, 1.f);
-		drawer.text(title_options[0], {100.f, 500.f}, title_options_scale[0], title_options_color[0]);
-		drawer.text(title_options[1], {100.f, 450.f}, title_options_scale[1], title_options_color[1]);
-		drawer.text(title_options[2], {100.f, 400.f}, title_options_scale[2], title_options_color[2]);
-		drawer.text(title_options[3], {100.f, 350.f}, title_options_scale[3], title_options_color[3]);
-		drawer.text(title_options[4], {100.f, 300.f}, title_options_scale[4], title_options_color[4]);
-		drawer.text(title_options[5], {100.f, 250.f}, title_options_scale[5], title_options_color[5]);
+		drawer.text("Poly Defense", {100.f, 450.f}, 1.f);
+		drawer.text(title_options[0], {100.f, 380.f}, title_options_scale[0], title_options_color[0]);
+		drawer.text(title_options[1], {100.f, 330.f}, title_options_scale[1], title_options_color[1]);
+		drawer.text(title_options[2], {100.f, 280.f}, title_options_scale[2], title_options_color[2]);
+		drawer.text(title_options[3], {100.f, 230.f}, title_options_scale[3], title_options_color[3]);
+		drawer.text(title_options[4], {100.f, 180.f}, title_options_scale[4], title_options_color[4]);
+		drawer.text(title_options[5], {100.f, 130.f}, title_options_scale[5], title_options_color[5]);
 	} 
 	else if(gs.state == gs.Controls) { // Controls
-		drawer.text("You are an antivirus software, fighting through hordes of", {100.f, 650.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
-		drawer.text("viruses. Keep on building your antivirus software by combining", {100.f, 600.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
-		drawer.text("different power triangles at beginning of each level.", {100.f, 550.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
+		drawer.text("You are an antivirus software, fighting through hordes of\n"
+					 "viruses. Keep on building your antivirus software by combining\n"
+					 "different power triangles at the beginning of each level.",
+					{50.f, 500.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
 
-		drawer.text("W A S D - Move Player", {100.f, 450.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Q - Player Rotate Anti-Clockwise", {100.f, 350.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("E - Player Rotate Clockwise", {100.f, 250.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Space - Player Bomb Attack", {100.f, 150.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("F - Player Timestop Attack", {100.f, 50.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("WASD - Move\n"
+					"Q - Rotate left\n"
+					"E - Rotate right\n"
+					"Space - Bomb attack\n"
+					"F - Timestop attack\n",
+					{50.f, 400.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
 	}
 	else if(gs.state == gs.Playing) {
-		drawer.text("Wave " + std::to_string(gs.current_wave), {800.f, 650.f}, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Wave " + std::to_string(gs.current_wave), {950.f, gs.window_max.y-30.f}, 0.4f);
 		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);
@@ -492,6 +393,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 		
 	}
+
+	gs.drawer_min = drawer.center - glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
+	gs.drawer_max = drawer.center + glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
 	
 	GL_ERRORS();
 }

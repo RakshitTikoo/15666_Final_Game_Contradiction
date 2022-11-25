@@ -47,5 +47,13 @@ struct GameState {
 	int current_wave = 0;
     int current_level = 0;
 
+    glm::vec2 drawer_min;
+    glm::vec2 drawer_max;
+
+    glm::vec2 window_min;
+    glm::vec2 window_max;
+
+    int money = 500;
+
     bool in_arena(glm::vec2 p);
 };

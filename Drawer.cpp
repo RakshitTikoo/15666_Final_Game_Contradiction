@@ -3,10 +3,9 @@
 #include "Mesh.hpp"
 #include <array>
 
-Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
+Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat4()) {
 	this->drawable_size = drawable_size;
     this->center = {0.f, 0.f};
-    this->scale = 1.f;
 
 	// Not sure what these do but we can change when necessary
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -14,6 +13,7 @@ Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
 	glDisable(GL_DEPTH_TEST);
 
 	this->aspect = float(drawable_size.x) / float(drawable_size.y);
+    this->width = 2.f / this->aspect;
 	glm::vec2 offset = {0.f, 0.f};
 	glm::mat4 world_to_clip = glm::mat4(
 		1.f / this->aspect, 0.0f, 0.0f, offset.x,
@@ -23,18 +23,19 @@ Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
 	);
 
     this->lines = DrawLines(world_to_clip);
-	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
+	this->TextRenderer = textRenderer;
 }
 
 void Drawer::set_center(glm::vec2 c) {
     this->center = c;
 }
 
-void Drawer::set_width(float width) {
-    this->scale = 1.f / (width/2) * this->aspect;
+void Drawer::set_width(float w) {
+	this->width = w;
 }
 
 void Drawer::line(glm::vec2 p1, glm::vec2 p2, glm::uvec4 color) {
+	float scale = 1.f / (this->width/2) * this->aspect;
     glm::vec2 p1_ = (p1 - center) * scale;
     glm::vec2 p2_ = (p2 - center) * scale;
     this->lines.draw({p1_.x, p1_.y, 0.f},
@@ -62,12 +63,16 @@ void Drawer::circle(glm::vec2 p, float rad, glm::uvec4 color) {
     }
 }
 
-// at: bottom left corner of text
+// at: top left corner of text
 // size: how much to scale the text
 void Drawer::text(std::string text, glm::vec2 at, float size, glm::vec3 color) {
-	this->lines.draw_text(text,
-						  glm::vec3(at.x, at.y, 0.0),
-						  glm::vec3(size, 0.0f, 0.0f), glm::vec3(0.0f, size, 0.0f),
-						  glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 	this->TextRenderer.draw_msg(text, at.x, at.y, size, drawable_size, color);
+}
+
+void Drawer::text_align_right(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	this->TextRenderer.draw_msg_align_right(text, at.x, at.y, size, drawable_size, color);
+}
+
+void Drawer::text_align_centered(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	this->TextRenderer.draw_msg_align_centered(text, at.x, at.y, size, drawable_size, color);
 }
