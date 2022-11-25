@@ -94,7 +94,6 @@ void PlayMode::init(){
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	builder = Builder(1000);
 	gs.score = 0;
 	gs.trojan = nullptr;
 
@@ -161,8 +160,8 @@ void PlayMode::update(float elapsed) {
 		}
 		if(controls.enter.pressed) {
 			if(selected_option == 0) { // Level 1 select
-				gs.state = gs.Playing;
-				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+				gs.state = gs.Building;
+				builder = Builder(gs.money);
 			}
 
 			if(selected_option == 4) { // Controls select
@@ -183,10 +182,13 @@ void PlayMode::update(float elapsed) {
 	}
 
 	if (gs.state == gs.Building) {
-		Player* p = builder.update(elapsed);
-		if (p != nullptr) {
+		// returns {remaining money, player} if done, otherwise the first number is -1
+		pair<int, Player> result = builder.update(elapsed);
+		if (result.first != -1) {
 			gs.state = gs.Playing;
-			gs.player = *p;
+			gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			gs.money = result.first;
+			gs.player = result.second;
 		}
 		return;
 	}
@@ -296,18 +298,27 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.text(title_options[5], {100.f, 130.f}, title_options_scale[5], title_options_color[5]);
 	} 
 	else if(gs.state == gs.Controls) { // Controls
-		drawer.text("You are an antivirus software, fighting through hordes of", {100.f, 650.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
-		drawer.text("viruses. Keep on building your antivirus software by combining", {100.f, 600.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
-		drawer.text("different power triangles at beginning of each level.", {100.f, 550.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f)); // Lore
+		drawer.text("You are an antivirus software, fighting through hordes of\n"
+					 "viruses. Keep on building your antivirus software by combining\n"
+					 "different power triangles at the beginning of each level.",
+					{50.f, 500.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
 
-		drawer.text("W A S D - Move Player", {100.f, 450.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Q - Player Rotate Anti-Clockwise", {100.f, 350.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("E - Player Rotate Clockwise", {100.f, 250.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("Space - Player Bomb Attack", {100.f, 150.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
-		drawer.text("F - Player Timestop Attack", {100.f, 50.f}, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("WASD - Move\n"
+					"Q - Rotate left\n"
+					"E - Rotate right\n"
+					"Space - Bomb attack\n"
+					"F - Timestop attack\n",
+					{50.f, 400.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
 	}
 	else if(gs.state == gs.Playing) {
-		drawer.text("Wave " + std::to_string(gs.current_wave), {800.f, 450.f}, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
+		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Wave " + std::to_string(gs.current_wave), {950.f, gs.window_max.y-30.f}, 0.4f);
 		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);

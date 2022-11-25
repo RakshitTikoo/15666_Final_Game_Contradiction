@@ -15,7 +15,7 @@ struct GameState {
     GameState();
 
     enum State { Menu, Controls, Building, Playing };
-    State state = Building;
+    State state = Menu;
 
     std::shared_ptr<Sound::PlayingSample> MainLoop;
 
@@ -52,6 +52,8 @@ struct GameState {
 
     glm::vec2 window_min;
     glm::vec2 window_max;
+
+    int money = 500;
 
     bool in_arena(glm::vec2 p);
 };

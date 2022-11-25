@@ -23,7 +23,7 @@ bool Builder::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) 
     return controls.handle_event(evt, window_size);
 }
 
-Player* Builder::update(float elapsed) {
+pair<int, Player> Builder::update(float elapsed) {
     { // Mouse stuff
         vec2 mouse_absolute = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min);
         mouse_absolute.y *= (window_max.y - window_min.y) / (window_max.x - window_min.x);
@@ -40,7 +40,7 @@ Player* Builder::update(float elapsed) {
                 box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
                 done_hovered = true;
                 if (controls.mouse.pressed) {
-                    return &player;
+                    return {remaining_money, player};
                 }
             }
         }
@@ -70,9 +70,16 @@ Player* Builder::update(float elapsed) {
                 bool contains_triangle = player.triangle_info.count({building_hover.first, building_hover.second});
                 if (controls.mouse.pressed) {
                     if (!contains_triangle && menu_selected >= 1) {
-                        player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+                        int cost = PlayerTriangle::triangleTypeMap[menu_selected].cost;
+                        if (this->remaining_money >= cost) {
+                            player.addTriangle(building_hover.first, building_hover.second, menu_selected);
+                            this->remaining_money -= cost;
+                        }
                     } else if (contains_triangle && menu_selected == 0 && building_hover != make_pair(0, 0)) {
+                        int type = player.triangle_info[{building_hover.first, building_hover.second}].type;
+                        int cost = PlayerTriangle::triangleTypeMap[type].cost;
                         player.eraseSingleTriangle(building_hover.first, building_hover.second);
+                        this->remaining_money += cost;
                     }
                 }
             }
@@ -94,7 +101,7 @@ Player* Builder::update(float elapsed) {
         disconnected = player.structureDisconnected();
     }
 
-    return nullptr;
+    return {-1, player};
 }
 
 void Builder::draw(glm::uvec2 const &drawable_size) {
@@ -141,7 +148,7 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
         // Draw vertical divider line
         auto tmp = get_menu_item_bounds(0);
         float menu_item_sz = tmp.second.x - tmp.first.x;
-        float triangle_sz = menu_item_sz * 0.5f;
+        float triangle_sz = menu_item_sz * 0.4f;
 
         // Draw available triangle types
         for (int i = 0; i < PlayerTriangle::NUM_TRIANGLE_TYPES; i++) {
@@ -160,14 +167,21 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
                 line_absolute(p0, p2, color);
                 line_absolute(p1, p3, color);
             } else {
-                vec2 p0 = mid + vec2(-triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
-                vec2 p1 = mid + vec2( triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
-                vec2 p2 = mid + vec2(0.f, sqrtf(3.f)*triangle_sz/3.f);
+                vec2 trimid = mid + vec2(0.f, 0.004f);
+                vec2 p0 = trimid + vec2(-triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
+                vec2 p1 = trimid + vec2( triangle_sz/2.f, -sqrtf(3)*triangle_sz/6.f);
+                vec2 p2 = trimid + vec2(0.f, sqrtf(3.f)*triangle_sz/3.f);
 
                 glm::uvec4 color = PlayerTriangle::triangleTypeMap[i].color;
                 line_absolute(p0, p1, color);
                 line_absolute(p1, p2, color);
                 line_absolute(p2, p0, color);
+
+                // Draw cost
+                float name_x = (box.first.x + box.second.x)/2.f * (window_max.x - window_min.x) + window_min.x;
+                float name_y = ((box.first.y + .013f)*drawer.aspect) * (window_max.y - window_min.y) + window_min.y;
+                int cost = PlayerTriangle::triangleTypeMap[i].cost;
+                drawer.text_align_centered("$" + to_string(cost), {name_x, name_y}, 0.3f);
             }
         }
 
@@ -255,8 +269,8 @@ void Builder::draw(glm::uvec2 const &drawable_size) {
 
 pair<vec2, vec2> Builder::get_menu_item_bounds(int idx) {
     static float sidelen = 0.05f;
-    static float max_x = 1;
-    static float max_y = max_x * (window_max.y - window_min.y)/(window_max.x - window_min.x);
+    float max_x = 1;
+    float max_y = max_x * (window_max.y - window_min.y)/(window_max.x - window_min.x);
     return make_pair(vec2(max_x - sidelen, max_y - idx*sidelen - sidelen),
                      vec2(max_x, max_y - idx*sidelen));
 }

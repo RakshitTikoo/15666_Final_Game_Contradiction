@@ -126,11 +126,10 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     }
 
     // ==============================
-    // eat food = grow a triangle
+    // eat food = get money
     // ==============================
     {
         std::vector<int> toErase;
-        std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
         for (int i = 0; i < (int)gs.food.size(); i++) {
             glm::vec2 foodpos = gs.food[i];
             for (std::pair<int,int> coords : cluster.triangles) {
@@ -141,50 +140,12 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     toErase.push_back(i);
                     // play sound
                     Sound::play(*gs.player_grow, gs.sound_effect_volume*0.5f, 0.0f);
-
-                    // add a new triangle to the nearest side
-                    float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
-                    float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
-                    float d3 = GeoHelpers::pointToSegmentDistance(foodpos, corners[2], corners[0]);
-
-                    float minDist = fmin(d1, fmin(d2, d3));
-
-                    auto addTriangle = [&](int x, int y) {
-                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%5 + 1)});
-                    };
-
-                    if (minDist == d1) {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first+1, coords.second-1);
-                        } else {
-                            addTriangle(coords.first-1, coords.second+1);
-                        }
-                    } else if (minDist == d2) {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first+1, coords.second);
-                        } else {
-                            addTriangle(coords.first-1, coords.second);
-                        }
-                    } else {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first-1, coords.second);
-                        } else {
-                            addTriangle(coords.first+1, coords.second);
-                        }
-                    }
-                    break;
+                    gs.money += 10;
                 }
             }
         }
         for (int i = (int)toErase.size()-1; i >= 0; i--) {
             gs.food.erase(gs.food.begin() + toErase[i]);
-        }
-        for (auto k : toInsert) {
-            std::pair<int,int> coords = k.first;
-            PlayerTriangle t = k.second;
-            if (!cluster.triangles.count({coords.first, coords.second})) {
-                addTriangle(coords.first, coords.second, t);
-            }
         }
     }
 
@@ -286,10 +247,6 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             turret_bullet_speed *= 10.f;  
         }
     }
-    
-
-
-
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {

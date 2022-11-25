@@ -10,7 +10,7 @@ struct Builder {
     Builder();
     Builder(int money);
 	bool handle_event(SDL_Event const &, glm::uvec2 const &window_size);
-	Player* update(float elapsed);
+	pair<int, Player> update(float elapsed); // returns {remaining money, player} if done, otherwise the first number is -1
 	void draw(glm::uvec2 const &drawable_size);
 
     private:

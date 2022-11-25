@@ -19,6 +19,7 @@ struct PlayerTriangle {
         glm::uvec4 color;
         int health;
         string description;
+        int cost;
     };
     enum TriangleType : int {CORE, BASIC, SHOOTER, DEFENCE, INFECTOR, TIMESTOP};
     static inline TriangleTypeInfo triangleTypeMap[NUM_TRIANGLE_TYPES] = {
@@ -26,37 +27,43 @@ struct PlayerTriangle {
             "Core",
             {255.f, 255.f, 0.f, 255.f},
             1,
-            "The one you need to protect"
+            "The one you need to protect",
+            9999999
         },
         {
             "Basic",
             {0.f, 255.f, 255.f, 255.f},
             1,
-            "Does nothing but can take one shot"
+            "Does nothing but can take one shot",
+            5
         },
         {
             "Shooter",
             {255.f, 0.f, 255.f, 255.f},
             1,
-            "Shoots bullets where you aim"
+            "Shoots bullets where you aim",
+            40
         },
         {
             "Defense",
             {128.f, 128.f, 128.f, 255.f},
             3,
-            "Takes 3 shots"
+            "Takes 3 shots",
+            20
         },
         {
             "Infector",
             {50.f, 255.f, 50.f, 255.f},
             1,
-            "Splits into 2 basic triangles once hit"
+            "Splits into 2 basic triangles once hit",
+            15
         },
         {
             "Timestop",
             {250.f, 250.f, 250.f, 255.f},
             1,
-            "Creates a time stop explosion which slows down enemies"
+            "Creates a time stop explosion which slows down enemies",
+            80
         }
     };
 
