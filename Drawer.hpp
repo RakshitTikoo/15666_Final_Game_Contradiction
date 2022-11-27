@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "DrawLines.hpp"
 #include "DrawText.hpp"
+#include "DrawTriangles.hpp"
 #include "TriangleCluster.hpp"
 
 using namespace std;
@@ -14,6 +15,7 @@ struct Drawer {
     float aspect = 1.f;
     DrawLines lines;
     DrawText TextRenderer;
+    DrawTriangles triangles;
 
     Drawer(glm::vec2 drawable_size, DrawText& textRenderer);
 
@@ -24,4 +26,5 @@ struct Drawer {
     void text(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
     void text_align_right(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
     void text_align_centered(std::string text, glm::vec2 at, float scale, glm::vec3 color = {1.f, 1.f, 1.f});
+    void triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uvec4 color);
 };

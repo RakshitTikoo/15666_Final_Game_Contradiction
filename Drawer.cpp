@@ -3,7 +3,7 @@
 #include "Mesh.hpp"
 #include <array>
 
-Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat4()) {
+Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat4()), triangles(glm::mat4()) {
 	this->drawable_size = drawable_size;
     this->center = {0.f, 0.f};
 
@@ -24,6 +24,7 @@ Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat
 
     this->lines = DrawLines(world_to_clip);
 	this->TextRenderer = textRenderer;
+	this->triangles = DrawTriangles(world_to_clip);
 }
 
 void Drawer::set_center(glm::vec2 c) {
@@ -75,4 +76,16 @@ void Drawer::text_align_right(std::string text, glm::vec2 at, float size, glm::v
 
 void Drawer::text_align_centered(std::string text, glm::vec2 at, float size, glm::vec3 color) {
 	this->TextRenderer.draw_msg_align_centered(text, at.x, at.y, size, drawable_size, color);
+}
+
+void Drawer::triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uvec4 color) {
+	float scale = 1.f / (this->width/2) * this->aspect;
+	glm::vec2 p1_ = (p1 - center) * scale;
+    glm::vec2 p2_ = (p2 - center) * scale;
+	glm::vec2 p3_ = (p3 - center) * scale;
+    this->triangles.draw({p1_.x, p1_.y, 0.f},
+						 {p2_.x, p2_.y, 0.f},
+						 {p3_.x, p3_.y, 0.f},
+						 color
+    );
 }

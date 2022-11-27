@@ -40,19 +40,10 @@ void Player::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        glm::uvec4 color = PlayerTriangle::triangleTypeMap[t.type].color;
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, color);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, color);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, color);
-    }
-
-    if (draw_bbox) {
-        glm::uvec4 white = {255.f, 255.f, 255.f, 255.f};
-        std::vector<glm::vec2> p = cluster.get_bbox_corners();
-        drawer.line(p[0], p[1], white);
-        drawer.line(p[1], p[2], white);
-        drawer.line(p[2], p[3], white);
-        drawer.line(p[3], p[0], white);
+        // drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        // drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        // drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, PlayerTriangle::triangleTypeMap[t.type].color);
     }
 }
 

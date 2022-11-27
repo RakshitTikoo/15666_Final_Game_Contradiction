@@ -326,6 +326,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		{ // draw the player
 			gs.player.draw(drawer);
 		}
+
+		GL_ERRORS();
 		
 		{ // draw boss
 			if (gs.trojan != nullptr) {
@@ -333,11 +335,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 
+		GL_ERRORS();
+
 		{ // draw boss
 			if (gs.infboss != nullptr) {
 				gs.infboss->draw(drawer);
 			}
 		}
+
+		GL_ERRORS();
 
 		
 		{ // draw boss
@@ -347,34 +353,46 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 
+		GL_ERRORS();
+
 		
 		{ // draw player explosion
 			gs.player.draw_explosion(drawer);
 		
 		}
 
+		GL_ERRORS();
+
 		{ // draw player timestop
 			gs.player.draw_timestop(drawer);
 		
 		}
+
+		GL_ERRORS();
 		
 		{ // draw food
 			for (auto& k : gs.food) {
 				drawer.circle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
 			}
 		}
+
+		GL_ERRORS();
 		
 		{ // draw basic_enemys
 			for (Enemy* e : gs.enemies) {
 				e->draw(drawer);
 			}
 		}
+
+		GL_ERRORS();
 		
 		{ // draw bullets
 			for (Bullet* b : gs.bullets) {
 				b->draw(drawer);
 			}
 		}
+
+		GL_ERRORS();
 		
 		{ // draw bounds
 			glm::u8vec4 color = {255.f, 255.f, 255.f, 255.f};
@@ -391,6 +409,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 						glm::vec2(gs.arena_min.x, gs.arena_min.y),
 						color);
 		}
+
+		GL_ERRORS();
 		
 	}
 
