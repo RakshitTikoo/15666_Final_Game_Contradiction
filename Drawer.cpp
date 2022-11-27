@@ -3,7 +3,7 @@
 #include "Mesh.hpp"
 #include <array>
 
-Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
+Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()), triangles(glm::mat4()) {
     this->center = {0.f, 0.f};
     this->scale = 1.f;
 
@@ -22,6 +22,7 @@ Drawer::Drawer(glm::vec2 drawable_size) : lines(glm::mat4()) {
 	);
 
     this->lines = DrawLines(world_to_clip);
+	this->triangles = DrawTriangles(world_to_clip);
 }
 
 void Drawer::set_center(glm::vec2 c) {
@@ -58,6 +59,17 @@ void Drawer::circle(glm::vec2 p, float rad, glm::uvec4 color) {
             p + rad * circle[(a + 1) % circle.size()],
             color);
     }
+}
+
+void Drawer::triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::uvec4 color) {
+	glm::vec2 p1_ = (p1 - center) * scale;
+    glm::vec2 p2_ = (p2 - center) * scale;
+	glm::vec2 p3_ = (p3 - center) * scale;
+    this->triangles.draw({p1_.x, p1_.y, 0.f},
+						 {p2_.x, p2_.y, 0.f},
+						 {p3_.x, p3_.y, 0.f},
+						 color
+    );
 }
 
 // at: bottom left corner of text

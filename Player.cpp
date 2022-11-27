@@ -40,9 +40,10 @@ void Player::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        // drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        // drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        // drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
     }
 }
 
