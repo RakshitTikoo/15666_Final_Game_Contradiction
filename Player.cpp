@@ -8,18 +8,18 @@
 #include "Sound.hpp"
 
 PlayerTriangle::PlayerTriangle() {
-    this->type = 0;
-    this->health = triangle_health[0];
+    this->type = CORE;
+    this->health = triangleTypeMap[CORE].health;
 }
 
 PlayerTriangle::PlayerTriangle(int type) {
     this->type = type;
-    this->health = triangle_health[type];
+    this->health = triangleTypeMap[type].health;
 }
 
 Player::Player() {
     cluster = TriangleCluster();
-	addTriangle(0, 0, PlayerTriangle(0));
+	addTriangle(0, 0, PlayerTriangle(PlayerTriangle::CORE));
     cluster.pos = glm::vec2(0.f, 0.f);
 }
 
@@ -43,7 +43,7 @@ void Player::draw(Drawer& drawer) {
         // drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
         // drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
         // drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
-        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, PlayerTriangle::triangleTypeMap[t.type].color);
     }
 }
 
@@ -66,6 +66,26 @@ bool Player::explosion_intersect(const Hitbox& hitbox) {
     }
     return false;
 }
+
+void Player::draw_timestop(Drawer& drawer) {
+    for (int i = 0 ; i < (int)timestop_pos.size(); i++) {
+        drawer.circle(timestop_pos[i], timestop_rad[i], glm::uvec4(250.f, 250.f, 250.f, 255.f));
+        timestop_rad[i] += timestop_speed;
+        if (timestop_rad[i] >= timestop_max_rad) {
+            timestop_pos.erase(timestop_pos.begin() + i);
+            timestop_rad.erase(timestop_rad.begin() + i);
+        }
+    }
+}
+
+bool Player::timestop_intersect(const Hitbox& hitbox) {
+    for (int i = 0 ; i < (int)timestop_pos.size(); i++) {
+        CircleHitbox timestop_hitbox = CircleHitbox(timestop_pos[i], timestop_rad[i]);
+        if (timestop_hitbox.intersect(hitbox)) return true;
+    }
+    return false;
+}
+
 
 void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // ===================
@@ -97,11 +117,10 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     }
 
     // ==============================
-    // eat food = grow a triangle
+    // eat food = get money
     // ==============================
     {
         std::vector<int> toErase;
-        std::vector<std::pair<std::pair<int, int>, PlayerTriangle>> toInsert;
         for (int i = 0; i < (int)gs.food.size(); i++) {
             glm::vec2 foodpos = gs.food[i];
             for (std::pair<int,int> coords : cluster.triangles) {
@@ -112,51 +131,12 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
                     toErase.push_back(i);
                     // play sound
                     Sound::play(*gs.player_grow, gs.sound_effect_volume*0.5f, 0.0f);
-
-                    // add a new triangle to the nearest side
-                    float d1 = GeoHelpers::pointToSegmentDistance(foodpos, corners[0], corners[1]);
-                    float d2 = GeoHelpers::pointToSegmentDistance(foodpos, corners[1], corners[2]);
-                    float d3 = GeoHelpers::pointToSegmentDistance(foodpos, corners[2], corners[0]);
-
-                    float minDist = fmin(d1, fmin(d2, d3));
-
-                    auto addTriangle = [&](int x, int y) {
-                        //int curr_type = ; 
-                        toInsert.push_back({{x, y}, PlayerTriangle(std::rand()%3 + 1)});
-                    };
-
-                    if (minDist == d1) {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first+1, coords.second-1);
-                        } else {
-                            addTriangle(coords.first-1, coords.second+1);
-                        }
-                    } else if (minDist == d2) {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first+1, coords.second);
-                        } else {
-                            addTriangle(coords.first-1, coords.second);
-                        }
-                    } else {
-                        if (coords.first%2 == 0) {
-                            addTriangle(coords.first-1, coords.second);
-                        } else {
-                            addTriangle(coords.first+1, coords.second);
-                        }
-                    }
-                    break;
+                    gs.money += 10;
                 }
             }
         }
         for (int i = (int)toErase.size()-1; i >= 0; i--) {
             gs.food.erase(gs.food.begin() + toErase[i]);
-        }
-        for (auto k : toInsert) {
-            std::pair<int,int> coords = k.first;
-            PlayerTriangle t = k.second;
-            if (!cluster.triangles.count({coords.first, coords.second})) {
-                addTriangle(coords.first, coords.second, t);
-            }
         }
     }
 
@@ -165,24 +145,26 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // =================
     {
         time_since_shoot += elapsed;
-        for (auto& k : triangle_info) if (k.second.type == 2) {
+        for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::SHOOTER) {
             k.second.time_since_shoot += elapsed;
         }
 
         if (controls.mouse.pressed) {
+            // translate location from window coordinates to game coordinates
+            glm::vec2 mouse_loc = ((controls.mouse_loc - gs.window_min) / (gs.window_max - gs.window_min)) * (gs.drawer_max - gs.drawer_min) + gs.drawer_min;
             if (time_since_shoot >= SHOOT_COOLDOWN) {
                 time_since_shoot = 0.f;
-                glm::vec2 dir = glm::normalize(controls.mouse_loc - cluster.pos);
+                glm::vec2 dir = glm::normalize(mouse_loc - cluster.pos);
                 gs.bullets.push_back(new CoreBullet(cluster.pos, core_bullet_speed * dir));
                 Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.5f, 0.0f);
             }
-            for (auto& k : triangle_info) if (k.second.type == 2) {
+            for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::SHOOTER) {
                 std::pair<int, int> coords = k.first;
                 PlayerTriangle& t = k.second;
                 if (t.time_since_shoot >= t.SHOOT_COOLDOWN) {
                     t.time_since_shoot = 0.f;
                     glm::vec2 p = cluster.getTrianglePosition(coords.first, coords.second);
-                    glm::vec2 dir = glm::normalize(controls.mouse_loc - p);
+                    glm::vec2 dir = glm::normalize(mouse_loc - p);
                     gs.bullets.push_back(new TurretBullet(p, turret_bullet_speed * dir));
                     Sound::play(*gs.player_bullet, gs.sound_effect_volume*0.3f, 0.0f);
                 }
@@ -205,7 +187,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         for (auto& k : triangle_info)  {
             std::pair<int, int> coords = k.first;
 
-            if(!(coords.first == 0 && coords.second == 0)) {
+            if(k.second.type != PlayerTriangle::CORE) {
                 if(cluster.triangles.count({coords.first, coords.second})) { // Check if triagle in cluster
                     //triangle_info[{coords.first, coords.second}] = 1; // Reset Hit Box
                     destroyTriangle(coords.first, coords.second);
@@ -215,6 +197,47 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         }
     }
 
+
+    // =========================
+    // player timestop attack
+    // =========================
+    if(controls.f.pressed && controls.f.once == 1) {
+        controls.f.once = 2; // One Action per Press 
+        for (auto& k : triangle_info) if (k.second.type == PlayerTriangle::TIMESTOP) {
+            timestop_pos.push_back(cluster.getTrianglePosition(k.first.first, k.first.second));
+            timestop_rad.push_back(0.0f);
+        }
+    }
+
+
+    // =========================
+    // Boss timestop attack
+    // =========================
+    for (auto& k : gs.player.triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+        if(gs.timestopboss->timestop_intersect(tri_hitbox)  && boss_timestop_hit == false) {
+            boss_timestop_hit = true;
+            boss_timestop_hit_cnt = boss_timestop_hit_cooldown;
+            time_since_shoot    /= 10.f;
+            player_speed        /= 10.f;
+            player_rot          /= 10.f;
+            core_bullet_speed   /= 10.f;
+            turret_bullet_speed /= 10.f; 
+        }
+    }
+    
+    if(boss_timestop_hit) {
+        boss_timestop_hit_cnt -= elapsed;
+        if(boss_timestop_hit_cnt <= 0.f) {
+            boss_timestop_hit = false;
+            time_since_shoot    *= 10.f;
+            player_speed        *= 10.f;
+            player_rot          *= 10.f;
+            core_bullet_speed   *= 10.f;
+            turret_bullet_speed *= 10.f;  
+        }
+    }
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {
@@ -226,11 +249,41 @@ void Player::addTriangle(int i, int j, PlayerTriangle t) {
 void Player::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
+    bool inf_fl = (triangle_info[{i, j}].type == PlayerTriangle::INFECTOR);
     if(triangle_info[{i, j}].health <= 0)
     {
         eraseSingleTriangle(i, j);
         dfsEraseTriangles();
-    }  
+    }
+    if(inf_fl) {
+        addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
+        // Randomly add a triangle 
+        std::pair<int, int> next_triangle[3];
+        if(i % 2 == 0)
+        {
+            // (i+1,j), (i-1,j), and (i+1,j-1)
+            next_triangle[0] = {i+1,j};
+            next_triangle[1] = {i-1,j};
+            next_triangle[2] = {i+1,j-1};
+        }
+        else {
+            // (i+1,j), (i-1,j), and (i-1,j+1)
+            next_triangle[0] = {i+1,j};
+            next_triangle[1] = {i-1,j};
+            next_triangle[2] = {i-1,j+1};
+        }
+        int selection = std::rand() % 3;
+        int mx = 3;
+        while(triangle_info.find(next_triangle[selection]) != triangle_info.end()) {
+          mx--;
+          if (mx < 0) break;
+          // found
+          selection += 1;
+          if(selection >= 3) selection = 0;
+        }
+        
+        addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
+    }
 }
 
 void Player::destroyTriangles(std::vector<std::pair<int,int>> coords) {
@@ -247,7 +300,6 @@ void Player::eraseSingleTriangle(int i, int j) {
 }
 
 void Player::dfsEraseTriangles() {
-    std::function<void(int, int, std::set<std::pair<int, int>>)> do_dfs;
     std::set<std::pair<int, int>> visited;
     dfsEraseTrianglesInner(0, 0, visited);
     
@@ -257,6 +309,15 @@ void Player::dfsEraseTriangles() {
         if (!visited.count(t)) toErase.push_back(t);
     }
     for (std::pair<int, int> t : toErase) eraseSingleTriangle(t.first, t.second);
+}
+
+bool Player::structureDisconnected() {
+    std::set<std::pair<int, int>> visited;
+    dfsEraseTrianglesInner(0, 0, visited);
+    for (std::pair<int, int> t : cluster.triangles) {
+        if (!visited.count(t)) return true;
+    }
+    return false;
 }
 
 void Player::dfsEraseTrianglesInner(int i, int j, std::set<std::pair<int, int>>& visited) {

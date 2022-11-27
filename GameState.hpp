@@ -9,11 +9,13 @@
 #include "data_path.hpp"
 #include "Boss.hpp"
 #include "DrawText.hpp"
+#include "Builder.hpp"
 
 struct GameState {
     GameState();
 
-    int state = 0; //0 - level select, 1 - level 1 
+    enum State { Menu, Controls, Building, Playing };
+    State state = Menu;
 
     std::shared_ptr<Sound::PlayingSample> MainLoop;
 
@@ -25,6 +27,10 @@ struct GameState {
 
     Player player;
     Trojan* trojan = nullptr;
+
+    Infboss* infboss = nullptr;
+
+    Timestopboss* timestopboss = nullptr;
 
     std::vector<Enemy *> enemies;
     std::vector<Bullet *> bullets;
@@ -41,8 +47,13 @@ struct GameState {
 	int current_wave = 0;
     int current_level = 0;
 
+    glm::vec2 drawer_min;
+    glm::vec2 drawer_max;
+
+    glm::vec2 window_min;
+    glm::vec2 window_max;
+
+    int money = 500;
+
     bool in_arena(glm::vec2 p);
-
-
-    //DrawText* TextRenderer = nullptr;
 };

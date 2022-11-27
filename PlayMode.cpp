@@ -27,11 +27,11 @@
 GLuint gl_compile_program(std::string const &vertex_shader_source,std::string const &fragment_shader_source);
 
 void PlayMode::spawn_entity(int entity_type) {
-	glm::vec2 pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+	glm::vec2 pos = glm::vec2(rng::rand01(), rng::rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 	if (entity_type != FOOD) {
 		// reroll until far enough away
 		while (glm::length(pos - gs.player.cluster.pos) < 30) {
-			pos = glm::vec2(rand01(), rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
+			pos = glm::vec2(rng::rand01(), rng::rand01()) * (gs.arena_max - gs.arena_min) + gs.arena_min;
 		}
 	}
 
@@ -55,10 +55,27 @@ void PlayMode::spawn_entity(int entity_type) {
 		case BOMBER:
 			gs.enemies.push_back(new Bomber(pos));
 			break;
+
+		case INFECTOR:
+			gs.enemies.push_back(new Infector(pos));
+			break;
+		
+		case WORM:
+			gs.enemies.push_back(new WormSegment(pos, nullptr));
+			break;
 		
 		case TROJAN:
 			gs.trojan = new Trojan(pos);
 			break;
+
+		case INFBOSS:
+			gs.infboss = new Infboss(pos);
+			break;
+
+		case TIMESTOPBOSS:
+			gs.timestopboss = new Timestopboss(pos);
+			break;
+			
 
 		default: 
 			printf("\nError: Unknown Entity Type\n");
@@ -77,131 +94,40 @@ void PlayMode::init(){
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	gs.state = 0;
 	gs.score = 0;
 	gs.trojan = nullptr;
 
 	gs.current_level = 0;
 	gs.current_wave = -1; // hacky way to get first wave to spawn on update
 
-
+	spawn_entities(500, FOOD);
+	//spawn_entities(10, WORM);
+	spawn_entity(TIMESTOPBOSS);
 }
 
 PlayMode::PlayMode() {
+	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
+
 	init();
 
-	// Init Text Renderer
-	TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
-
-
 	std::cout << "Initialization successful\n"; 
-	
-	
 }
 
 PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.downs += 1;
-			controls.left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.downs += 1;
-			controls.right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.downs += 1;
-			controls.up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.downs += 1;
-			controls.down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.downs += 1;
-			controls.q.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.downs += 1;
-			controls.e.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE && controls.space.once == 0) {
-			controls.space.downs += 1;
-			controls.space.pressed = true;
-			controls.space.once = 1;
-		} else if (evt.key.keysym.sym == SDLK_RETURN && controls.enter.once == 0) {
-			controls.enter.downs += 1;
-			controls.enter.pressed = true;
-			controls.enter.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_UP && controls.arrow_up.once == 0) {
-			controls.arrow_up.downs += 1;
-			controls.arrow_up.pressed = true;
-			controls.arrow_up.once = 1;
-		}
-		else if (evt.key.keysym.sym == SDLK_DOWN && controls.arrow_down.once == 0) {
-			controls.arrow_down.downs += 1;
-			controls.arrow_down.pressed = true;
-			controls.arrow_down.once = 1;
-		}
-
-
-	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			controls.left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			controls.right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			controls.up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			controls.down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			controls.q.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			controls.e.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_SPACE) {
-			controls.space.pressed = false;
-			controls.space.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_RETURN) {
-			controls.enter.pressed = false;
-			controls.enter.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_UP) {
-			controls.arrow_up.pressed = false;
-			controls.arrow_up.once = 0;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_DOWN) {
-			controls.arrow_down.pressed = false;
-			controls.arrow_down.once = 0;
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		controls.mouse.downs += 1;
-		controls.mouse.pressed = true;
-		return true;
-	} else if (evt.type == SDL_MOUSEBUTTONUP) {
-		controls.mouse.pressed = false;
-		return true;
+	if (gs.state == gs.Building) {
+		return builder.handle_event(evt, window_size);
 	}
 
-	int x, y; SDL_GetMouseState(&x, &y);
-	controls.mouse_loc = glm::vec2();
-	controls.mouse_loc.x = x - float(window_size.x) / 2.f;
-	controls.mouse_loc.y = float(window_size.y) / 2.f - y;
-
-	return false;
+	gs.window_min = {0.f, 0.f};
+	gs.window_max = window_size;
+	return controls.handle_event(evt, window_size);
 }
 
 void PlayMode::update(float elapsed) {
-	if (gs.state == 0) { 
+	if (gs.state == gs.Menu) { 
 		// =========================
 		// Title Screen Settings
 		// =========================
@@ -227,26 +153,42 @@ void PlayMode::update(float elapsed) {
 			if(i != selected_option) {
 				title_options_color[i] = glm::vec3(0.5f, 0.5f, 0.5f);
 				title_options_scale[i] = 0.5f;
-			}
-			else {
+			} else {
 				title_options_color[i] = glm::vec3(1.0f, 1.0f, 1.0f);
 				title_options_scale[i] = 0.75f;
 			}
 		}
-
-		
-		 
 		if(controls.enter.pressed) {
 			if(selected_option == 0) { // Level 1 select
-				gs.state = 1;
-				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+				gs.state = gs.Building;
+				builder = Builder(gs.money);
 			}
-			
+
+			if(selected_option == 4) { // Controls select
+				gs.state = gs.Controls;
+			}
 
 			if(selected_option == 5) { // Quit select
 				exit(0);
 			}
 
+		}
+		return;
+	}
+
+	if (gs.state == gs.Controls) { // Control menu
+		if(controls.escape.pressed) gs.state = gs.Menu;
+		return;
+	}
+
+	if (gs.state == gs.Building) {
+		// returns {remaining money, player} if done, otherwise the first number is -1
+		pair<int, Player> result = builder.update(elapsed);
+		if (result.first != -1) {
+			gs.state = gs.Playing;
+			gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			gs.money = result.first;
+			gs.player = result.second;
 		}
 		return;
 	}
@@ -260,6 +202,19 @@ void PlayMode::update(float elapsed) {
 			gs.trojan->update(elapsed, gs);
 		}
 	}
+
+	{ // update boss
+		if (gs.infboss != nullptr) {
+			gs.infboss->update(elapsed, gs);
+		}
+	}
+
+	{ // update boss
+		if (gs.timestopboss != nullptr) {
+			gs.timestopboss->update(elapsed, gs);
+		}
+	}
+
 
 	{ // update enemies
 		for (Enemy* e : gs.enemies) {
@@ -299,7 +254,7 @@ void PlayMode::update(float elapsed) {
 				gs.current_wave = 0;
 			}
 			if (gs.current_level == NUM_LEVELS) {
-				gs.state = 0;
+				gs.state = gs.Menu;
 				return;
 			}
 			// Spawn wave
@@ -326,19 +281,45 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	if (gs.state == 0) {
-		TextRenderer.draw_msg("Poly Defence", 100.f, 650.f, 1.f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
-		TextRenderer.draw_msg(title_options[0], 100.f, 500.f, title_options_scale[0], drawable_size, title_options_color[0]);
-		TextRenderer.draw_msg(title_options[1], 100.f, 450.f, title_options_scale[1], drawable_size, title_options_color[1]);
-		TextRenderer.draw_msg(title_options[2], 100.f, 400.f, title_options_scale[2], drawable_size, title_options_color[2]);
-		TextRenderer.draw_msg(title_options[3], 100.f, 350.f, title_options_scale[3], drawable_size, title_options_color[3]);
-		TextRenderer.draw_msg(title_options[4], 100.f, 300.f, title_options_scale[4], drawable_size, title_options_color[4]);
-		TextRenderer.draw_msg(title_options[5], 100.f, 250.f, title_options_scale[5], drawable_size, title_options_color[5]);
-	} else {
-		TextRenderer.draw_msg("Wave " + std::to_string(gs.current_wave), 900.f, 650.f, 0.5f, drawable_size, glm::vec3(1.0f, 1.0f, 1.0f));
-	
+	if (gs.state == gs.Building) {
+		builder.draw(drawable_size);
+		GL_ERRORS();
+		return;
+	}
 
-		Drawer drawer(drawable_size);
+	Drawer drawer(drawable_size, TextRenderer);
+	if (gs.state == gs.Menu) {
+		drawer.text("Poly Defense", {100.f, 450.f}, 1.f);
+		drawer.text(title_options[0], {100.f, 380.f}, title_options_scale[0], title_options_color[0]);
+		drawer.text(title_options[1], {100.f, 330.f}, title_options_scale[1], title_options_color[1]);
+		drawer.text(title_options[2], {100.f, 280.f}, title_options_scale[2], title_options_color[2]);
+		drawer.text(title_options[3], {100.f, 230.f}, title_options_scale[3], title_options_color[3]);
+		drawer.text(title_options[4], {100.f, 180.f}, title_options_scale[4], title_options_color[4]);
+		drawer.text(title_options[5], {100.f, 130.f}, title_options_scale[5], title_options_color[5]);
+	} 
+	else if(gs.state == gs.Controls) { // Controls
+		drawer.text("You are an antivirus software, fighting through hordes of\n"
+					 "viruses. Keep on building your antivirus software by combining\n"
+					 "different power triangles at the beginning of each level.",
+					{50.f, 500.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
+
+		drawer.text("WASD - Move\n"
+					"Q - Rotate left\n"
+					"E - Rotate right\n"
+					"Space - Bomb attack\n"
+					"F - Timestop attack\n",
+					{50.f, 400.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
+	}
+	else if(gs.state == gs.Playing) {
+		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Wave " + std::to_string(gs.current_wave), {950.f, gs.window_max.y-30.f}, 0.4f);
+		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);
 		
@@ -351,9 +332,29 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 				gs.trojan->draw(drawer);
 			}
 		}
+
+		{ // draw boss
+			if (gs.infboss != nullptr) {
+				gs.infboss->draw(drawer);
+			}
+		}
+
+		
+		{ // draw boss
+			if (gs.timestopboss != nullptr) {
+				gs.timestopboss->draw(drawer);
+				gs.timestopboss->draw_timestop(drawer);
+			}
+		}
+
 		
 		{ // draw player explosion
 			gs.player.draw_explosion(drawer);
+		
+		}
+
+		{ // draw player timestop
+			gs.player.draw_timestop(drawer);
 		
 		}
 		
@@ -392,6 +393,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 		
 	}
+
+	gs.drawer_min = drawer.center - glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
+	gs.drawer_max = drawer.center + glm::vec2(drawer.width/2.f, (drawer.width/2.f)/drawer.aspect);
 	
 	GL_ERRORS();
 }

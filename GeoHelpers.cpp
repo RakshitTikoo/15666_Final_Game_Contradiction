@@ -29,10 +29,21 @@ namespace GeoHelpers{
         return glm::distance(p, proj);
     }
 
-
     bool pointInCircle(glm::vec2 point, glm::vec2 circle, float radius) {
         if(glm::length(point - circle) < radius) return true;
 
         return false;
     };
+
+    // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+    bool segmentsIntersect(glm::vec2 p0, glm::vec2 p1, glm::vec2 q0, glm::vec2 q1) {
+        glm::vec2 s1 = p1 - p0;
+        glm::vec2 s2 = q1 - q0;
+
+        float s = (-s1.y*(p0.x - q0.x) + s1.x*(p0.y - q0.y)) / (-s2.x*s1.y + s1.x*s2.y);
+        float t = ( s2.x*(p0.y - q0.y) - s2.y*(p0.x - q0.x)) / (-s2.x*s1.y + s1.x*s2.y);
+
+        if (0 <= s && s <= 1 && 0 <= t && t <= 1) return true;
+        return false;
+    }
 }

@@ -14,7 +14,23 @@ bool CircleTriangleIntersect(const CircleHitbox& h1, const TriangleHitbox& h2) {
 }
 
 bool TriangleTriangleIntersect(const TriangleHitbox& h1, const TriangleHitbox& h2) {
-    // currently unimplemented
+    // Check if any two segments intersect
+    if (GeoHelpers::segmentsIntersect(h1.p0, h1.p1, h2.p0, h2.p1)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p0, h1.p1, h2.p1, h2.p2)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p0, h1.p1, h2.p2, h2.p0)) return true;
+
+    if (GeoHelpers::segmentsIntersect(h1.p1, h1.p2, h2.p0, h2.p1)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p1, h1.p2, h2.p1, h2.p2)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p1, h1.p2, h2.p2, h2.p0)) return true;
+
+    if (GeoHelpers::segmentsIntersect(h1.p2, h1.p0, h2.p0, h2.p1)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p2, h1.p0, h2.p1, h2.p2)) return true;
+    if (GeoHelpers::segmentsIntersect(h1.p2, h1.p0, h2.p2, h2.p0)) return true;
+
+    // Check if any triangle is inside another
+    if (GeoHelpers::pointInTriangle(h1.p0, h2.p0, h2.p1, h2.p2)) return true;
+    if (GeoHelpers::pointInTriangle(h2.p0, h1.p0, h1.p1, h1.p2)) return true;
+
     return false;
 }
 

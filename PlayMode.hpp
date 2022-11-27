@@ -18,8 +18,9 @@
 #include "Player.hpp"
 #include "Boss.hpp"
 #include "GameState.hpp"
+#include "Builder.hpp"
 
-#include <random>
+#include "rng.hpp"
 #include "Controls.hpp"
 
 #include "DrawText.hpp"
@@ -37,14 +38,8 @@ struct PlayMode : Mode {
 
 	void init();
 
-	std::mt19937 mt; //rng stuff
-	float rand01() {
-		static float mx = (float)mt.max();
-		return mt() / mx;
-	}
-	
 	// Entity Control
-	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7};
+	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7, INFBOSS = 8, TIMESTOPBOSS = 9};
 	void spawn_entity(int entity_type);
 	void spawn_entities(int count, int entity_type);
 
@@ -52,10 +47,10 @@ struct PlayMode : Mode {
 	static constexpr int NUM_LEVELS = 1;
 	vector<vector<pair<int, int>>> levels[NUM_LEVELS] = {
 		{ // Level 0
-			{{10, CHASER}},
-			{{20, CHASER}, {3, SHOOTER}},
-			{{40, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
-			{{50, CHASER}, {10, SHOOTER}, {5, SPIRAL}},
+			{{1, CHASER}},
+			{{2, CHASER}, {3, SHOOTER}},
+			{{4, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
+			{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}},
 			{{1, TROJAN}}
 		}
 	};
@@ -65,6 +60,10 @@ struct PlayMode : Mode {
 	Controls controls;
 
 	GameState gs;
+
+	Builder builder;
+
+	DrawText TextRenderer;
 
 	// Title screen options
 	int selected_option = 0;
@@ -84,7 +83,5 @@ struct PlayMode : Mode {
 		glm::vec3(0.5f, 0.5f, 0.5f),
 		glm::vec3(0.5f, 0.5f, 0.5f) 
 	}; 
-
-	DrawText TextRenderer;
 
 };

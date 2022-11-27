@@ -9,6 +9,11 @@ struct GameState; // forward declaration
 struct Enemy {
     bool destroyed = false;
 
+    float timestop_hit_cooldown = 10.f;
+    float timestop_hit_cnt;
+    bool timestop_hit = false;
+
+
     virtual void draw(Drawer& drawer) = 0;
     virtual void update(float elapsed, GameState& state) = 0;
     virtual Hitbox* getHitbox() = 0;
@@ -82,3 +87,31 @@ struct Bomber : Enemy {
     Hitbox* getHitbox() override;
 };
 
+struct Infector : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    float rad = 0.25f;
+    float mov_speed = 8.f;
+    glm::uvec4 color = glm::uvec4(50.f, 255.f, 50.f, 255.f);
+    Infector(glm::vec2 pos);
+
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};
+
+struct WormSegment : Enemy {
+    glm::vec2 pos = {0.f, 0.f};
+    float rad = 0.25f;
+    float mov_speed = 5.f;
+    WormSegment* follow;
+    WormSegment* follower = nullptr;
+    glm::uvec4 color = glm::uvec4(0xDD, 0x6E, 0x0F, 0xFF);
+    bool wandering = true;
+    float wander_timer = 2.f;
+    glm::vec2 wander_dir;
+
+    WormSegment(glm::vec2 pos, WormSegment *follow); // if head = nullptr --> this is the head
+    void draw(Drawer& drawer) override;
+    void update(float elapsed, GameState& state) override;
+    Hitbox* getHitbox() override;
+};

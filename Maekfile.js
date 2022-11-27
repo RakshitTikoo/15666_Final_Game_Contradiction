@@ -171,7 +171,9 @@ const common_names = [
 	maek.CPP('load_opus.cpp'),
 	maek.CPP('Hitbox.cpp'),
 	maek.CPP('Boss.cpp'),
-	maek.CPP('DrawText.cpp')
+	maek.CPP('DrawText.cpp'),
+	maek.CPP('rng.cpp'),
+	maek.CPP("Builder.cpp")
 ];
 
 const show_meshes_names = [
