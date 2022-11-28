@@ -62,9 +62,10 @@ void Trojan::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        //drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        //drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        //drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
     }
 }
 
@@ -155,6 +156,10 @@ void Trojan::update(float elapsed, GameState& gs) {
     if(cluster.pos.y > gs.arena_max.y) cluster.pos.y = gs.arena_max.y;
     if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
     if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
+
+    // Clear ptr
+    if(cluster.triangles.size() == 0)
+        gs.trojan = nullptr;
 
     // Check collision between player and boss
     //check_triangle_collision(gs); // Need to implement triangle triangle intersect
@@ -316,9 +321,11 @@ void Infboss::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        //drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        //drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        //drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+
     }
 }
 
@@ -438,6 +445,10 @@ void Infboss::update(float elapsed, GameState& gs) {
 
     // Check collision between player bomb and boss
     //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+
+    // Clear ptr
+    if(cluster.triangles.size() == 0)
+        gs.infboss = nullptr;
 
 }
 
@@ -599,9 +610,11 @@ void Timestopboss::draw(Drawer& drawer) {
         glm::vec2 offset_2 = (cluster.getTrianglePosition(coords.first, coords.second) - corners[2]) / glm::length(cluster.getTrianglePosition(coords.first, coords.second) - corners[2]);
         offset_2 = offset_2*0.05f;
 
-        drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
-        drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
-        drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        //drawer.line(corners[0] + offset_0 , corners[1] + offset_1, t.color[t.type]);
+        //drawer.line(corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+        //drawer.line(corners[2] + offset_2, corners[0] + offset_0, t.color[t.type]);
+        drawer.triangle(corners[0] + offset_0, corners[1] + offset_1, corners[2] + offset_2, t.color[t.type]);
+
     }
 }
 
@@ -748,6 +761,10 @@ void Timestopboss::update(float elapsed, GameState& gs) {
 
     // Check collision between player bomb and boss
     //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+
+    // Clear ptr
+    if(cluster.triangles.size() == 0)
+        gs.timestopboss = nullptr;
 
 }
 

@@ -92,6 +92,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     // player movement
     // ===================
     {
+        
         // combine inputs into a move:
         glm::vec2 move = glm::vec2(0.0f);
         if (controls.left.pressed && !controls.right.pressed) move.x =-1.0f;
@@ -115,7 +116,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             cluster.angle = std::fmodf(cluster.angle + 360.0f, 360.0f);
         }
     }
-
+    
     // ==============================
     // eat food = get money
     // ==============================
@@ -216,7 +217,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
     for (auto& k : gs.player.triangle_info) {
         std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
         TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
-        if(gs.timestopboss->timestop_intersect(tri_hitbox)  && boss_timestop_hit == false) {
+        if(gs.timestopboss != nullptr &&  gs.timestopboss->timestop_intersect(tri_hitbox)  && boss_timestop_hit == false) {
             boss_timestop_hit = true;
             boss_timestop_hit_cnt = boss_timestop_hit_cooldown;
             time_since_shoot    /= 10.f;
@@ -226,7 +227,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             turret_bullet_speed /= 10.f; 
         }
     }
-    
+
     if(boss_timestop_hit) {
         boss_timestop_hit_cnt -= elapsed;
         if(boss_timestop_hit_cnt <= 0.f) {
@@ -238,6 +239,8 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
             turret_bullet_speed *= 10.f;  
         }
     }
+
+    
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {

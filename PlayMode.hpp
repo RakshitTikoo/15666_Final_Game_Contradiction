@@ -36,22 +36,37 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 
-	void init();
 
+	void init(int state); // 0 - new level or game over, 1 - level change 
+	void destroy_entities();
 	// Entity Control
 	enum Entity_Type {FOOD = 0, CHASER = 1, SHOOTER = 2, SPIRAL = 3, WORM = 4, INFECTOR = 5, BOMBER = 6, TROJAN = 7, INFBOSS = 8, TIMESTOPBOSS = 9};
 	void spawn_entity(int entity_type);
 	void spawn_entities(int count, int entity_type);
 
 	static constexpr int MAX_FOOD = 300;
-	static constexpr int NUM_LEVELS = 1;
+	static constexpr int NUM_LEVELS = 3;
 	vector<vector<pair<int, int>>> levels[NUM_LEVELS] = {
 		{ // Level 0
 			{{1, CHASER}},
-			{{2, CHASER}, {3, SHOOTER}},
-			{{4, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
-			{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}},
-			{{1, TROJAN}}
+			//{{2, CHASER}, {3, SHOOTER}},
+			//{{4, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
+			//{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}},
+			//{{1, TROJAN}}
+		}, 
+		{ // Level 1
+			{{1, CHASER}, {3, SHOOTER}},
+			//{{2, CHASER}, {3, SHOOTER}, {2, SPIRAL}},
+			//{{4, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
+			//{{5, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
+			//{{1, INFBOSS}}
+		}, 
+		{ // Level 2
+			{{1, CHASER}, {3, SHOOTER}, {2, SPIRAL}},
+			//{{2, CHASER}, {3, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
+			//{{4, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}, {10, WORM}},
+			//{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}, {10, WORM}},
+			//{{1, TIMESTOPBOSS}}
 		}
 	};
 

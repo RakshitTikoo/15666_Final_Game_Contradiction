@@ -12,9 +12,9 @@ struct Builder {
 	bool handle_event(SDL_Event const &, glm::uvec2 const &window_size);
 	pair<int, Player> update(float elapsed); // returns {remaining money, player} if done, otherwise the first number is -1
 	void draw(glm::uvec2 const &drawable_size);
+    int remaining_money;
 
     private:
-    int remaining_money;
     DrawText TextRenderer;
     Player player;
     Controls controls;

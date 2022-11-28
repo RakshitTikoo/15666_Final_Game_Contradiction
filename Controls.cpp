@@ -97,11 +97,13 @@ bool Controls::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			f.once = 0;
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
+	} else if (evt.type == SDL_MOUSEBUTTONDOWN && mouse.once == 0) {
+		mouse.once = 1;
 		mouse.downs += 1;
 		mouse.pressed = true;
 		return true;
 	} else if (evt.type == SDL_MOUSEBUTTONUP) {
+		mouse.once = 0; 
 		mouse.pressed = false;
 		return true;
 	}

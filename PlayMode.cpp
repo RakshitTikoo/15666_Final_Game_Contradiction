@@ -89,26 +89,70 @@ void PlayMode::spawn_entities(int count, int entity_type) {
 	}
 }
 
-void PlayMode::init(){
-	gs.player = Player();
+void PlayMode::destroy_entities()
+{
+
 	gs.bullets.clear();
 	gs.food.clear();
 	gs.enemies.clear();
-	gs.score = 0;
-	gs.trojan = nullptr;
 
-	gs.current_level = 0;
-	gs.current_wave = -1; // hacky way to get first wave to spawn on update
+	// Clear bosses
+	if(gs.trojan != nullptr) {
+		for (auto& k : gs.trojan->triangle_info) {
+            gs.trojan->eraseSingleTriangle(k.first.first, k.first.second);
+        }
+		gs.trojan = nullptr;
+	}
 
-	spawn_entities(500, FOOD);
-	//spawn_entities(10, WORM);
-	spawn_entity(TIMESTOPBOSS);
+	if(gs.infboss != nullptr) {
+		for (auto& k : gs.infboss->triangle_info) {
+            gs.infboss->eraseSingleTriangle(k.first.first, k.first.second);
+        }
+		gs.infboss = nullptr;
+	}
+
+	if(gs.timestopboss != nullptr) {
+		for (auto& k : gs.timestopboss->triangle_info) {
+            gs.timestopboss->eraseSingleTriangle(k.first.first, k.first.second);
+        }
+		gs.timestopboss = nullptr;
+	}
+
+
+	// Destroy player
+
+	for (auto& k : gs.player.triangle_info) {
+            gs.player.eraseSingleTriangle(k.first.first, k.first.second);
+	}
+
+
+}
+void PlayMode::init(int state){
+	destroy_entities();
+
+	gs.player = Player();
+
+	if(state == 0) {
+		gs.score = 0;
+		gs.current_level = 0;
+		gs.current_wave = -1; // hacky way to get first wave to spawn on update
+		gs.state = gs.Menu;
+		builder.remaining_money = 500;
+		
+	}
+	else  {
+		gs.state = gs.Building; // Go to building
+		builder.remaining_money = gs.money;
+	}
+
+	
+	
 }
 
 PlayMode::PlayMode() {
 	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
 
-	init();
+	init(0);
 
 	std::cout << "Initialization successful\n"; 
 }
@@ -182,87 +226,115 @@ void PlayMode::update(float elapsed) {
 	}
 
 	if (gs.state == gs.Building) {
+		controls.mouse.once = 2; //debounce
 		// returns {remaining money, player} if done, otherwise the first number is -1
 		pair<int, Player> result = builder.update(elapsed);
 		if (result.first != -1) {
-			gs.state = gs.Playing;
-			gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			if(gs.current_level == 0) {
+				gs.state = gs.Level1;
+				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+			}
+			if(gs.current_level == 1) {
+				gs.state = gs.Level2;
+				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
+			}
+			if(gs.current_level == 2) {
+				gs.state = gs.Level3;
+				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
+			}
+			
 			gs.money = result.first;
 			gs.player = result.second;
 		}
 		return;
 	}
 
-	{ // update player
-		gs.player.update(elapsed, gs, controls);
-	}
 
-	{ // update boss
-		if (gs.trojan != nullptr) {
-			gs.trojan->update(elapsed, gs);
-		}
-	}
+	if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3) {
+		
 
-	{ // update boss
-		if (gs.infboss != nullptr) {
-			gs.infboss->update(elapsed, gs);
-		}
-	}
+		{ // Update wave
+			if (gs.enemies.empty() && gs.trojan == nullptr && gs.infboss == nullptr && gs.timestopboss == nullptr) {
+				gs.current_wave++;
+				
+				if (gs.current_wave == levels[gs.current_level].size()) { // Level Update
+					gs.current_level++;
+					gs.current_wave = -1;
+					// Add save file
 
-	{ // update boss
-		if (gs.timestopboss != nullptr) {
-			gs.timestopboss->update(elapsed, gs);
-		}
-	}
+					if (gs.current_level == NUM_LEVELS) { // Game end
+						init(0);
+						return;
+					} else {
+						
+						init(1);
+						return;
+					}
 
-
-	{ // update enemies
-		for (Enemy* e : gs.enemies) {
-			e->update(elapsed, gs);
-		}
-	}
-
-	{ // update bullets
-		for (Bullet* b : gs.bullets) {
-			b->update(elapsed, gs);
-		}
-	}
-
-	{ // destroy dead things
-		for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
-			if (gs.enemies[i]->destroyed) {
-				gs.enemies.erase(gs.enemies.begin() + i);
-				gs.score += 1;
+				}
+				
+				// Spawn wave
+				spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD);
+				for (pair<int, int> to_spawn : levels[gs.current_level][gs.current_wave]) {
+					spawn_entities(to_spawn.first, to_spawn.second);
+				}
 			}
 		}
-		for (int i = (int)gs.bullets.size()-1; i >= 0; i--) {
-			if (gs.bullets[i]->destroyed) {
-				gs.bullets.erase(gs.bullets.begin() + i);
-			}
-		}
-		if (gs.player.cluster.triangles.size() == 0) {
-			Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
-			init();
-		}
-	}
 
-	{ // Update wave
-		if (gs.enemies.empty() && gs.trojan == nullptr) {
-			gs.current_wave++;
-			if (gs.current_wave == levels[gs.current_level].size()) {
-				gs.current_level++;
-				gs.current_wave = 0;
-			}
-			if (gs.current_level == NUM_LEVELS) {
-				gs.state = gs.Menu;
-				return;
-			}
-			// Spawn wave
-			spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD);
-			for (pair<int, int> to_spawn : levels[gs.current_level][gs.current_wave]) {
-				spawn_entities(to_spawn.first, to_spawn.second);
+		{ // update player
+			gs.player.update(elapsed, gs, controls);
+		}
+
+		{ // update boss
+			if (gs.trojan != nullptr) {
+				gs.trojan->update(elapsed, gs);
 			}
 		}
+
+		{ // update boss
+			if (gs.infboss != nullptr) {
+				gs.infboss->update(elapsed, gs);
+			}
+		}
+
+		{ // update boss
+			if (gs.timestopboss != nullptr) {
+				gs.timestopboss->update(elapsed, gs);
+			}
+		}
+
+
+		{ // update enemies
+			for (Enemy* e : gs.enemies) {
+				e->update(elapsed, gs);
+			}
+		}
+
+		{ // update bullets
+			for (Bullet* b : gs.bullets) {
+				b->update(elapsed, gs);
+			}
+		}
+
+		{ // destroy dead things
+			for (int i = (int)gs.enemies.size()-1; i >= 0; i--) {
+				if (gs.enemies[i]->destroyed) {
+					gs.enemies.erase(gs.enemies.begin() + i);
+					gs.score += 1;
+				}
+			}
+			for (int i = (int)gs.bullets.size()-1; i >= 0; i--) {
+				if (gs.bullets[i]->destroyed) {
+					gs.bullets.erase(gs.bullets.begin() + i);
+				}
+			}
+			if (gs.player.cluster.triangles.size() == 0) {
+				Sound::play(*gs.player_destroyed, 3.0f*gs.sound_effect_volume, 0.0f);
+				init(0);
+			}
+		}
+
+		
 	}
 
 	//reset button press counters:
@@ -316,9 +388,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 					glm::vec3(1.0f, 1.0f, 1.0f)
 		);
 	}
-	else if(gs.state == gs.Playing) {
+	else if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3) {
 		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
 		drawer.text_align_right("Wave " + std::to_string(gs.current_wave), {950.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Level " + std::to_string(gs.current_level), {850.f, gs.window_max.y-30.f}, 0.4f);
 		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);

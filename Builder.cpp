@@ -39,7 +39,7 @@ pair<int, Player> Builder::update(float elapsed) {
             if (box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
                 box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
                 done_hovered = true;
-                if (controls.mouse.pressed) {
+                if (controls.mouse.pressed && controls.mouse.once == 1) {
                     return {remaining_money, player};
                 }
             }
