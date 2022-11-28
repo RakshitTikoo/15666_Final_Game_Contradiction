@@ -222,7 +222,7 @@ void PlayMode::update(float elapsed) {
 			}
 			if(selected_option == 1) { // Level 2 select
 				if(unlocked_levels > 0) {
-					gs.money = 500;
+					gs.money = 750;
 					gs.state = gs.Building;
 					gs.current_level = 1; 
 					builder = Builder(gs.money);
@@ -233,7 +233,7 @@ void PlayMode::update(float elapsed) {
 			}
 			if(selected_option == 2) { // Level 3 select
 				if(unlocked_levels > 1) {
-					gs.money = 500;
+					gs.money = 1000;
 					gs.state = gs.Building;
 					gs.current_level = 2;
 					builder = Builder(gs.money);
@@ -289,10 +289,6 @@ void PlayMode::update(float elapsed) {
 				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
 			}
 			if(gs.current_level == 3) {
-				gs.state = gs.Level3;
-				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
-			}
-			if(gs.current_level == 4) {
 				gs.state = gs.FreeMode;
 				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
 			}
@@ -304,10 +300,10 @@ void PlayMode::update(float elapsed) {
 	}
 
 
-	if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3) {
+	if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3 || gs.state == gs.FreeMode) {
 		
 
-		{ // Update wave
+		if(gs.state != gs.FreeMode) { // Update wave
 			if (gs.enemies.empty() && gs.trojan == nullptr && gs.infboss == nullptr && gs.timestopboss == nullptr) {
 				gs.current_wave++;
 				
@@ -329,6 +325,7 @@ void PlayMode::update(float elapsed) {
 						init(0);
 						return;
 					} else {
+						spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD); // Spawn food only on level up
 						init(1);
 						return;
 					}
@@ -336,12 +333,27 @@ void PlayMode::update(float elapsed) {
 				}
 				
 				// Spawn wave
-				spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD);
+				
 				for (pair<int, int> to_spawn : levels[gs.current_level][gs.current_wave]) {
 					spawn_entities(to_spawn.first, to_spawn.second);
 				}
 			}
 		}
+
+		else { // FreeMode Settings
+
+			if (gs.enemies.empty()) {
+				for(int i = 0; i < 6; i++){
+					std::pair<int, int> to_spawn = freemode[i]; 
+					if(to_spawn.first > 0)
+						spawn_entities(to_spawn.first, to_spawn.second);
+
+					freemode[i].first += 5; // Increase for next level
+				}
+			}
+
+		}
+		
 
 		{ // update player
 			gs.player.update(elapsed, gs, controls);
@@ -453,11 +465,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 					glm::vec3(1.0f, 1.0f, 1.0f)
 		);
 	}
-	else if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3) {
-		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
-		drawer.text_align_right("Wave " + std::to_string(gs.current_wave + 1), {950.f, gs.window_max.y-30.f}, 0.4f);
-		drawer.text_align_right("Level " + std::to_string(gs.current_level + 1), {850.f, gs.window_max.y-30.f}, 0.4f);
-		
+	else if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3 || gs.state == gs.FreeMode) {
+		if(gs.state != gs.FreeMode) {
+			drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
+			drawer.text_align_right("Wave " + std::to_string(gs.current_wave + 1), {950.f, gs.window_max.y-30.f}, 0.4f);
+			drawer.text_align_right("Level " + std::to_string(gs.current_level + 1), {850.f, gs.window_max.y-30.f}, 0.4f);
+		}
+		else { // Free Mode
+			drawer.text("Score: " + to_string(gs.score), {10.f, gs.window_max.y-30.f}, 0.4f);
+			drawer.text_align_right("Free Mode", {950.f, gs.window_max.y-30.f}, 0.4f);
+		}
+
+
+
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);
 		

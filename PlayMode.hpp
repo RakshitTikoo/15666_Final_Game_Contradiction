@@ -73,6 +73,15 @@ struct PlayMode : Mode {
 		}
 	};
 
+	pair<int, int> freemode[6] = {
+		{10, CHASER},
+		{5, SHOOTER},
+		{-5, SPIRAL},
+		{-10, INFECTOR},
+		{-20, WORM},
+		{-30, BOMBER}
+	};
+
 	int unlocked_levels = 0;
 	std::string locked_msg = "";
 
