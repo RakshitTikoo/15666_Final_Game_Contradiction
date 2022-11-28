@@ -137,8 +137,6 @@ void PlayMode::init(int state){
 		gs.current_level = 0;
 		gs.current_wave = -1; // hacky way to get first wave to spawn on update
 		gs.state = gs.Menu;
-		builder.remaining_money = 500;
-		
 	}
 	else  {
 		gs.state = gs.Building; // Go to building
@@ -153,6 +151,17 @@ PlayMode::PlayMode() {
 	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
 
 	init(0);
+
+	// Read save file
+	ifstream a_file ("Game.save");
+	if (a_file.is_open()) {
+		std::string level;
+		a_file >> level;
+		unlocked_levels = std::stoi(level);
+		printf("11 %d", unlocked_levels);
+  	}
+
+
 
 	std::cout << "Initialization successful\n"; 
 }
@@ -179,11 +188,13 @@ void PlayMode::update(float elapsed) {
 		if(controls.arrow_up.pressed && controls.arrow_up.once == 1) {
 			controls.arrow_up.once = 2;
 			selected_option -= 1;
+			locked_msg = "";
 		}
 		
 		if(controls.arrow_down.pressed && controls.arrow_down.once == 1) {
 			controls.arrow_down.once = 2;
 			selected_option += 1;
+			locked_msg = "";
 		}
 
 		if(selected_option < 0) selected_option = 0;
@@ -204,8 +215,43 @@ void PlayMode::update(float elapsed) {
 		}
 		if(controls.enter.pressed) {
 			if(selected_option == 0) { // Level 1 select
+				gs.money = 500;
 				gs.state = gs.Building;
+				gs.current_level = 0;
 				builder = Builder(gs.money);
+			}
+			if(selected_option == 1) { // Level 2 select
+				if(unlocked_levels > 0) {
+					gs.money = 500;
+					gs.state = gs.Building;
+					gs.current_level = 1; 
+					builder = Builder(gs.money);
+				}
+				else {
+					locked_msg = "Level Locked";
+				}
+			}
+			if(selected_option == 2) { // Level 3 select
+				if(unlocked_levels > 1) {
+					gs.money = 500;
+					gs.state = gs.Building;
+					gs.current_level = 2;
+					builder = Builder(gs.money);
+				}
+				else {
+					locked_msg = "Level Locked";
+				}
+			}
+			if(selected_option == 3) { // Free Mode select
+				if(unlocked_levels > 2) {
+					gs.money = 2000;
+					gs.state = gs.Building;
+					gs.current_level = 3;
+					builder = Builder(gs.money);
+				}
+				else {
+					locked_msg = "Level Locked";
+				}
 			}
 
 			if(selected_option == 4) { // Controls select
@@ -242,6 +288,14 @@ void PlayMode::update(float elapsed) {
 				gs.state = gs.Level3;
 				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
 			}
+			if(gs.current_level == 3) {
+				gs.state = gs.Level3;
+				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
+			}
+			if(gs.current_level == 4) {
+				gs.state = gs.FreeMode;
+				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
+			}
 			
 			gs.money = result.first;
 			gs.player = result.second;
@@ -258,15 +312,23 @@ void PlayMode::update(float elapsed) {
 				gs.current_wave++;
 				
 				if (gs.current_wave == levels[gs.current_level].size()) { // Level Update
-					gs.current_level++;
+					
 					gs.current_wave = -1;
+					if(unlocked_levels < 4)
+					{
+						unlocked_levels += 1;
+						gs.current_level++;
+					}
+
 					// Add save file
+					ofstream a_file ("Game.save", ios::trunc);
+					a_file<<std::to_string(unlocked_levels);
+  					a_file.close();
 
 					if (gs.current_level == NUM_LEVELS) { // Game end
 						init(0);
 						return;
 					} else {
-						
 						init(1);
 						return;
 					}
@@ -368,6 +430,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.text(title_options[3], {100.f, 230.f}, title_options_scale[3], title_options_color[3]);
 		drawer.text(title_options[4], {100.f, 180.f}, title_options_scale[4], title_options_color[4]);
 		drawer.text(title_options[5], {100.f, 130.f}, title_options_scale[5], title_options_color[5]);
+
+		drawer.text(locked_msg, {600.f, 330.f}, 0.75f , glm::vec3(1.0f, 1.0f, 1.0f));
+		
 	} 
 	else if(gs.state == gs.Controls) { // Controls
 		drawer.text("You are an antivirus software, fighting through hordes of\n"
@@ -390,8 +455,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 	else if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3) {
 		drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
-		drawer.text_align_right("Wave " + std::to_string(gs.current_wave), {950.f, gs.window_max.y-30.f}, 0.4f);
-		drawer.text_align_right("Level " + std::to_string(gs.current_level), {850.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Wave " + std::to_string(gs.current_wave + 1), {950.f, gs.window_max.y-30.f}, 0.4f);
+		drawer.text_align_right("Level " + std::to_string(gs.current_level + 1), {850.f, gs.window_max.y-30.f}, 0.4f);
 		
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);

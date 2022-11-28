@@ -14,6 +14,9 @@
 
 #include <SDL.h>
 
+#include <fstream>
+#include <iostream>
+
 #include "TriangleCluster.hpp"
 #include "Player.hpp"
 #include "Boss.hpp"
@@ -69,6 +72,9 @@ struct PlayMode : Mode {
 			//{{1, TIMESTOPBOSS}}
 		}
 	};
+
+	int unlocked_levels = 0;
+	std::string locked_msg = "";
 
 	//----- game state -----
 	//input tracking:
