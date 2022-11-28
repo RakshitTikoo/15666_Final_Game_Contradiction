@@ -491,7 +491,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 					"Q - Rotate left\n"
 					"E - Rotate right\n"
 					"Space - Bomb attack\n"
-					"F - Timestop attack\n",
+					"F - Timestop attack\n"
+					"Esc - Pause Game\n",
 					{50.f, 400.f},
 					0.5f,
 					glm::vec3(1.0f, 1.0f, 1.0f)
