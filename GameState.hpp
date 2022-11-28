@@ -14,7 +14,7 @@
 struct GameState {
     GameState();
 
-    enum State {Menu, Controls, Building, Level1, Level2, Level3, FreeMode};
+    enum State {Menu, Controls, Building, Level1, Level2, Level3, FreeMode, Pause};
     State state = Menu;
 
     std::shared_ptr<Sound::PlayingSample> MainLoop;

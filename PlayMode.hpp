@@ -85,6 +85,8 @@ struct PlayMode : Mode {
 	int unlocked_levels = 0;
 	std::string locked_msg = "";
 
+	GameState::State pause_state = GameState::Menu;
+
 	//----- game state -----
 	//input tracking:
 	Controls controls;

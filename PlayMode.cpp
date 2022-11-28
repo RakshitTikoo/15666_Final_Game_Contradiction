@@ -213,7 +213,8 @@ void PlayMode::update(float elapsed) {
 				title_options_scale[i] = 0.75f;
 			}
 		}
-		if(controls.enter.pressed) {
+		if(controls.enter.pressed && controls.enter.pressed == 1) {
+			controls.enter.pressed = 2;
 			if(selected_option == 0) { // Level 1 select
 				gs.money = 500;
 				gs.state = gs.Building;
@@ -300,8 +301,27 @@ void PlayMode::update(float elapsed) {
 	}
 
 
+	if(gs.state == gs.Pause) {
+		if(controls.escape.pressed && controls.escape.once == 1) {
+			controls.escape.once = 2;
+			gs.state =  pause_state;
+			return;
+		}
+		if(controls.space.pressed && controls.space.once == 1) { // Escape to main menu
+			controls.space.once = 2;
+			init(0);
+			return;
+		}
+	}
+
 	if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3 || gs.state == gs.FreeMode) {
 		
+		if(controls.escape.pressed && controls.escape.once == 1) { // Pause
+			controls.escape.once = 2; // debounce
+			pause_state = gs.state;
+			gs.state = gs.Pause;
+			return;
+		}
 
 		if(gs.state != gs.FreeMode) { // Update wave
 			if (gs.enemies.empty() && gs.trojan == nullptr && gs.infboss == nullptr && gs.timestopboss == nullptr) {
@@ -310,22 +330,25 @@ void PlayMode::update(float elapsed) {
 				if (gs.current_wave == levels[gs.current_level].size()) { // Level Update
 					
 					gs.current_wave = -1;
+
 					if(unlocked_levels < 4)
 					{
-						unlocked_levels += 1;
-						gs.current_level++;
+						unlocked_levels ++;
+						// Add save file
+						ofstream a_file ("Game.save", ios::trunc);
+						a_file<<std::to_string(unlocked_levels);
+  						a_file.close();
 					}
+					
+					gs.current_level++;
 
-					// Add save file
-					ofstream a_file ("Game.save", ios::trunc);
-					a_file<<std::to_string(unlocked_levels);
-  					a_file.close();
+					
 
 					if (gs.current_level == NUM_LEVELS) { // Game end
 						init(0);
 						return;
 					} else {
-						spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD); // Spawn food only on level up
+						
 						init(1);
 						return;
 					}
@@ -333,7 +356,7 @@ void PlayMode::update(float elapsed) {
 				}
 				
 				// Spawn wave
-				
+				spawn_entities(MAX_FOOD - (int)gs.food.size(), FOOD); // Spawn food only on level up
 				for (pair<int, int> to_spawn : levels[gs.current_level][gs.current_wave]) {
 					spawn_entities(to_spawn.first, to_spawn.second);
 				}
@@ -446,6 +469,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		drawer.text(locked_msg, {600.f, 330.f}, 0.75f , glm::vec3(1.0f, 1.0f, 1.0f));
 		
 	} 
+	else if (gs.state == gs.Pause) {
+		drawer.text("Game Paused\n"
+					 "\n\nPress Escape to Continue\n"
+					 "\n\nPress Space to Quit to Main Menu",
+					{50.f, 500.f},
+					0.5f,
+					glm::vec3(1.0f, 1.0f, 1.0f)
+		);
+	}
 	else if(gs.state == gs.Controls) { // Controls
 		drawer.text("You are an antivirus software, fighting through hordes of\n"
 					 "viruses. Keep on building your antivirus software by combining\n"
