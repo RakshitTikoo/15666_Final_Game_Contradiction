@@ -129,6 +129,12 @@ void PlayMode::destroy_entities()
 }
 void PlayMode::init(int state){
 	destroy_entities();
+	freemode[0] = {10, CHASER};
+	freemode[1] = {5, SHOOTER};
+	freemode[2] = {-5, SPIRAL};
+	freemode[3] = {-10, INFECTOR};
+	freemode[4] = {-20, WORM};
+	freemode[5] = {-30, BOMBER};
 
 	gs.player = Player();
 
