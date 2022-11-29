@@ -64,6 +64,26 @@ void Drawer::circle(glm::vec2 p, float rad, glm::uvec4 color) {
     }
 }
 
+void Drawer::solidCircle(glm::vec2 p, float rad, glm::uvec4 color) {
+	static float M_PI = acosf(-1.f);
+	static std::array< glm::vec2, 64 > const circle = [](){
+		std::array< glm::vec2, 64 > ret;
+		for (uint32_t a = 0; a < ret.size(); ++a) {
+			float ang = a / float(ret.size()) * 2.0f * float(M_PI);
+			ret[a] = glm::vec2(std::cos(ang), std::sin(ang));
+		}
+		return ret;
+	}();
+
+    for (uint32_t a = 0; a < circle.size(); ++a) {
+        this->triangle(
+            p + rad * circle[a],
+            p + rad * circle[(a + 1) % circle.size()],
+			p,
+            color);
+    }
+}
+
 // at: top left corner of text
 // size: how much to scale the text
 void Drawer::text(std::string text, glm::vec2 at, float size, glm::vec3 color) {

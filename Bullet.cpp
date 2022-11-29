@@ -13,7 +13,7 @@ CoreBullet::CoreBullet(glm::vec2 pos, glm::vec2 speed) {
     this->speed = speed;
 }
 void CoreBullet::draw(Drawer& drawer) {
-	drawer.circle(pos, this->rad, this->color);
+	drawer.solidCircle(pos, this->rad, this->color);
 }
 void CoreBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
@@ -68,7 +68,7 @@ TurretBullet::TurretBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->speed = speed;
 }
 void TurretBullet::draw(Drawer& drawer) {
-	drawer.circle(pos, this->rad, this->color);
+	drawer.solidCircle(pos, this->rad, this->color);
 }
 void TurretBullet::update(float elapsed, GameState& state) {
 	this->lifespan -= elapsed;
@@ -123,7 +123,7 @@ ShooterBullet::ShooterBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->speed = speed;
 }
 void ShooterBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void ShooterBullet::update(float elapsed, GameState& state) {
 	this->lifespan -= elapsed;
@@ -180,7 +180,7 @@ SpiralBullet::SpiralBullet(glm::vec2 pos, glm::vec2 init_angle, float speed) {
 	if(init_angle.x == 0.f && init_angle.y == -1.f) this->angle = 3.f*PI/2.f;
 }
 void SpiralBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void SpiralBullet::update(float elapsed, GameState& state) {
 	this->lifespan -= elapsed;
@@ -236,7 +236,7 @@ TrojanBullet::TrojanBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->speed = speed;
 }
 void TrojanBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void TrojanBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
@@ -283,7 +283,7 @@ InfbossBullet::InfbossBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->speed = speed;
 }
 void InfbossBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void InfbossBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;
@@ -341,7 +341,7 @@ InfbossSpiralBullet::InfbossSpiralBullet(glm::vec2 pos, glm::vec2 init_angle, fl
 	if(init_angle.x == 1.f && init_angle.y == -1.f) this->angle = 5.f*PI/3.f;
 }
 void InfbossSpiralBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void InfbossSpiralBullet::update(float elapsed, GameState& state) {
 	this->lifespan -= elapsed;
@@ -397,7 +397,7 @@ TimestopBullet::TimestopBullet(glm::vec2 pos, glm::vec2 speed) {
 	this->speed = speed;
 }
 void TimestopBullet::draw(Drawer& drawer) {
-	drawer.circle(this->pos, this->rad, this->color);
+	drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void TimestopBullet::update(float elapsed, GameState& state) {
 	this->pos += this->speed * elapsed;

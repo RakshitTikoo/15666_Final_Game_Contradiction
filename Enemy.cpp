@@ -9,7 +9,7 @@ Chaser::Chaser(glm::vec2 pos) {
     this->pos = pos;
 }
 void Chaser::draw(Drawer& drawer) {
-    drawer.circle(this->pos, this->rad, this->color);
+    drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void Chaser::update(float elapsed, GameState& state) {
     // Walk towards player
@@ -55,7 +55,7 @@ Shooter::Shooter(glm::vec2 pos) {
     this->pos = pos;
 }
 void Shooter::draw(Drawer& drawer) {
-    drawer.circle(this->pos, this->rad, this->color);
+    drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void Shooter::update(float elapsed, GameState& state) {
     // Walk towards player if too far
@@ -116,7 +116,7 @@ Spiral::Spiral(glm::vec2 pos) {
     this->pos = pos;
 }
 void Spiral::draw(Drawer& drawer) {
-    drawer.circle(this->pos, this->rad, this->color);
+    drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void Spiral::update(float elapsed, GameState& state) {
     // Walk towards player if too far
@@ -201,7 +201,7 @@ Bomber::Bomber(glm::vec2 pos) {
 }
 void Bomber::draw(Drawer& drawer) {
     if(blink_render == 0)
-        drawer.circle(this->pos, this->rad, this->color);
+        drawer.solidCircle(this->pos, this->rad, this->color);
 
 }
 void Bomber::update(float elapsed, GameState& state) {
@@ -279,7 +279,7 @@ Infector::Infector(glm::vec2 pos) {
     this->pos = pos;
 }
 void Infector::draw(Drawer& drawer) {
-    drawer.circle(this->pos, this->rad, this->color);
+    drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void Infector::update(float elapsed, GameState& state) {
     // Walk towards player
@@ -339,7 +339,7 @@ WormSegment::WormSegment(glm::vec2 pos, WormSegment *follow) {
     }
 }
 void WormSegment::draw(Drawer& drawer) {
-    drawer.circle(this->pos, this->rad, this->color);
+    drawer.solidCircle(this->pos, this->rad, this->color);
 }
 void WormSegment::update(float elapsed, GameState& state) {
     // if follow is destroyed, we should be a new worm

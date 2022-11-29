@@ -569,7 +569,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		
 		{ // draw food
 			for (auto& k : gs.food) {
-				drawer.circle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
+				drawer.solidCircle(k, 0.1f, glm::u8vec4(0x00, 0xff, 0x00, 0xff));
 			}
 		}
 
