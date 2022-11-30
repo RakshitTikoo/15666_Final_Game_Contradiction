@@ -30,7 +30,9 @@ struct BossTriangle {
 };
 
 struct Boss { 
-    
+    float timestop_hit_cooldown = 10.f;
+    float timestop_hit_cnt;
+    bool timestop_hit = false;
 };
 
 // ==============
@@ -146,6 +148,8 @@ struct Trojan : Boss {
 
     void check_triangle_collision(GameState &gs);
     void check_triangle_bomb_collision(GameState &gs);
+
+    bool check_triangle_timestop_collision(GameState &gs);
 
     enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHASE = 4};
 
@@ -296,6 +300,8 @@ struct Infboss : Boss {
 
     void check_triangle_collision(GameState &gs);
     void check_triangle_bomb_collision(GameState &gs);
+
+    bool check_triangle_timestop_collision(GameState &gs);
 
     enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHASE = 4, INFECT = 5};
 
@@ -460,7 +466,7 @@ struct Timestopboss : Boss {
     void check_triangle_bomb_collision(GameState &gs);
 
     
-
+    bool check_triangle_timestop_collision(GameState &gs);
 
 
     enum BossState {IDLE = 0, SHOOT1 = 1, SHOOT2 = 2, BOMB = 3, CHASE = 4, INFECT = 5, TIMESTOP = 6};

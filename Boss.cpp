@@ -157,9 +157,7 @@ void Trojan::update(float elapsed, GameState& gs) {
     if(cluster.pos.x < gs.arena_min.x) cluster.pos.x = gs.arena_min.x;
     if(cluster.pos.y < gs.arena_min.y) cluster.pos.y = gs.arena_min.y;
 
-    // Clear ptr
-    if(cluster.triangles.size() == 0)
-        gs.trojan = nullptr;
+
 
     // Check collision between player and boss
     //check_triangle_collision(gs); // Need to implement triangle triangle intersect
@@ -167,7 +165,54 @@ void Trojan::update(float elapsed, GameState& gs) {
     // Check collision between player bomb and boss
     check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
+
+
+    // Check collision between player timestop and boss
+    if(check_triangle_timestop_collision(gs) && this->timestop_hit == false) {
+        this->timestop_hit = true;
+        this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+        mov_speed /= 10.f;
+        chase_speed /= 10.f;
+        bullet_speed1 /= 10.f;
+        bullet_speed2 /= 10.f;
+        shoot1_rate *= 10.f;
+        shoot2_rate *= 10.f;
+        bomb_rate *= 10.f; 
+    }
+    
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+                mov_speed *= 10.f;
+                chase_speed *= 10.f;
+                bullet_speed1 *= 10.f;
+                bullet_speed2 *= 10.f;
+                shoot1_rate /= 10.f;
+                shoot2_rate /= 10.f;
+                bomb_rate /= 10.f; 
+        }
+    }
+
+    // Clear ptr
+    if(cluster.triangles.size() == 0)
+        gs.trojan = nullptr;
+
 }
+
+bool Trojan::check_triangle_timestop_collision(GameState &gs) {
+    // Timestop hit logic 
+    for (auto& k : triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+	    if(gs.player.timestop_intersect(tri_hitbox)) return true;
+    }
+
+    return false;
+}
+
+
+
 
 void Trojan::check_triangle_bomb_collision(GameState &gs) {
     // Explosion hit logic 
@@ -446,10 +491,56 @@ void Infboss::update(float elapsed, GameState& gs) {
     // Check collision between player bomb and boss
     check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
+
+
+
+    // Check collision between player timestop and boss
+    if(check_triangle_timestop_collision(gs) && this->timestop_hit == false) {
+        this->timestop_hit = true;
+        this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+        mov_speed /= 10.f;
+        chase_speed /= 10.f;
+        bullet_speed1 /= 10.f;
+        bullet_speed2 /= 10.f;
+        shoot1_rate *= 10.f;
+        shoot2_rate *= 10.f;
+        bomb_rate *= 10.f; 
+        shoot2_bullet_per_shot_rate *= 10.f;
+        infect_rate *= 10.f;
+    }
+
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+                mov_speed *= 10.f;
+                chase_speed *= 10.f;
+                bullet_speed1 *= 10.f;
+                bullet_speed2 *= 10.f;
+                shoot1_rate /= 10.f;
+                shoot2_rate /= 10.f;
+                bomb_rate /= 10.f; 
+                shoot2_bullet_per_shot_rate /= 10.f;
+                infect_rate /= 10.f;
+        }
+    }
+
     // Clear ptr
     if(cluster.triangles.size() == 0)
         gs.infboss = nullptr;
 
+}
+
+
+bool Infboss::check_triangle_timestop_collision(GameState &gs) {
+    // Timestop hit logic 
+    for (auto& k : triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+	    if(gs.player.timestop_intersect(tri_hitbox)) return true;
+    }
+
+    return false;
 }
 
 void Infboss::check_triangle_bomb_collision(GameState &gs) {
@@ -761,12 +852,61 @@ void Timestopboss::update(float elapsed, GameState& gs) {
 
     // Check collision between player bomb and boss
     check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+    
+    // Check collision between player timestop and boss
+    if(check_triangle_timestop_collision(gs) && this->timestop_hit == false) {
+        this->timestop_hit = true;
+        this->timestop_hit_cnt = this-> timestop_hit_cooldown;
+        mov_speed /= 10.f;
+        chase_speed /= 10.f;
+        bullet_speed1 /= 10.f;
+        bullet_speed2 /= 10.f;
+        shoot1_rate *= 10.f;
+        shoot2_rate *= 10.f;
+        bomb_rate *= 10.f; 
+        shoot2_bullet_per_shot_rate *= 10.f;
+        infect_rate *= 10.f;
+        timestop_rate *= 10.f;
+        timestop_speed /= 10.f;
+    }
+
+    if(this->timestop_hit) {
+        this->timestop_hit_cnt -= elapsed;
+        if(this->timestop_hit_cnt <= 0.f) {
+            this->timestop_hit = false;
+                mov_speed *= 10.f;
+                chase_speed *= 10.f;
+                bullet_speed1 *= 10.f;
+                bullet_speed2 *= 10.f;
+                shoot1_rate /= 10.f;
+                shoot2_rate /= 10.f;
+                bomb_rate /= 10.f; 
+                shoot2_bullet_per_shot_rate /= 10.f;
+                infect_rate /= 10.f;
+                timestop_rate /= 10.f;
+                timestop_speed *= 10.f;
+        }
+    }
 
     // Clear ptr
     if(cluster.triangles.size() == 0)
         gs.timestopboss = nullptr;
 
 }
+
+
+bool Timestopboss::check_triangle_timestop_collision(GameState &gs) {
+    // Timestop hit logic 
+    for (auto& k : triangle_info) {
+        std::vector<glm::vec2> corners = cluster.getTriangleCorners(k.first.first, k.first.second);
+        TriangleHitbox tri_hitbox = TriangleHitbox(corners[0], corners[1], corners[2]);
+	    if(gs.player.timestop_intersect(tri_hitbox)) return true;
+    }
+
+    return false;
+}
+
+
 
 void Timestopboss::check_triangle_bomb_collision(GameState &gs) {
     // Explosion hit logic 
