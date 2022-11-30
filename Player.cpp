@@ -181,7 +181,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
         controls.space.once = 2; // One Action per Press
         //printf("Bomb Attack \n");
         explosion_pos.push_back(cluster.pos);
-        explosion_max_rad.push_back(std::min((float)cluster.triangles.size() - 1.f, 10.f));
+        explosion_max_rad.push_back(std::min((float)cluster.triangles.size() - 1.f, 8.f));
         explosion_rad.push_back(0.0f);
 
         // Destroy Triangles
@@ -190,7 +190,8 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
 
             if(k.second.type != PlayerTriangle::CORE) {
                 if(cluster.triangles.count({coords.first, coords.second})) { // Check if triagle in cluster
-                    //triangle_info[{coords.first, coords.second}] = 1; // Reset Hit Box
+                    if (triangle_info[{coords.first, coords.second}].type == PlayerTriangle::INFECTOR) // Infectors sould be destroyed too 
+                        triangle_info[{coords.first, coords.second}].type = PlayerTriangle::BASIC;
                     destroyTriangle(coords.first, coords.second);
                 }    
             }

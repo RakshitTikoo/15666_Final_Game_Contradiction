@@ -165,7 +165,7 @@ void Trojan::update(float elapsed, GameState& gs) {
     //check_triangle_collision(gs); // Need to implement triangle triangle intersect
 
     // Check collision between player bomb and boss
-    //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+    check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
 }
 
@@ -444,7 +444,7 @@ void Infboss::update(float elapsed, GameState& gs) {
     //check_triangle_collision(gs); // Need to implement triangle triangle intersect
 
     // Check collision between player bomb and boss
-    //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+    check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
     // Clear ptr
     if(cluster.triangles.size() == 0)
@@ -760,7 +760,7 @@ void Timestopboss::update(float elapsed, GameState& gs) {
     //check_triangle_collision(gs); // Need to implement triangle triangle intersect
 
     // Check collision between player bomb and boss
-    //check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
+    check_triangle_bomb_collision(gs); // Check how to make better - currently blindly destroying, too powerful, nerf such that boss inner triangles are not hit and defence hit once
 
     // Clear ptr
     if(cluster.triangles.size() == 0)
