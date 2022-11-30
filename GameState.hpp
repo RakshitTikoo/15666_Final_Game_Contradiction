@@ -17,7 +17,7 @@ struct GameState {
     enum State {Menu, Controls, Building, Level1, Level2, Level3, FreeMode, Pause};
     State state = Menu;
 
-    std::shared_ptr<Sound::PlayingSample> MainLoop;
+    std::shared_ptr<Sound::PlayingSample> MainLoop = nullptr;
 
     float sound_effect_volume = 1.f;
     float main_volume = 0.5f;
@@ -43,6 +43,11 @@ struct GameState {
     Sound::Sample* player_grow;
     Sound::Sample* player_hit;
     Sound::Sample* player_bullet;
+    Sound::Sample* menu_select;
+    Sound::Sample* menu_lock;
+    Sound::Sample* menu_music;
+
+    bool change_sound = true;
 
 	int current_wave = 0;
     int current_level = 0;

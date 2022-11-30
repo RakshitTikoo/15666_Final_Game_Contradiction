@@ -143,6 +143,8 @@ void PlayMode::init(int state){
 		gs.current_level = 0;
 		gs.current_wave = -1; // hacky way to get first wave to spawn on update
 		gs.state = gs.Menu;
+		gs.change_sound = true;
+		
 	}
 	else  {
 		gs.state = gs.Building; // Go to building
@@ -164,11 +166,10 @@ PlayMode::PlayMode() {
 		std::string level;
 		a_file >> level;
 		unlocked_levels = std::stoi(level);
-		printf("11 %d", unlocked_levels);
   	}
 
-
-
+	
+	
 	std::cout << "Initialization successful\n"; 
 }
 
@@ -186,7 +187,22 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
+	if(gs.change_sound) {
+		
+		gs.change_sound = false;
+		Sound::stop_all_samples();
+		if(gs.state == gs.Menu) { // Should run in menu
+			
+			gs.MainLoop = Sound::loop(*gs.menu_music, gs.main_volume, 0.0f);
+		}
+		else if(gs.state == gs.Building) { // Should run for all gameplay
+			//Sound::stop_all_samples();
+			gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+		}
+	}
+
 	if (gs.state == gs.Menu) { 
+		
 		// =========================
 		// Title Screen Settings
 		// =========================
@@ -195,21 +211,21 @@ void PlayMode::update(float elapsed) {
 			controls.arrow_up.once = 2;
 			selected_option -= 1;
 			locked_msg = "";
+			Sound::play(*gs.menu_select, gs.sound_effect_volume);
 		}
 		
 		if(controls.arrow_down.pressed && controls.arrow_down.once == 1) {
 			controls.arrow_down.once = 2;
 			selected_option += 1;
 			locked_msg = "";
+			Sound::play(*gs.menu_select, gs.sound_effect_volume);
 		}
 
 		if(selected_option < 0) selected_option = 0;
 		if(selected_option > 5) selected_option = 5;
 
 
-		if (gs.MainLoop != nullptr){
-			gs.MainLoop->volume = 0.f;
-		}
+
 		for(int i = 0; i < 6; i++) {
 			if(i != selected_option) {
 				title_options_color[i] = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -226,6 +242,7 @@ void PlayMode::update(float elapsed) {
 				gs.state = gs.Building;
 				gs.current_level = 0;
 				builder = Builder(gs.money);
+				gs.change_sound = true;
 			}
 			if(selected_option == 1) { // Level 2 select
 				if(unlocked_levels > 0) {
@@ -233,9 +250,11 @@ void PlayMode::update(float elapsed) {
 					gs.state = gs.Building;
 					gs.current_level = 1; 
 					builder = Builder(gs.money);
+					gs.change_sound = true;
 				}
 				else {
 					locked_msg = "Level Locked";
+					Sound::play(*gs.menu_lock, gs.sound_effect_volume);
 				}
 			}
 			if(selected_option == 2) { // Level 3 select
@@ -244,9 +263,11 @@ void PlayMode::update(float elapsed) {
 					gs.state = gs.Building;
 					gs.current_level = 2;
 					builder = Builder(gs.money);
+					gs.change_sound = true;
 				}
 				else {
 					locked_msg = "Level Locked";
+					Sound::play(*gs.menu_lock, gs.sound_effect_volume);
 				}
 			}
 			if(selected_option == 3) { // Free Mode select
@@ -255,9 +276,11 @@ void PlayMode::update(float elapsed) {
 					gs.state = gs.Building;
 					gs.current_level = 3;
 					builder = Builder(gs.money);
+					gs.change_sound = true;
 				}
 				else {
 					locked_msg = "Level Locked";
+					Sound::play(*gs.menu_lock, gs.sound_effect_volume);
 				}
 			}
 
@@ -279,24 +302,31 @@ void PlayMode::update(float elapsed) {
 	}
 
 	if (gs.state == gs.Building) {
+		
+		
+
 		controls.mouse.once = 2; //debounce
 		// returns {remaining money, player} if done, otherwise the first number is -1
 		pair<int, Player> result = builder.update(elapsed);
 		if (result.first != -1) {
 			if(gs.current_level == 0) {
 				gs.state = gs.Level1;
-				gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
+				//gs.change_sound = true;
+				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f);
 			}
 			if(gs.current_level == 1) {
 				gs.state = gs.Level2;
-				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
+				//gs.change_sound = true;
+				//gs.MainLoop = Sound::loop(*gs.menu_music, gs.main_volume, 0.0f); // Can change song
 			}
 			if(gs.current_level == 2) {
 				gs.state = gs.Level3;
+				//gs.change_sound = true;
 				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
 			}
 			if(gs.current_level == 3) {
 				gs.state = gs.FreeMode;
+				//gs.change_sound = true;
 				//gs.MainLoop = Sound::loop(*gs.main_music, gs.main_volume, 0.0f); // Can change song
 			}
 			
@@ -337,7 +367,7 @@ void PlayMode::update(float elapsed) {
 					
 					gs.current_wave = -1;
 
-					if(unlocked_levels < 4)
+					if(unlocked_levels < 3)
 					{
 						unlocked_levels ++;
 						// Add save file
