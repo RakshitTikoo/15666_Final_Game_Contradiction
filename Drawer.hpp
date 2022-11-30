@@ -16,8 +16,9 @@ struct Drawer {
     DrawLines lines;
     DrawText TextRenderer;
     DrawTriangles triangles;
+    glm::vec2 window_size = {960, 540};
 
-    Drawer(glm::vec2 drawable_size, DrawText& textRenderer);
+    Drawer(glm::vec2 drawable_size, glm::vec2 window_size, DrawText& textRenderer);
 
     void set_center(glm::vec2 c);
     void set_width(float width);

@@ -176,13 +176,12 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	if (gs.state == gs.Building) {
-		return builder.handle_event(evt, window_size);
-	}
-
 	gs.window_min = {0.f, 0.f};
 	gs.window_max = window_size;
-	return controls.handle_event(evt, window_size);
+	bool b0 = builder.handle_event(evt, window_size);
+	bool b1 = controls.handle_event(evt, window_size);
+
+	return gs.state == gs.Building ? b0 : b1;
 }
 
 void PlayMode::update(float elapsed) {
@@ -462,7 +461,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		return;
 	}
 
-	Drawer drawer(drawable_size, TextRenderer);
+	Drawer drawer(drawable_size, gs.window_max, TextRenderer);
 	if (gs.state == gs.Menu) {
 		drawer.text("Poly Defense", {100.f, 450.f}, 1.f);
 		drawer.text(title_options[0], {100.f, 380.f}, title_options_scale[0], title_options_color[0]);
@@ -507,12 +506,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	else if(gs.state == gs.Level1 || gs.state == gs.Level2 || gs.state == gs.Level3 || gs.state == gs.FreeMode) {
 		if(gs.state != gs.FreeMode) {
 			drawer.text("$" + to_string(gs.money), {10.f, gs.window_max.y-30.f}, 0.4f);
-			drawer.text_align_right("Wave " + std::to_string(gs.current_wave + 1), {950.f, gs.window_max.y-30.f}, 0.4f);
-			drawer.text_align_right("Level " + std::to_string(gs.current_level + 1), {850.f, gs.window_max.y-30.f}, 0.4f);
+			drawer.text_align_right("Level " + std::to_string(gs.current_level + 1) + ", wave " + std::to_string(gs.current_wave + 1), {gs.window_max.x - 10.f, gs.window_max.y-30.f}, 0.4f);
 		}
 		else { // Free Mode
 			drawer.text("Score: " + to_string(gs.score), {10.f, gs.window_max.y-30.f}, 0.4f);
-			drawer.text_align_right("Free Mode", {950.f, gs.window_max.y-30.f}, 0.4f);
+			drawer.text_align_right("Free Mode", {gs.window_max.x - 10.f, gs.window_max.y-30.f}, 0.4f);
 		}
 
 

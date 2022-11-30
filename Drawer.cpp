@@ -3,8 +3,9 @@
 #include "Mesh.hpp"
 #include <array>
 
-Drawer::Drawer(glm::vec2 drawable_size, DrawText& textRenderer) : lines(glm::mat4()), triangles(glm::mat4()) {
+Drawer::Drawer(glm::vec2 drawable_size, glm::vec2 window_size, DrawText& textRenderer) : lines(glm::mat4()), triangles(glm::mat4()) {
 	this->drawable_size = drawable_size;
+	this->window_size = window_size;
     this->center = {0.f, 0.f};
 
 	// Not sure what these do but we can change when necessary
@@ -87,14 +88,17 @@ void Drawer::solidCircle(glm::vec2 p, float rad, glm::uvec4 color) {
 // at: top left corner of text
 // size: how much to scale the text
 void Drawer::text(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	at = at * glm::vec2{960, 540} / window_size;
 	this->TextRenderer.draw_msg(text, at.x, at.y, size, drawable_size, color);
 }
 
 void Drawer::text_align_right(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	at = at * glm::vec2{960, 540} / window_size;
 	this->TextRenderer.draw_msg_align_right(text, at.x, at.y, size, drawable_size, color);
 }
 
 void Drawer::text_align_centered(std::string text, glm::vec2 at, float size, glm::vec3 color) {
+	at = at * glm::vec2{960, 540} / window_size;
 	this->TextRenderer.draw_msg_align_centered(text, at.x, at.y, size, drawable_size, color);
 }
 
