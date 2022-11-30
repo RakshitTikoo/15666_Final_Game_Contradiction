@@ -105,7 +105,7 @@ pair<int, Player> Builder::update(float elapsed) {
 }
 
 void Builder::draw(glm::uvec2 const &drawable_size) {
-	Drawer drawer(drawable_size, this->TextRenderer);
+	Drawer drawer(drawable_size, window_max, this->TextRenderer);
     float width = 40.f;
     drawer.set_center(center);
     drawer.set_width(width);
