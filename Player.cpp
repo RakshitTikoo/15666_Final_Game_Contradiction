@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Player.hpp"
 #include <functional>
 #include <vector>
@@ -260,7 +258,7 @@ void Player::destroyTriangle(int i, int j) {
         dfsEraseTriangles();
     }
     if(inf_fl) {
-        addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
+        if (!cluster.triangles.count({i, j})) addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
         // Randomly add a triangle 
         std::pair<int, int> next_triangle[3];
         if(i % 2 == 0)
@@ -286,7 +284,7 @@ void Player::destroyTriangle(int i, int j) {
           if(selection >= 3) selection = 0;
         }
         
-        addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
+        if (!cluster.triangles.count({i, j})) addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
     }
 }
 
