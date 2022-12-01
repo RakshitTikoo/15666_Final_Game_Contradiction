@@ -156,7 +156,8 @@ void PlayMode::init(int state){
 }
 
 PlayMode::PlayMode() {
-	this->TextRenderer = DrawText("NotoSansMono_Condensed-Regular.ttf");
+	const char* fontfile = "NotoSansMono_Condensed-Regular.ttf";
+	this->TextRenderer = DrawText(fontfile);
 
 	init(0);
 

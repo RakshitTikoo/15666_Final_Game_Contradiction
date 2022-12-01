@@ -13,7 +13,7 @@ Builder::Builder() {
 
 Builder::Builder(int money) {
     this->remaining_money = money;
-    char* fontfile = "NotoSansMono_Condensed-Regular.ttf";
+    const char* fontfile = "NotoSansMono_Condensed-Regular.ttf";
     this->TextRenderer = DrawText(fontfile);
     this->player = Player();
 }

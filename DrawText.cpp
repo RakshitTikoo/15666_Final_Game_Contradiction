@@ -11,11 +11,11 @@ DrawText::DrawText(){
     
 }
 
-DrawText::DrawText(char *fontfile){
+DrawText::DrawText(const char *fontfile){
     load_char(fontfile);
 }
 
-void DrawText::load_char(char *fontfile) {
+void DrawText::load_char(const char *fontfile) {
     program = gl_compile_program(
 		//vertex shader:
 		"#version 330 core\n"

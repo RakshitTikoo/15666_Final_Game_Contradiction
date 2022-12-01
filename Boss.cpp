@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Boss.hpp"
 #include <functional>
 #include <vector>

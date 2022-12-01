@@ -1,5 +1,3 @@
-#pragma once
-
 #include "GeoHelpers.hpp"
 #include <glm/gtx/norm.hpp>
 
