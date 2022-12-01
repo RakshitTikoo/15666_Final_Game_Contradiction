@@ -634,6 +634,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 						glm::vec2(gs.arena_min.x, gs.arena_min.y),
 						color);
 		}
+		
+		{	// draw some background grids
+			for (float i = gs.arena_min.x; i <= gs.arena_max.x; i = i + 5.0f) {
+				drawer.line({i, gs.arena_min.y}, {i, gs.arena_max.y}, {64, 64, 64, 255});
+			}
+			for (float i = gs.arena_min.y; i <= gs.arena_max.y; i = i + 5.0f) {
+				drawer.line({gs.arena_min.x, i}, {gs.arena_max.x, i}, {64, 64, 64, 255});
+			}
+		}
 
 		GL_ERRORS();
 		
