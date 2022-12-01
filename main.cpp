@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 
 	//create window:
 	SDL_Window *window = SDL_CreateWindow(
-		"Contradiction", //TODO: remember to set a title for your game!
+		"Poly Defence", //TODO: remember to set a title for your game!
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		960, 540, //TODO: modify window size if you'd like
 		SDL_WINDOW_OPENGL
