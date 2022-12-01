@@ -54,22 +54,22 @@ struct PlayMode : Mode {
 			{{1, CHASER}},
 			{{2, CHASER}, {3, SHOOTER}},
 			{{4, CHASER}, {5, SHOOTER}, {2, SPIRAL}},
-			{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}},
-			{{1, TROJAN}}
+			{{5, CHASER}, {5, SHOOTER}, {5, SPIRAL}},
+			{{1, TROJAN}, {5, CHASER}, {5, SHOOTER}}
 		}, 
 		{ // Level 1
 			{{1, CHASER}, {3, SHOOTER}},
 			{{2, CHASER}, {3, SHOOTER}, {2, SPIRAL}},
 			{{4, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
 			{{5, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
-			{{1, INFBOSS}}
+			{{1, INFBOSS}, {5, CHASER}, {5, SHOOTER}}
 		}, 
 		{ // Level 2
 			{{1, CHASER}, {3, SHOOTER}, {2, SPIRAL}},
 			{{2, CHASER}, {3, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}},
 			{{4, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}, {10, WORM}},
-			{{5, CHASER}, {1, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}, {10, WORM}},
-			{{1, TIMESTOPBOSS}}
+			{{5, CHASER}, {5, SHOOTER}, {5, SPIRAL}, {5, INFECTOR}, {10, WORM}},
+			{{1, TIMESTOPBOSS}, {5, CHASER}, {5, SHOOTER}}
 		}
 	};
 
