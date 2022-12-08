@@ -40,8 +40,8 @@ void Drawer::line(glm::vec2 p1, glm::vec2 p2, glm::uvec4 color) {
 	float scale = 1.f / (this->width/2) * this->aspect;
     glm::vec2 p1_ = (p1 - center) * scale;
     glm::vec2 p2_ = (p2 - center) * scale;
-    this->lines.draw({p1_.x, p1_.y, 0.f},
-                     {p2_.x, p2_.y, 0.f},
+    this->lines.draw({p1_.x, p1_.y, 0.1f},
+                     {p2_.x, p2_.y, 0.1f},
                      color
     );
 }

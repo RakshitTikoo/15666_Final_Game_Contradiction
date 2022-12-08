@@ -161,4 +161,33 @@ DrawLines::~DrawLines() {
 	glUseProgram(0);
 }
 
+void DrawLines::commit() {
+	if (attribs.empty()) return;
+
+	//based on DrawSprites.cpp :
+
+	//upload vertices to vertex_buffer:
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer); //set vertex_buffer as current
+	glBufferData(GL_ARRAY_BUFFER, attribs.size() * sizeof(attribs[0]), attribs.data(), GL_STREAM_DRAW); //upload attribs array
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//set color_program as current program:
+	glUseProgram(color_program->program);
+
+	//upload OBJECT_TO_CLIP to the proper uniform location:
+	glUniformMatrix4fv(color_program->OBJECT_TO_CLIP_mat4, 1, GL_FALSE, glm::value_ptr(world_to_clip));
+
+	//use the mapping vertex_buffer_for_color_program to fetch vertex data:
+	glBindVertexArray(vertex_buffer_for_color_program);
+
+	//run the OpenGL pipeline:
+	glDrawArrays(GL_LINES, 0, GLsizei(attribs.size()));
+
+	//reset vertex array to none:
+	glBindVertexArray(0);
+
+	//reset current program to none:
+	glUseProgram(0);
+}
+
 

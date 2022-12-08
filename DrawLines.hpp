@@ -36,6 +36,8 @@ struct DrawLines {
 	//Finish drawing (push attribs to GPU):
 	~DrawLines();
 
+	void commit(void);
+
 
 	glm::mat4 world_to_clip;
 	struct Vertex {

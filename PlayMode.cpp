@@ -502,6 +502,8 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	if (gs.state == gs.Building) {
 		builder.draw(drawable_size);
 		GL_ERRORS();
@@ -509,6 +511,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	Drawer drawer(drawable_size, gs.window_max, TextRenderer);
+		
 	if (gs.state == gs.Menu) {
 		drawer.text("Poly Defense", {100.f, 450.f}, 1.f);
 		drawer.text(title_options[0], {100.f, 380.f}, title_options_scale[0], title_options_color[0]);
@@ -564,6 +567,18 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 		drawer.set_center(gs.player.cluster.pos);
 		drawer.set_width(40.f);
+
+		glEnable(GL_DEPTH_TEST);
+
+		{	// draw some background grids
+			for (float i = gs.arena_min.x; i <= gs.arena_max.x; i = i + 5.0f) {
+				drawer.line({i, gs.arena_min.y}, {i, gs.arena_max.y}, {64, 64, 64, 255});
+			}
+			for (float i = gs.arena_min.y; i <= gs.arena_max.y; i = i + 5.0f) {
+				drawer.line({gs.arena_min.x, i}, {gs.arena_max.x, i}, {64, 64, 64, 255});
+			}
+			drawer.lines.commit();
+		}
 		
 		{ // draw the player
 			gs.player.draw(drawer);
@@ -650,15 +665,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			drawer.line(glm::vec2(gs.arena_max.x, gs.arena_min.y),
 						glm::vec2(gs.arena_min.x, gs.arena_min.y),
 						color);
-		}
-		
-		{	// draw some background grids
-			for (float i = gs.arena_min.x; i <= gs.arena_max.x; i = i + 5.0f) {
-				drawer.line({i, gs.arena_min.y}, {i, gs.arena_max.y}, {64, 64, 64, 255});
-			}
-			for (float i = gs.arena_min.y; i <= gs.arena_max.y; i = i + 5.0f) {
-				drawer.line({gs.arena_min.x, i}, {gs.arena_max.x, i}, {64, 64, 64, 255});
-			}
 		}
 
 		GL_ERRORS();
