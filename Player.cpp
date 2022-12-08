@@ -4,6 +4,9 @@
 #include "GameState.hpp"
 #include "GeoHelpers.hpp"
 #include "Sound.hpp"
+#include "rng.hpp"
+
+using namespace std;
 
 PlayerTriangle::PlayerTriangle() {
     this->type = CORE;
@@ -243,7 +246,7 @@ void Player::update(float elapsed, GameState& gs, Controls& controls) {
 }
 
 void Player::addTriangle(int i, int j, PlayerTriangle t) {
-    assert(!cluster.triangles.count({i, j}));
+    if (cluster.triangles.count({i, j})) return;
     cluster.insertTriangle(i, j);
     triangle_info[{i,j}] = t;
 }
@@ -251,14 +254,19 @@ void Player::addTriangle(int i, int j, PlayerTriangle t) {
 void Player::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
-    bool inf_fl = (triangle_info[{i, j}].type == PlayerTriangle::INFECTOR);
+    bool infector_destroyed = false;
     if(triangle_info[{i, j}].health <= 0)
     {
-        eraseSingleTriangle(i, j);
-        dfsEraseTriangles();
+        if (triangle_info[{i,j}].type == PlayerTriangle::INFECTOR) {
+            infector_destroyed = true;
+        } else {
+            eraseSingleTriangle(i, j);
+            dfsEraseTriangles();
+        }
     }
-    if(inf_fl) {
-        if (!cluster.triangles.count({i, j})) addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
+    if(infector_destroyed) {
+        eraseSingleTriangle(i, j);
+        addTriangle(i, j, PlayerTriangle(PlayerTriangle::BASIC));
         // Randomly add a triangle 
         std::pair<int, int> next_triangle[3];
         if(i % 2 == 0)
@@ -274,17 +282,18 @@ void Player::destroyTriangle(int i, int j) {
             next_triangle[1] = {i-1,j};
             next_triangle[2] = {i-1,j+1};
         }
-        int selection = std::rand() % 3;
-        int mx = 3;
-        while(triangle_info.find(next_triangle[selection]) != triangle_info.end()) {
-          mx--;
-          if (mx < 0) break;
-          // found
-          selection += 1;
-          if(selection >= 3) selection = 0;
+        vector<pair<int,int>> candidates;
+        for (int ii = 0; ii < 3; ii++) {
+            pair<int,int> p = next_triangle[ii];
+            if (!cluster.triangles.count({p.first, p.second})) {
+                candidates.push_back(p);
+            }
         }
-        
-        if (!cluster.triangles.count({i, j})) addTriangle(next_triangle[selection].first, next_triangle[selection].second, PlayerTriangle(PlayerTriangle::BASIC));
+        if (!candidates.empty()) {
+            int idx = (int)(rng::rand01() * candidates.size());
+            pair<int, int> selection = candidates[idx];
+            addTriangle(selection.first, selection.second, PlayerTriangle(PlayerTriangle::BASIC));
+        }
     }
 }
 
@@ -296,7 +305,7 @@ void Player::destroyTriangles(std::vector<std::pair<int,int>> coords) {
 }
 
 void Player::eraseSingleTriangle(int i, int j) {
-    assert(cluster.triangles.count({i, j}));
+    if (!cluster.triangles.count({i, j})) return;
     cluster.eraseTriangle(i, j);
     triangle_info.erase({i, j});
 }

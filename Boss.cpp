@@ -102,7 +102,7 @@ void Trojan::update(float elapsed, GameState& gs) {
                 glm::vec2 loc = cluster.getTrianglePosition(k.first.first, k.first.second);
                 glm::vec2 dir = glm::normalize(gs.player.cluster.pos - loc);
                 TrojanBullet* b = new TrojanBullet(loc,  bullet_speed1 * dir);
-                gs.bullets.push_back(b); 
+                gs.bullets.push_back(b);
             }
         } 
     }
@@ -245,20 +245,19 @@ void Trojan::addTriangle(int i, int j, TrojanTriangle t) {
 void Trojan::destroyTriangle(int i, int j) {
     assert(cluster.triangles.count({i, j}));
     triangle_info[{i, j}].health -= 1;
-    if(triangle_info[{i, j}].health <= 0)
-    {
+    if(triangle_info[{i, j}].health <= 0) {
         if(triangle_info[{i, j}].type == C) { // Destroy all if core
-        for (auto& k : triangle_info) {
-            eraseSingleTriangle(k.first.first, k.first.second);
-        }
-        }
-
-        else 
+            vector<pair<int,int>> toErase;
+            for (auto& k : triangle_info) {
+                toErase.emplace_back(k.first.first, k.first.second);
+            }
+            for (auto k : toErase) {
+                eraseSingleTriangle(k.first, k.second);
+            }
+        } else {
             eraseSingleTriangle(i, j);
-    } 
-
-    
-     
+        }
+    }
 }
 
 
@@ -577,11 +576,14 @@ void Infboss::destroyTriangle(int i, int j) {
     if(triangle_info[{i, j}].health <= 0)
     {
         if(triangle_info[{i, j}].type == C) { // Destroy all if core
-        for (auto& k : triangle_info) {
-            eraseSingleTriangle(k.first.first, k.first.second);
+            vector<pair<int,int>> toErase;
+            for (auto& k : triangle_info) {
+                toErase.emplace_back(k.first.first, k.first.second);
+            }
+            for (auto k : toErase) {
+                eraseSingleTriangle(k.first, k.second);
+            }
         }
-        }
-
         else 
             eraseSingleTriangle(i, j);
     } 
@@ -965,11 +967,14 @@ void Timestopboss::destroyTriangle(int i, int j) {
     if(triangle_info[{i, j}].health <= 0)
     {
         if(triangle_info[{i, j}].type == C) { // Destroy all if core
-        for (auto& k : triangle_info) {
-            eraseSingleTriangle(k.first.first, k.first.second);
+            vector<pair<int,int>> toErase;
+            for (auto& k : triangle_info) {
+                toErase.emplace_back(k.first.first, k.first.second);
+            }
+            for (auto k : toErase) {
+                eraseSingleTriangle(k.first, k.second);
+            }
         }
-        }
-
         else 
             eraseSingleTriangle(i, j);
     } 

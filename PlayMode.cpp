@@ -98,33 +98,50 @@ void PlayMode::destroy_entities()
 
 	// Clear bosses
 	if(gs.trojan != nullptr) {
-		for (auto& k : gs.trojan->triangle_info) {
-            gs.trojan->eraseSingleTriangle(k.first.first, k.first.second);
+		vector<pair<int,int>> toErase;
+		for (auto k : gs.trojan->triangle_info) {
+			toErase.push_back(make_pair(k.first.first, k.first.second));
         }
+		for (auto k : toErase) {
+			gs.trojan->eraseSingleTriangle(k.first, k.second);
+		}
+		free(gs.trojan);
 		gs.trojan = nullptr;
 	}
 
 	if(gs.infboss != nullptr) {
-		for (auto& k : gs.infboss->triangle_info) {
-            gs.infboss->eraseSingleTriangle(k.first.first, k.first.second);
+		vector<pair<int,int>> toErase;
+		for (auto k : gs.infboss->triangle_info) {
+			toErase.push_back(make_pair(k.first.first, k.first.second));
         }
+		for (auto k : toErase) {
+			gs.infboss->eraseSingleTriangle(k.first, k.second);
+		}
+		free(gs.infboss);
 		gs.infboss = nullptr;
 	}
 
 	if(gs.timestopboss != nullptr) {
-		for (auto& k : gs.timestopboss->triangle_info) {
-            gs.timestopboss->eraseSingleTriangle(k.first.first, k.first.second);
+		vector<pair<int,int>> toErase;
+		for (auto k : gs.timestopboss->triangle_info) {
+			toErase.push_back(make_pair(k.first.first, k.first.second));
         }
+		for (auto k : toErase) {
+			gs.timestopboss->eraseSingleTriangle(k.first, k.second);
+		}
+		free(gs.timestopboss);
 		gs.timestopboss = nullptr;
 	}
 
 
 	// Destroy player
-
-	for (auto& k : gs.player.triangle_info) {
-            gs.player.eraseSingleTriangle(k.first.first, k.first.second);
+	vector<pair<int,int>> toErase;
+	for (auto k : gs.player.triangle_info) {
+		toErase.push_back(make_pair(k.first.first, k.first.second));
 	}
-
+	for (auto k : toErase) {
+		gs.player.eraseSingleTriangle(k.first, k.second);
+	}
 
 }
 void PlayMode::init(int state){
@@ -150,7 +167,6 @@ void PlayMode::init(int state){
 		gs.state = gs.Building; // Go to building
 		builder.remaining_money = gs.money;
 	}
-
 	
 	
 }

@@ -25,26 +25,14 @@ bool Builder::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) 
 }
 
 pair<int, Player> Builder::update(float elapsed) {
+    vec2 mouse_absolute = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min);
+    mouse_absolute.y *= (window_max.y - window_min.y) / (window_max.x - window_min.x);
+
     { // Mouse stuff
-        vec2 mouse_absolute = (controls.mouse_loc - this->window_min) / (this->window_max - this->window_min);
-        mouse_absolute.y *= (window_max.y - window_min.y) / (window_max.x - window_min.x);
         auto menu_min_x = get_menu_item_bounds(0).first.x;
 
-        done_hovered = false;
         building_hovered = false;
         menu_hover = -1;
-
-        
-        { // Check for hover over done button
-            auto box = get_finished_button_bounds();
-            if (box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
-                box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
-                done_hovered = true;
-                if (controls.mouse.pressed && controls.mouse.once == 1) {
-                    return {remaining_money, player};
-                }
-            }
-        }
         
         if (!done_hovered) {
             if (mouse_absolute.x >= menu_min_x) { // Mouse over menu
@@ -100,6 +88,19 @@ pair<int, Player> Builder::update(float elapsed) {
 
     { // Check if the structure is disconnected
         disconnected = player.structureDisconnected();
+    }
+
+    { // Check for hover over done button
+        done_hovered = false;
+        auto box = get_finished_button_bounds();
+        if (!disconnected &&
+            box.first.x <= mouse_absolute.x && mouse_absolute.x <= box.second.x &&
+            box.first.y <= mouse_absolute.y && mouse_absolute.y <= box.second.y) {
+            done_hovered = true;
+            if (controls.mouse.pressed && controls.mouse.once == 1) {
+                return {remaining_money, player};
+            }
+        }
     }
 
     return {-1, player};
